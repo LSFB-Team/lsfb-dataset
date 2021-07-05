@@ -2,12 +2,9 @@ import numbers
 import random
 import numpy as np
 import PIL
-import skimage.transform
-import torchvision
 import math
-import torch
 
-import utils.video_utils as F
+import lsfb_dataset.utils.video_utils as F
 
 
 class I3DPixelsValue(object):
