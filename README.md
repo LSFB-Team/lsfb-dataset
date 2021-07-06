@@ -2,6 +2,8 @@
 
 This library is a companion for the [French Belgian Sign Language dataset](https://lsfb.info.unamur.be/). You will find useful functions to load and manipulate the video from the LSFB dataset. The package provide a pytorch dataset class and several useful transformations methods for video.
 
+*TODO impelement the deploy here https://blog.ionelmc.ro/2014/05/25/python-packaging/#the-structure*
+
 ## Loading the dataset
 
 Currently, only the loading of LSFB-isol is supported. The dataset needs to be downloaded from [the website](https://lsfb.info.unamur.be/). The dataset information could than be read into a dataframe like this :

@@ -4,7 +4,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="lsfb-dataset",
+    name="lsfb_dataset",
     version="0.0.1",
     author="Jérôme Fink",
     author_email="jerome.fink@unamur.be",
