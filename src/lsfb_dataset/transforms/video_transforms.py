@@ -42,7 +42,7 @@ class ChangeVideoShape(object):
 
 
 class ResizeVideo(object):
-    """Resizes a list of (H x W x C) numpy.ndarray to the final size
+    """Resizes a list of ( T x H x W x C) to the final size
     The larger the original image is, the more times it takes to
     interpolate
     Args:

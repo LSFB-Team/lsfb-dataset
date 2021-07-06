@@ -16,6 +16,7 @@ class LsfbDataset(Dataset):
         sequence_label=False,
         one_hot=False,
         transforms=None,
+        max_frame=150,
         labels=None,
     ):
         """
@@ -31,6 +32,7 @@ class LsfbDataset(Dataset):
         self.sequence_label = sequence_label
         self.transforms = transforms
         self.one_hot = one_hot
+        self.max_frame = max_frame
 
         if labels == None:
             self.labels = self._get_label_mapping()
@@ -61,17 +63,7 @@ class LsfbDataset(Dataset):
         y = int(item["label_nbr"])
 
         if self.sequence_label:
-
-            # Retrieve the class number associated to the padding
-            if self.padding == "zero":
-                pad_nbr = list(self.labels.keys())[
-                    list(self.labels.values()).index("SEQUENCE-PADDING")
-                ]
-                pad_len = len(video) - video_len
-                y = np.array([y] * video_len + [pad_nbr] * pad_len)
-
-            elif self.padding == "loop":
-                y = np.array([y] * len(video))
+            y = np.array([y] * len(video))
 
         if self.one_hot:
             nbr_labels = len(self.labels)
@@ -120,7 +112,7 @@ class LsfbDataset(Dataset):
 
             # Avoid memory saturation by stopping reading of
             # video if it is > 150 frames (5sec)
-            if frame_count > 150:
+            if frame_count > self.max_frame:
                 break
 
         return np.array(frame_array)
