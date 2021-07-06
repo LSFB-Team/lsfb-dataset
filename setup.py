@@ -4,7 +4,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="lsfb_dataset",
+    name="lsfb-dataset",
     version="0.0.1",
     author="Jérôme Fink",
     author_email="jerome.fink@unamur.be",
@@ -21,5 +21,5 @@ setuptools.setup(
     package_dir={"": "src"},
     packages=setuptools.find_packages(where="src"),
     python_requires=">=3.8",
-    install_requires=["numpy", "Pillow", "opencv-python"],
+    install_requires=["numpy", "Pillow", "opencv-python", "torch"],
 )
