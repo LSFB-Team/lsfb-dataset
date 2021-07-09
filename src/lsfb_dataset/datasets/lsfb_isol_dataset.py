@@ -6,7 +6,7 @@ import numpy as np
 import random
 
 
-class LsfbDataset(Dataset):
+class LsfbIsolDataset(Dataset):
     """ Load the LSFB video based on a dataframe containing their path"""
 
     def __init__(
@@ -14,7 +14,6 @@ class LsfbDataset(Dataset):
         data,
         label_padding="loop",
         sequence_label=False,
-        one_hot=False,
         transforms=None,
         max_frame=150,
         labels=None,
@@ -31,7 +30,6 @@ class LsfbDataset(Dataset):
         self.label_padding = label_padding
         self.sequence_label = sequence_label
         self.transforms = transforms
-        self.one_hot = one_hot
         self.max_frame = max_frame
 
         if labels == None:
@@ -58,10 +56,10 @@ class LsfbDataset(Dataset):
 
         y = int(item["label_nbr"])
 
-        ## Handle the zero padding
+        ## Handle the sequence label
         if self.sequence_label and self.label_padding == "loop":
             y = np.array([y] * len(video))
-        else:
+        elif self.sequence_label:
             pad_size = len(video) - video_len
 
             if pad_size > 0:
@@ -71,17 +69,6 @@ class LsfbDataset(Dataset):
                 y = np.array([y] * video_len) + np.array([pad_label] * pad_size)
             else:
                 y = np.array([y] * len(video))
-
-        if self.one_hot:
-            nbr_labels = len(self.labels)
-            if isinstance(y, int):
-                tmp = np.zeros(nbr_labels)
-                tmp[y] = 1
-            else:
-                tmp = np.zeros((nbr_labels, len(video)))
-                for idx, label in enumerate(y):
-                    tmp[label][idx] = 1
-            y = tmp
 
         return video, y
 
