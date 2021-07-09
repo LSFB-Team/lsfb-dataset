@@ -3,7 +3,7 @@ import glob
 from os.path import sep
 
 
-def load_lsfb_dataset(path: str, verbose: bool = True):
+def load_lsfb_dataset(path: str, verbose: bool = False):
     """
   Read the LSFB corpus in a dataframe containing the label of each signs, a number associated to each label,
   the path of the sign and which subset the signs come from (test or train). 

@@ -5,9 +5,10 @@ from pathlib import Path
 import os
 import numpy as np
 import cv2
+from lsfb_dataset.utils.dataset_loader import load_lsfb_dataset
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def lsfb_isol_path():
 
     with tempfile.TemporaryDirectory() as tmp_dirname:
@@ -39,8 +40,12 @@ def create_fake_video(video_path):
     out = cv2.VideoWriter(video_path, fourc, 30.0, shape)
 
     for i in range(30):
-        frame = np.zeros((224, 224, 3), dtype=np.uint8)
+        frame = np.ones((224, 224, 3), dtype=np.uint8)
         out.write(frame)
 
     out.release()
 
+
+@pytest.fixture(scope="session")
+def lsfb_isol_dataframe(lsfb_isol_path):
+    return load_lsfb_dataset(lsfb_isol_path)

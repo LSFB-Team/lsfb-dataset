@@ -12,7 +12,7 @@ class LsfbDataset(Dataset):
     def __init__(
         self,
         data,
-        padding="loop",
+        label_padding="loop",
         sequence_label=False,
         one_hot=False,
         transforms=None,
@@ -22,13 +22,13 @@ class LsfbDataset(Dataset):
         """
         data : A pandas dataframe containing ...
         nbr_frames : Number of frames to sample per video
-        padding : Ensure all video have same lenght. To value possible. 
-                  zero for zero padding or loop to loop the video.
+        label_padding : Required when using sequence label. Indicates if the padding should be a specific padding value
+                        or if the padding should be looped.
         sequence_label : Return one label per video frame
         transforms : transformations to apply to the frames.
         """
         self.data = data
-        self.padding = padding
+        self.label_padding = label_padding
         self.sequence_label = sequence_label
         self.transforms = transforms
         self.one_hot = one_hot
@@ -56,14 +56,21 @@ class LsfbDataset(Dataset):
         if self.transforms:
             video = self.transforms(video)
 
-        # If the video was trimmed and not padded
-        if len(video) < video_len:
-            video_len = len(video)
-
         y = int(item["label_nbr"])
 
-        if self.sequence_label:
+        ## Handle the zero padding
+        if self.sequence_label and self.label_padding == "loop":
             y = np.array([y] * len(video))
+        else:
+            pad_size = len(video) - video_len
+
+            if pad_size > 0:
+                pad_label = list(self.labels.keys())[
+                    list(self.labels.values()).index("<pad>")
+                ][0]
+                y = np.array([y] * video_len) + np.array([pad_label] * pad_size)
+            else:
+                y = np.array([y] * len(video))
 
         if self.one_hot:
             nbr_labels = len(self.labels)
@@ -89,9 +96,9 @@ class LsfbDataset(Dataset):
 
             mapping[class_number] = label
 
-        if self.padding == "zero" and self.sequence_label:
+        if self.label_padding == "zero" and self.sequence_label:
             nbr_class = len(mapping)
-            mapping[nbr_class] = "SEQUENCE-PADDING"
+            mapping[nbr_class] = "<pad>"
 
         return mapping
 
