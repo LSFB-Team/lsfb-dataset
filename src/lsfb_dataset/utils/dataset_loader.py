@@ -1,6 +1,8 @@
 import pandas as pd
 import glob
 from os.path import sep
+from concurrent.futures.process import ProcessPoolExecutor
+from concurrent.futures import as_completed
 
 
 def load_lsfb_dataset(path: str, verbose: bool = False):
@@ -20,33 +22,48 @@ def load_lsfb_dataset(path: str, verbose: bool = False):
 
     dataset = pd.DataFrame(columns=["label", "label_nbr", "path", "subset"])
 
-    for (idx, folder) in enumerate(signs_folders):
-        train_path = f"{folder}{sep}train{sep}*"
-        test_path = f"{folder}{sep}test{sep}*"
-        label = folder.split(sep)[-1]
+    results = []
+    with ProcessPoolExecutor() as executor:
+        for folder in signs_folders:
+            results.append(executor.submit(process_sign_folder, folder, map_label))
+
+    df_data = []
+    for idx, data in enumerate(results):
 
         if verbose:
-            printProgressBar(idx + 1, len(signs_folders), prefix=f"Loading dataset")
+            printProgressBar(idx + 1, len(signs_folders), prefix="Loading dataset")
 
-        for sign in glob.glob(train_path):
-            row = {}
-            row["label"] = label
-            row["label_nbr"] = map_label[label]
-            row["path"] = sign
-            row["subset"] = "train"
+        df_data += data.result()
 
-            dataset = dataset.append(row, ignore_index=True)
+    return pd.DataFrame(df_data)
 
-        for sign in glob.glob(test_path):
-            row = {}
-            row["label"] = label
-            row["label_nbr"] = map_label[label]
-            row["path"] = sign
-            row["subset"] = "test"
 
-            dataset = dataset.append(row, ignore_index=True)
+def process_sign_folder(folder: str, map_label):
+    train_path = f"{folder}{sep}train{sep}*"
+    test_path = f"{folder}{sep}test{sep}*"
+    label = folder.split(sep)[-1]
 
-    return dataset
+    data = []
+
+    for sign in glob.glob(train_path):
+        row = {}
+        row["label"] = label
+        row["label_nbr"] = map_label[label]
+        row["path"] = sign
+        row["subset"] = "train"
+
+        data.append(row)
+
+    for sign in glob.glob(test_path):
+        row = {}
+        row["label"] = label
+        row["label_nbr"] = map_label[label]
+        row["path"] = sign
+        row["subset"] = "test"
+
+        data.append(row)
+
+    return data
 
 
 # Print iterations progress
