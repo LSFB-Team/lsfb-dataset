@@ -4,3 +4,4 @@ dist
 .tox
 **.pyc
 .pytest_cache
+site
