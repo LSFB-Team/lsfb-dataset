@@ -1,17 +1,11 @@
-# Welcome to MkDocs
+# LSFB Dataset
 
-For full documentation visit [mkdocs.org](https://www.mkdocs.org).
+LSFB Dataset is a companion library for the [French Belgian Sign Language (LSFB) dataset](https://lsfb.info.unamur.be/) released by the University of Namur. The library provides a set of tools helping to load the dataset in python data structures or to visualize the data. 
 
-## Commands
+This library reduce drastically the time you will spend on data loading and preprocessing allowing you to focus on your research.
 
-* `mkdocs new [dir-name]` - Create a new project.
-* `mkdocs serve` - Start the live-reloading docs server.
-* `mkdocs build` - Build the documentation site.
-* `mkdocs -h` - Print help message and exit.
+## Content
 
-## Project layout
-
-    mkdocs.yml    # The configuration file.
-    docs/
-        index.md  # The documentation homepage.
-        ...       # Other markdown pages, images and other files.
+The dataset is available in two versions :
+* LSFB Isol : depicting isolated signs
+* LSFB cont : depicting continuous signs

@@ -1,1 +1,4 @@
 site_name: LSFB Dataset
+
+theme:
+    name: readthedocs
