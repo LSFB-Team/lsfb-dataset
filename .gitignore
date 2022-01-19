@@ -5,3 +5,5 @@ dist
 **.pyc
 .pytest_cache
 site
+.idea/
+notebooks/
