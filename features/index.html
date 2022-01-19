@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>LSFB CONT - Features - LSFB Dataset</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
+
+  <link rel="stylesheet" href="../css/theme.css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "LSFB CONT - Features";
+    var mkdocs_page_input_path = "features.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> LSFB Dataset</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="..">LSFB Dataset</a>
+                    </li>
+                </ul>
+                <ul class="current">
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">LSFB CONT - Features</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#videos-with-annotations">Videos with annotations</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#the-annotation-list">The annotation list</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#columns-in-an-annotation-file-csv">Columns in an annotation file (CSV)</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#extracted-landmarks">Extracted landmarks</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#face-landmarks">Face landmarks</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#skeleton-landmarks">Skeleton landmarks</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#hand-landmarks">Hand landmarks</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#holistic-landmarks">Holistic landmarks</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#a-file-that-links-videos-to-their-features">A file that links videos to their features</a>
+    </li>
+    </ul>
+                    </li>
+                </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">LSFB Dataset</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>LSFB CONT - Features</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  
+  <hr/>
+</div>
+
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="lsfb-cont-features">LSFB CONT - Features</h1>
+<h2 id="videos-with-annotations">Videos with annotations</h2>
+<p>First, a set of video files is provided.
+Each of these videos is several minutes long and has a category and an associated file containing
+annotations in sign language (ELAN file).</p>
+<p>For example, the video file <code>CLSFB - 01 ok/CLSFBI0103_S001_B.mp4</code> has <code>CLSFB - 01 ok</code> as a category
+and an associated ELAN annotation file <code>CLSFBI0103.eaf</code>.</p>
+<h2 id="the-annotation-list">The annotation list</h2>
+<p>As explained above, each video has associated annotations. However, in addition to the ELAN file,
+a CSV file with the list of annotations and their start and end is provided. The annotations are
+separated according to the hand used.</p>
+<p>For example, <code>features/annotations/CLSFB - 01 ok/CLSFBI0103A_S001_B.mp4/right_hand.csv</code> is an annotation file for the right hand of the video
+for the right hand of the video <code>CLSFBI0103A_S001_B.mp4</code>.</p>
+<h3 id="columns-in-an-annotation-file-csv">Columns in an annotation file (CSV)</h3>
+<ol>
+<li><strong>start</strong>: the start of the annotation (in milliseconds)</li>
+<li><strong>end</strong> : the end of the annotation (in milliseconds)</li>
+<li><strong>word</strong>: the annotation, e.g. <code>HOUSE(1X)</code></li>
+</ol>
+<h2 id="extracted-landmarks">Extracted landmarks</h2>
+<p>From each frame of each video a set of landmarks is extracted.
+These landmarks relate to the main speaker in the video. Here are the different sets of landmarks extracted:</p>
+<ul>
+<li>The face</li>
+<li>The pose (skeleton)</li>
+<li>The hands</li>
+</ul>
+<p>This very precise data is then aggregated into another set of landmarks, the holistic landmarks.
+These are also offered in a cleaned version where an interpolation phase and a smoothing phase have been performed.</p>
+<p>For example, the video <code>CLSFB - 01 ok/CLSFBI0103_S001_B.mp4</code> has several associated landmarks
+in the folder <code>features/landmarks/CLSFB - 01 ok/CLSFBI0103A_S001_B.mp4</code> :</p>
+<ul>
+<li><code>face.csv</code> : the face landmarks</li>
+<li><code>pose.csv</code> : pose, skeleton landmarks</li>
+<li><code>hands.csv</code>: hand landmarks</li>
+<li><code>holistic.csv</code>: holistic landmarks</li>
+<li><code>holistic_cleaned.csv</code> : holistic cleaned landmarks</li>
+</ul>
+<h3 id="face-landmarks">Face landmarks</h3>
+<p>There are 468 facial landmarks (numbered from 0 to 467).
+The corresponding CSV file therefore has 2x468 (for X and Y respectively) or 936 columns.
+Let <code>FACE_0_X, FACE_0_Y, FACE_1_X, FACE_1_Y, ... , FACE_467_X, FACE_467_Y,</code>.</p>
+<p><img src="https://mediapipe.dev/assets/img/photos/faceMesh.jpg" width="500px" alt="Face landmarks"/></p>
+<h3 id="skeleton-landmarks">Skeleton landmarks</h3>
+<p>The pose landmarks are 33 in number (numbered 0 to 32).
+The corresponding CSV file therefore has 2x33 (for X and Y respectively) or 66 columns.
+In order to identify the part of the body concerned, please refer to the image below.
+The columns are in the same order as in the image and are in capitals.
+So: <code>NOSE_X, NOSE_Y, LEFT_EYE_INNER_X, LEFT_EYE_INNER_Y, ..., RIGHT_FOOT_INDEX_X, RIGHT_FOOT_INDEX_Y</code>.</p>
+<p><img src="https://google.github.io/mediapipe/images/mobile/pose_tracking_full_body_landmarks.png" width="500px" alt="Pose landmarks"/></p>
+<h3 id="hand-landmarks">Hand landmarks</h3>
+<p>The hand landmarks are primarily for the right hand, and then the left hand.
+Each hand has 21 landmarks (numbered from 0 to 20). Each landmark consists of an X position and a Y position.
+This makes a total of (2 hands) x (21 landmarks) x (2 dimensions), or 84 columns.</p>
+<p>The column names are in upper case and are ordered first by hand, then by the name of the landmark in the image below, and finally by X and Y.
+This gives: <code>RIGHT_WRIST_X, RIGHT_WRIST_Y, ..., RIGHT_PINKY_TIP_X, RIGHT_PINKY_TIP_Y, LEFT_WRIST_X, LEFT_WRIST_Y, ..., LEFT_PINKY_TIP_X, LEFT_PINKY_TIP_Y</code></p>
+<p><img src="https://google.github.io/mediapipe/images/mobile/hand_landmarks.png" width="500px" alt="Hand landmarks"/></p>
+<h3 id="holistic-landmarks">Holistic landmarks</h3>
+<p>There are 5 holistic landmarks:</p>
+<ol>
+<li>the face (FACE): the average of the face landmarks</li>
+<li>the right hand (RIGHT_HAND): the average of the right hand landmarks</li>
+<li>left hand (LEFT_HAND): the average of the left hand landmarks</li>
+<li>right shoulder (RIGHT_SHOULDER): the right shoulder marker</li>
+<li>the left shoulder (LEFT_SHOULDER): the left shoulder marker</li>
+</ol>
+<p>These landmarks are separated into two dimensions (X and Y).
+So there are 10 columns in the CSV file: `FACE_X,FACE_Y,RIGHT_HAND_X,RIGHT_HAND_Y,LEFT_HAND_X,LEFT_HAND_Y,RIGHT_SHOULDER_X,RIGHT_SHOULDER_Y,LEFT_SHOULDER_X,LEFT_SHOULDER_Y</p>
+<h2 id="a-file-that-links-videos-to-their-features">A file that links videos to their features</h2>
+<p>In addition to the features discussed above.
+A <code>videos.csv</code> file is a list of videos with information about them and paths to their features.</p>
+<p>Each row is for one video. Here are the different columns in this file:</p>
+<ul>
+<li><strong>filename</strong>: the name of the video file (e.g. <code>CLSFBI0103_S001_B.mp4</code>)</li>
+<li><strong>category</strong>: the category of the video (e.g. <code>CLSFB - 01 ok</code>)</li>
+<li>filepath : the relative path of the video (eg <code>videos\CLSFB - 01 ok\CLSFBI0103A_S001_B.mp4</code>)</li>
+<li>frames : the number of frames in the video (ex: <code>25274</code>)</li>
+<li>right_hand_annotations : the relative path of the right hand annotations</li>
+<li>left_hand_annotations : the relative path of the left hand annotations</li>
+<li>face_positions : the relative path of the face landmarks</li>
+<li>hands_positions: the relative path of the hand landmarks</li>
+<li>pose_positions : the relative path of the skeleton landmarks</li>
+<li>holistic_features : the relative path of the holistic landmarks</li>
+<li>holistic_features_cleaned : the relative path of the cleaned holistic landmarks</li>
+</ul>
+<p>The two first columns are mandatory. The others can be empty.</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href=".." class="btn btn-neutral" title="LSFB Dataset"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href=".." style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+  </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>
