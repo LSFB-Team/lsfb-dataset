@@ -9,7 +9,7 @@
   
   
   <link rel="shortcut icon" href="../img/favicon.ico">
-  <title>LSFB CONT - Features - LSFB Dataset</title>
+  <title>LSFB CONT - LSFB Dataset</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
 
   <link rel="stylesheet" href="../css/theme.css" />
@@ -18,7 +18,7 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "LSFB CONT - Features";
+    var mkdocs_page_name = "LSFB CONT";
     var mkdocs_page_input_path = "features.md";
     var mkdocs_page_url = null;
   </script>
@@ -51,15 +51,11 @@
                     </li>
                 </ul>
                 <ul class="current">
-                    <li class="toctree-l1 current"><a class="reference internal current" href="./">LSFB CONT - Features</a>
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">LSFB CONT</a>
     <ul class="current">
-    <li class="toctree-l2"><a class="reference internal" href="#videos-with-annotations">Videos with annotations</a>
+    <li class="toctree-l2"><a class="reference internal" href="#videos">Videos</a>
     </li>
-    <li class="toctree-l2"><a class="reference internal" href="#the-annotation-list">The annotation list</a>
-        <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#columns-in-an-annotation-file-csv">Columns in an annotation file (CSV)</a>
-    </li>
-        </ul>
+    <li class="toctree-l2"><a class="reference internal" href="#left-and-right-hands-annotations">Left and Right hands Annotations</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#extracted-landmarks">Extracted landmarks</a>
         <ul>
@@ -72,8 +68,6 @@
     <li class="toctree-l3"><a class="reference internal" href="#holistic-landmarks">Holistic landmarks</a>
     </li>
         </ul>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#a-file-that-links-videos-to-their-features">A file that links videos to their features</a>
     </li>
     </ul>
                     </li>
@@ -99,7 +93,7 @@
     
       
     
-    <li>LSFB CONT - Features</li>
+    <li>LSFB CONT</li>
     <li class="wy-breadcrumbs-aside">
       
     </li>
@@ -111,44 +105,42 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="lsfb-cont-features">LSFB CONT - Features</h1>
-<h2 id="videos-with-annotations">Videos with annotations</h2>
-<p>First, a set of video files is provided.
-Each of these videos is several minutes long and has a category and an associated file containing
-annotations in sign language (ELAN file).</p>
-<p>For example, the video file <code>CLSFB - 01 ok/CLSFBI0103_S001_B.mp4</code> has <code>CLSFB - 01 ok</code> as a category
-and an associated ELAN annotation file <code>CLSFBI0103.eaf</code>.</p>
-<h2 id="the-annotation-list">The annotation list</h2>
-<p>As explained above, each video has associated annotations. However, in addition to the ELAN file,
-a CSV file with the list of annotations and their start and end is provided. The annotations are
-separated according to the hand used.</p>
-<p>For example, <code>features/annotations/CLSFB - 01 ok/CLSFBI0103A_S001_B.mp4/right_hand.csv</code> is an annotation file for the right hand of the video
-for the right hand of the video <code>CLSFBI0103A_S001_B.mp4</code>.</p>
-<h3 id="columns-in-an-annotation-file-csv">Columns in an annotation file (CSV)</h3>
-<ol>
-<li><strong>start</strong>: the start of the annotation (in milliseconds)</li>
-<li><strong>end</strong> : the end of the annotation (in milliseconds)</li>
-<li><strong>word</strong>: the annotation, e.g. <code>HOUSE(1X)</code></li>
-</ol>
+                <h1 id="lsfb-cont">LSFB CONT</h1>
+<p>LSFB CONT is a dataset for continuous sign language recognition. It is made of videos of deaf people talking together. Each video of the dataset are annotated with the gloss of each sign for each hands. Some video are also directly translated to french. The following section will provide more details about the dataset, its annotation and the various pre-computed features of the video.</p>
+<p>In order to download the LSFB CONT dataset, pleas contact me at the address jerome.fink[at]unamur.be</p>
+<h2 id="videos">Videos</h2>
+<p>The videos of the LSFB CONT dataset are all recorded in 720x576px resolution with 50 FPS. The duration of the video is variable (between 30 seconds and 30 minutes). The signers were asked to accomplish several tasks such as summurizing a video, describing a picture or tell a childhood story.</p>
+<p>The <em>videos.csv</em> file of the dataset contains the list of all the available video along with several metadata : </p>
+<ul>
+<li><strong>filename</strong>: the name of the video file (e.g. <code>CLSFBI0103_S001_B.mp4</code>)</li>
+<li><strong>category</strong>: the category of the video (e.g. <code>CLSFB - 01 ok</code>)</li>
+<li><strong>filepath</strong> : the relative path of the video (eg <code>videos\CLSFB - 01 ok\CLSFBI0103A_S001_B.mp4</code>)</li>
+<li><strong>frames</strong> : the number of frames in the video (ex: <code>25274</code>)</li>
+<li><strong>right_hand_annotations</strong> : the relative path of the right hand annotations</li>
+<li><strong>left_hand_annotations</strong> : the relative path of the left hand annotations</li>
+<li><strong>face_positions</strong> : the relative path of the face landmarks</li>
+<li><strong>hands_positions</strong> : the relative path of the hand landmarks</li>
+<li><strong>pose_positions</strong> : the relative path of the skeleton landmarks</li>
+<li><strong>holistic_features</strong> : the relative path of the holistic landmarks</li>
+<li><strong>holistic_features_cleaned</strong> : the relative path of the cleaned holistic landmarks</li>
+</ul>
+<p>The actual content of all these files are presented in the following section.</p>
+<h2 id="left-and-right-hands-annotations">Left and Right hands Annotations</h2>
+<p>The LSFB video are annotated using gloss. Glosses are unique labels associated to each sign. The annotations CSV contains the following columns : </p>
+<ul>
+<li><strong>start</strong> : Starting time of the gloss (in milliseconds)</li>
+<li><strong>end</strong> : Ending time of the gloss (in milliseconds)</li>
+<li><strong>word</strong> :  The label of the gloss</li>
+</ul>
+<p>The annotations CSV files were created based on the original annotations created by the <a href="https://www.unamur.be/lettres/romanes/lsfb-lab">LSFB-LAB</a>. Those annotation are available on demande and use the <a href="https://archive.mpi.nl/tla/elan">ELAN</a> file format. Along with the gloss annotation, the ELAN file also contains an alligned french translation. However, frenche translation is still a work in progress and will be available in its own CSV file when ready.</p>
 <h2 id="extracted-landmarks">Extracted landmarks</h2>
-<p>From each frame of each video a set of landmarks is extracted.
-These landmarks relate to the main speaker in the video. Here are the different sets of landmarks extracted:</p>
+<p>From each frame of each video a set of landmarks is extracted. These landmarks relate to the main speaker in the video. The different sets of landmarks extracted:</p>
 <ul>
 <li>The face</li>
 <li>The pose (skeleton)</li>
 <li>The hands</li>
 </ul>
-<p>This very precise data is then aggregated into another set of landmarks, the holistic landmarks.
-These are also offered in a cleaned version where an interpolation phase and a smoothing phase have been performed.</p>
-<p>For example, the video <code>CLSFB - 01 ok/CLSFBI0103_S001_B.mp4</code> has several associated landmarks
-in the folder <code>features/landmarks/CLSFB - 01 ok/CLSFBI0103A_S001_B.mp4</code> :</p>
-<ul>
-<li><code>face.csv</code> : the face landmarks</li>
-<li><code>pose.csv</code> : pose, skeleton landmarks</li>
-<li><code>hands.csv</code>: hand landmarks</li>
-<li><code>holistic.csv</code>: holistic landmarks</li>
-<li><code>holistic_cleaned.csv</code> : holistic cleaned landmarks</li>
-</ul>
+<p>These very precise data are then aggregated into another set of landmarks, the holistic landmarks. Holistics landmarks are also available in a cleaned version where an interpolation and a smoothing phase have been applied.</p>
 <h3 id="face-landmarks">Face landmarks</h3>
 <p>There are 468 facial landmarks (numbered from 0 to 467).
 The corresponding CSV file therefore has 2x468 (for X and Y respectively) or 936 columns.
@@ -171,32 +163,14 @@ This gives: <code>RIGHT_WRIST_X, RIGHT_WRIST_Y, ..., RIGHT_PINKY_TIP_X, RIGHT_PI
 <h3 id="holistic-landmarks">Holistic landmarks</h3>
 <p>There are 5 holistic landmarks:</p>
 <ol>
-<li>the face (FACE): the average of the face landmarks</li>
-<li>the right hand (RIGHT_HAND): the average of the right hand landmarks</li>
-<li>left hand (LEFT_HAND): the average of the left hand landmarks</li>
-<li>right shoulder (RIGHT_SHOULDER): the right shoulder marker</li>
-<li>the left shoulder (LEFT_SHOULDER): the left shoulder marker</li>
+<li>the <strong>face</strong> (FACE): A point located at the average postion of the face landmarks</li>
+<li>the right hand (RIGHT_HAND): A point located at the average of the right hand landmarks</li>
+<li>left hand (LEFT_HAND): A point located at the average of the left hand landmarks</li>
+<li>right shoulder (RIGHT_SHOULDER): A point located at the right shoulder marker</li>
+<li>the left shoulder (LEFT_SHOULDER): A point located at the left shoulder marker</li>
 </ol>
 <p>These landmarks are separated into two dimensions (X and Y).
-So there are 10 columns in the CSV file: `FACE_X,FACE_Y,RIGHT_HAND_X,RIGHT_HAND_Y,LEFT_HAND_X,LEFT_HAND_Y,RIGHT_SHOULDER_X,RIGHT_SHOULDER_Y,LEFT_SHOULDER_X,LEFT_SHOULDER_Y</p>
-<h2 id="a-file-that-links-videos-to-their-features">A file that links videos to their features</h2>
-<p>In addition to the features discussed above.
-A <code>videos.csv</code> file is a list of videos with information about them and paths to their features.</p>
-<p>Each row is for one video. Here are the different columns in this file:</p>
-<ul>
-<li><strong>filename</strong>: the name of the video file (e.g. <code>CLSFBI0103_S001_B.mp4</code>)</li>
-<li><strong>category</strong>: the category of the video (e.g. <code>CLSFB - 01 ok</code>)</li>
-<li>filepath : the relative path of the video (eg <code>videos\CLSFB - 01 ok\CLSFBI0103A_S001_B.mp4</code>)</li>
-<li>frames : the number of frames in the video (ex: <code>25274</code>)</li>
-<li>right_hand_annotations : the relative path of the right hand annotations</li>
-<li>left_hand_annotations : the relative path of the left hand annotations</li>
-<li>face_positions : the relative path of the face landmarks</li>
-<li>hands_positions: the relative path of the hand landmarks</li>
-<li>pose_positions : the relative path of the skeleton landmarks</li>
-<li>holistic_features : the relative path of the holistic landmarks</li>
-<li>holistic_features_cleaned : the relative path of the cleaned holistic landmarks</li>
-</ul>
-<p>The two first columns are mandatory. The others can be empty.</p>
+So there are 10 columns in the CSV file: <code>FACE_X</code>,<code>FACE_Y</code>,<code>RIGHT_HAND_X</code>,<code>RIGHT_HAND_Y</code>,<code>LEFT_HAND_X</code>,<code>LEFT_HAND_Y</code>,<code>RIGHT_SHOULDER_X</code>,<code>RIGHT_SHOULDER_Y</code>,<code>LEFT_SHOULDER_X</code>,<code>LEFT_SHOULDER_Y</code></p>
               
             </div>
           </div>
