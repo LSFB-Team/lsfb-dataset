@@ -1,50 +1,50 @@
 
-# LSFB CONT - Features
+# LSFB CONT
 
-## Videos with annotations
+LSFB CONT is a dataset for continuous sign language recognition. It is made of videos of deaf people talking together. Each video of the dataset are annotated with the gloss of each sign for each hands. Some video are also directly translated to french. The following section will provide more details about the dataset, its annotation and the various pre-computed features of the video.
 
-First, a set of video files is provided.
-Each of these videos is several minutes long and has a category and an associated file containing
-annotations in sign language (ELAN file).
+In order to download the LSFB CONT dataset, pleas contact me at the address jerome.fink[at]unamur.be
 
-For example, the video file `CLSFB - 01 ok/CLSFBI0103_S001_B.mp4` has `CLSFB - 01 ok` as a category
-and an associated ELAN annotation file `CLSFBI0103.eaf`.
 
-## The annotation list
+## Videos
 
-As explained above, each video has associated annotations. However, in addition to the ELAN file,
-a CSV file with the list of annotations and their start and end is provided. The annotations are
-separated according to the hand used.
+The videos of the LSFB CONT dataset are all recorded in 720x576px resolution with 50 FPS. The duration of the video is variable (between 30 seconds and 30 minutes). The signers were asked to accomplish several tasks such as summurizing a video, describing a picture or tell a childhood story.
 
-For example, `features/annotations/CLSFB - 01 ok/CLSFBI0103A_S001_B.mp4/right_hand.csv` is an annotation file for the right hand of the video
-for the right hand of the video `CLSFBI0103A_S001_B.mp4`.
+The *videos.csv* file of the dataset contains the list of all the available video along with several metadata : 
 
-### Columns in an annotation file (CSV)
+- **filename**: the name of the video file (e.g. `CLSFBI0103_S001_B.mp4`)
+- **category**: the category of the video (e.g. `CLSFB - 01 ok`)
+- **filepath** : the relative path of the video (eg `videos\CLSFB - 01 ok\CLSFBI0103A_S001_B.mp4`)
+- **frames** : the number of frames in the video (ex: `25274`)
+- **right_hand_annotations** : the relative path of the right hand annotations
+- **left_hand_annotations** : the relative path of the left hand annotations
+- **face_positions** : the relative path of the face landmarks
+- **hands_positions** : the relative path of the hand landmarks
+- **pose_positions** : the relative path of the skeleton landmarks
+- **holistic_features** : the relative path of the holistic landmarks
+- **holistic_features_cleaned** : the relative path of the cleaned holistic landmarks
 
-1. **start**: the start of the annotation (in milliseconds)
-2. **end** : the end of the annotation (in milliseconds)
-3. **word**: the annotation, e.g. `HOUSE(1X)`
+The actual content of all these files are presented in the following section.
+
+## Left and Right hands Annotations
+
+The LSFB video are annotated using gloss. Glosses are unique labels associated to each sign. The annotations CSV contains the following columns : 
+
+- **start** : Starting time of the gloss (in milliseconds)
+- **end** : Ending time of the gloss (in milliseconds)
+- **word** :  The label of the gloss
+
+The annotations CSV files were created based on the original annotations created by the [LSFB-LAB](https://www.unamur.be/lettres/romanes/lsfb-lab). Those annotation are available on demande and use the [ELAN](https://archive.mpi.nl/tla/elan) file format. Along with the gloss annotation, the ELAN file also contains an alligned french translation. However, frenche translation is still a work in progress and will be available in its own CSV file when ready.
 
 ## Extracted landmarks
 
-From each frame of each video a set of landmarks is extracted.
-These landmarks relate to the main speaker in the video. Here are the different sets of landmarks extracted:
+From each frame of each video a set of landmarks is extracted. These landmarks relate to the main speaker in the video. The different sets of landmarks extracted:
 
 - The face
 - The pose (skeleton)
 - The hands
 
-This very precise data is then aggregated into another set of landmarks, the holistic landmarks.
-These are also offered in a cleaned version where an interpolation phase and a smoothing phase have been performed.
-
-For example, the video `CLSFB - 01 ok/CLSFBI0103_S001_B.mp4` has several associated landmarks
-in the folder `features/landmarks/CLSFB - 01 ok/CLSFBI0103A_S001_B.mp4` :
-
-- `face.csv` : the face landmarks
-- `pose.csv` : pose, skeleton landmarks
-- `hands.csv`: hand landmarks
-- `holistic.csv`: holistic landmarks
-- `holistic_cleaned.csv` : holistic cleaned landmarks
+These very precise data are then aggregated into another set of landmarks, the holistic landmarks. Holistics landmarks are also available in a cleaned version where an interpolation and a smoothing phase have been applied.
 
 ### Face landmarks
 
@@ -79,32 +79,12 @@ This gives: `RIGHT_WRIST_X, RIGHT_WRIST_Y, ..., RIGHT_PINKY_TIP_X, RIGHT_PINKY_T
 
 There are 5 holistic landmarks:
 
-1. the face (FACE): the average of the face landmarks
-2. the right hand (RIGHT_HAND): the average of the right hand landmarks
-3. left hand (LEFT_HAND): the average of the left hand landmarks
-4. right shoulder (RIGHT_SHOULDER): the right shoulder marker
-5. the left shoulder (LEFT_SHOULDER): the left shoulder marker
+1. the **face** (FACE): A point located at the average postion of the face landmarks
+2. the right hand (RIGHT_HAND): A point located at the average of the right hand landmarks
+3. left hand (LEFT_HAND): A point located at the average of the left hand landmarks
+4. right shoulder (RIGHT_SHOULDER): A point located at the right shoulder marker
+5. the left shoulder (LEFT_SHOULDER): A point located at the left shoulder marker
 
 These landmarks are separated into two dimensions (X and Y).
-So there are 10 columns in the CSV file: `FACE_X,FACE_Y,RIGHT_HAND_X,RIGHT_HAND_Y,LEFT_HAND_X,LEFT_HAND_Y,RIGHT_SHOULDER_X,RIGHT_SHOULDER_Y,LEFT_SHOULDER_X,LEFT_SHOULDER_Y
+So there are 10 columns in the CSV file: `FACE_X`,`FACE_Y`,`RIGHT_HAND_X`,`RIGHT_HAND_Y`,`LEFT_HAND_X`,`LEFT_HAND_Y`,`RIGHT_SHOULDER_X`,`RIGHT_SHOULDER_Y`,`LEFT_SHOULDER_X`,`LEFT_SHOULDER_Y`
 
-## A file that links videos to their features
-
-In addition to the features discussed above.
-A `videos.csv` file is a list of videos with information about them and paths to their features.
-
-Each row is for one video. Here are the different columns in this file:
-
-- **filename**: the name of the video file (e.g. `CLSFBI0103_S001_B.mp4`)
-- **category**: the category of the video (e.g. `CLSFB - 01 ok`)
-- filepath : the relative path of the video (eg `videos\CLSFB - 01 ok\CLSFBI0103A_S001_B.mp4`)
-- frames : the number of frames in the video (ex: `25274`)
-- right_hand_annotations : the relative path of the right hand annotations
-- left_hand_annotations : the relative path of the left hand annotations
-- face_positions : the relative path of the face landmarks
-- hands_positions: the relative path of the hand landmarks
-- pose_positions : the relative path of the skeleton landmarks
-- holistic_features : the relative path of the holistic landmarks
-- holistic_features_cleaned : the relative path of the cleaned holistic landmarks
-
-The two first columns are mandatory. The others can be empty.
