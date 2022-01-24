@@ -7,7 +7,7 @@ import random
 
 
 class LsfbIsolDataset(Dataset):
-    """ Load the LSFB video based on a dataframe containing their path"""
+    """Load the LSFB video based on a dataframe containing their path"""
 
     def __init__(
         self,
@@ -25,6 +25,7 @@ class LsfbIsolDataset(Dataset):
                         or if the padding should be looped.
         sequence_label : Return one label per video frame
         transforms : transformations to apply to the frames.
+        max_frame : Maximum number of frames to load for each video
         """
         self.data = data
         self.label_padding = label_padding

@@ -7,15 +7,15 @@ from concurrent.futures import as_completed
 
 def load_lsfb_dataset(path: str, verbose: bool = False):
     """
-  Read the LSFB corpus in a dataframe containing the label of each signs, a number associated to each label,
-  the path of the sign and which subset the signs come from (test or train). 
+    Read the LSFB corpus in a dataframe containing the label of each signs, a number associated to each label,
+    the path of the sign and which subset the signs come from (test or train).
 
-  PARAMETERS:
-    path : The path to lsfb corpus folder
+    PARAMETERS:
+      path : The path to lsfb corpus folder
 
-  OUTPUT:
-    dataset : A dataframre containing 4 columns (label, label_nbr, path, subset) 
-  """
+    OUTPUT:
+      dataset : A dataframe containing 4 columns (label, label_nbr, path, subset)
+    """
 
     signs_folders = glob.glob(f"{path}{sep}*")
     map_label = {value.split(sep)[-1]: idx for (idx, value) in enumerate(signs_folders)}
@@ -96,4 +96,3 @@ def printProgressBar(
     # Print New Line on Complete
     if iteration == total:
         print()
-

@@ -1,5 +1,5 @@
 
-# LSFB CONT
+# LSFB-CONT
 
 LSFB CONT is a dataset for continuous sign language recognition. It is made of videos of deaf people talking together. Each video of the dataset are annotated with the gloss of each sign for each hands. Some video are also directly translated to french. The following section will provide more details about the dataset, its annotation and the various pre-computed features of the video.
 
