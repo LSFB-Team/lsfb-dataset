@@ -12,7 +12,10 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/Jefidev/lsfb-dataset",
-    project_urls={"Bug Tracker": "https://github.com/Jefidev/lsfb-dataset/issues",},
+    project_urls={
+        "Bug Tracker": "https://github.com/Jefidev/lsfb-dataset/issues",
+        "Documentation": "https://jefidev.github.io/lsfb-dataset/",
+    },
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
