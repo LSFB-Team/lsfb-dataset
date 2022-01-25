@@ -52,5 +52,5 @@ def get_feature_box(img, rel_pos: (float, float), holistic_features: pd.DataFram
         holistic_features['LEFT_SHOULDER_Y']
     )))
 
-    base_length = np.sqrt(np.sum(np.square(right_shoulder - left_shoulder)))
+    base_length = max(50, np.sqrt(np.sum(np.square(right_shoulder - left_shoulder))))
     return compute_box(abs_pos, base_length * shoulder_length_factor)
