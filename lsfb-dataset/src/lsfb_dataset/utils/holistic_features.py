@@ -3,6 +3,18 @@ import numpy as np
 from cv2 import cv2
 
 
+def squarify_image(img):
+    height = img.shape[0]
+    width = img.shape[1]
+
+    if height > width:
+        padding = ((0, 0), (0, height-width), (0, 0))
+    else:
+        padding = ((0, width-height), (0, 0), (0, 0))
+
+    return np.pad(img, padding, mode='constant', constant_values=0)
+
+
 def absolute_position(img, pos):
     w = int(img.shape[1])
     h = int(img.shape[0])
@@ -20,7 +32,12 @@ def compute_box(pos, box_size):
 
 def extract_box_img(img, box, dim=(256, 256)):
     x1, y1, x2, y2 = box
-    return cv2.resize(img[y1:y2, x1:x2], dim, interpolation=cv2.INTER_AREA)
+    box_img = img[y1:y2, x1:x2]
+
+    if box_img.shape[0] != box_img.shape[1]:
+        box_img = squarify_image(box_img)
+
+    return cv2.resize(box_img, dim, interpolation=cv2.INTER_AREA)
 
 
 def get_feature_box(img, rel_pos: (float, float), holistic_features: pd.DataFrame, shoulder_length_factor: float):
