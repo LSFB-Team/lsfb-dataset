@@ -6,4 +6,4 @@ dist
 .pytest_cache
 site
 .idea/
-notebooks/
+lsfb-dataset/src/notebooks/
