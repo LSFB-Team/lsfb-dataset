@@ -16,11 +16,11 @@ In a near future, all the process should be automatised when a pull request is a
 
 This project use the [tox](https://tox.readthedocs.io/en/latest/) and [pytest](https://docs.pytest.org/en/latest/) for testing. Tox is a tool for running tests in multiple environments while pytest is the most commonly used library for writting test suites. The configuration of the tox environments are located in the `tox.ini` file.
 
-To run the test suite, you just have to run the command `tox` in the lsfb-dataset directory.
+To run the test suite, you just have to run the command `tox` in the lsfb-dataset directory. If some dependencies were added to the `setup.py` file, you need to run `tox --recreate` in order to force recreating the test environment including that dependency.
 
 Writting good test is trickier, please refer to the [pytest documentation](https://docs.pytest.org) for more information.
 
-## Deploy Locally for Testing
+## Creating 
 
 The test suite run by tox will cover the code of the library but not the deploy script. The main issue that can occur is that dependencies are missing in the setup.py file. To make sure everything is fine, 
 

@@ -31,5 +31,6 @@ setuptools.setup(
         "Pillow",
         "opencv-python",
         "mediapipe",
+        "tqdm",
     ],
 )

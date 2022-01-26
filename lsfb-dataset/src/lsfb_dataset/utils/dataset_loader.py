@@ -1,5 +1,6 @@
 import pandas as pd
 import glob
+from tqdm import tqdm
 from os.path import sep
 from concurrent.futures.process import ProcessPoolExecutor
 from concurrent.futures import as_completed
@@ -28,11 +29,7 @@ def load_lsfb_dataset(path: str, verbose: bool = False):
             results.append(executor.submit(process_sign_folder, folder, map_label))
 
     df_data = []
-    for idx, data in enumerate(results):
-
-        if verbose:
-            printProgressBar(idx + 1, len(signs_folders), prefix="Loading dataset")
-
+    for idx, data in tqdm(enumerate(results), total=len(results), disable=not verbose):
         df_data += data.result()
 
     return pd.DataFrame(df_data)
@@ -64,35 +61,3 @@ def process_sign_folder(folder: str, map_label):
         data.append(row)
 
     return data
-
-
-# Print iterations progress
-def printProgressBar(
-    iteration: int,
-    total: int,
-    prefix: str = "",
-    suffix: str = "",
-    decimals: int = 1,
-    length: int = 100,
-    fill: str = "█",
-    printEnd: str = "\r",
-):
-    """
-    Call in a loop to create terminal progress bar
-    @params:
-        iteration   - Required  : current iteration (Int)
-        total       - Required  : total iterations (Int)
-        prefix      - Optional  : prefix string (Str)
-        suffix      - Optional  : suffix string (Str)
-        decimals    - Optional  : positive number of decimals in percent complete (Int)
-        length      - Optional  : character length of bar (Int)
-        fill        - Optional  : bar fill character (Str)
-        printEnd    - Optional  : end character (e.g. "\r", "\r\n") (Str)
-    """
-    percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
-    filledLength = int(length * iteration // total)
-    bar = fill * filledLength + "-" * (length - filledLength)
-    print(f"\r{prefix} |{bar}| {percent}% {suffix}", end=printEnd)
-    # Print New Line on Complete
-    if iteration == total:
-        print()
