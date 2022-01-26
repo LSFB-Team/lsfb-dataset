@@ -18,7 +18,8 @@ jobs:
   deploy:
 
     runs-on: ubuntu-latest
-    matrix:
+    strategy:
+      matrix:
         python-version: ['3.8', '3.9']
 
     steps:
