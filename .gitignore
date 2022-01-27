@@ -8,3 +8,4 @@ site
 .idea/
 lsfb-dataset/src/notebooks/
 __pycache__
+build
