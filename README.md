@@ -20,9 +20,9 @@ To run the test suite, you just have to run the command `tox` in the lsfb-datase
 
 Writting good test is trickier, please refer to the [pytest documentation](https://docs.pytest.org) for more information.
 
-## Creating 
+## Local Install
 
-The test suite run by tox will cover the code of the library but not the deploy script. The main issue that can occur is that dependencies are missing in the setup.py file. To make sure everything is fine, 
+You can always install the library locally by running the command `python -m pip install ./lsfb-dataset` in the root directory.
 
 # Sources 
 
