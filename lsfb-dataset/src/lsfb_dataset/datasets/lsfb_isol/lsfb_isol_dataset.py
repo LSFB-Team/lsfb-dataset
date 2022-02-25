@@ -1,6 +1,8 @@
 from torch.utils.data import Dataset
 from typing import Tuple, Dict, Optional, Callable
+import cv2
 import pandas as pd
+import numpy as np
 import os
 
 
@@ -26,6 +28,7 @@ class LsfbIsolDataset(Dataset):
         transform: Optional[Callable] = None,
         features: Optional[list[str]] = None,
         labels: Optional[Dict[int, str]] = None,
+        max_frame: Optional[int] = 150,
     ):
         """
         Load the dataset.
@@ -38,12 +41,15 @@ class LsfbIsolDataset(Dataset):
             The pytorch transform
         features : list[str]
             List of the feature to load
+        max_frame:
+            The maximum number of frames to load. Use it to save memory.
         """
 
         self.root: str = root
         self.transform = transform
         self.features = features
         self.labels = labels
+        self.max_frame = max_frame
 
         self.clips_info = pd.read_csv(os.path.join(root, "clips.csv"))
 
@@ -52,6 +58,65 @@ class LsfbIsolDataset(Dataset):
 
         if self.labels == None:
             self.labels = self._load_label_mapping()
+
+    def __len__(self) -> int:
+        """
+        Return the length of the dataset.
+        """
+        return len(self.clips_info)
+
+    def __getitem__(self, idx: int):
+        """
+        Return an item of the dataset.
+        """
+        X = {}
+
+        item = self.clips_info.iloc[idx]
+        y = self.labels[item["gloss"]]
+
+        if "video" in self.features:
+            vid_path = os.path.join(self.root, item["relative_path"])
+            X["video"] = self._load_video(vid_path)
+
+        if "hands_landmarks" in self.features:
+            landmarks_path = os.path.join(self.root, item["hands_landmarks"])
+            X["hands_landmarks"] = pd.read_csv(landmarks_path).to_numpy()
+
+        if "face_landmarks" in self.features:
+            landmarks_path = os.path.join(self.root, item["face_landmarks"])
+            X["face_landmarks"] = pd.read_csv(landmarks_path).to_numpy()
+
+        if "pose_landmarks" in self.features:
+            landmarks_path = os.path.join(self.root, item["pose_landmarks"])
+            X["pose_landmarks"] = pd.read_csv(landmarks_path).to_numpy()
+
+        return X, y
+
+    def _load_video(self, path: str):
+        """
+        Load all
+        """
+        capture = cv2.VideoCapture(path)
+
+        frame_array = []
+        success, frame = capture.read()
+
+        # Select
+        frame_count = 0
+        while success:
+            frame_count += 1
+
+            b, g, r = cv2.split(frame)
+            frame = cv2.merge([r, g, b])
+            frame_array.append(frame / 255)
+            success, frame = capture.read()
+
+            # Avoid memory saturation by stopping reading of
+            # video if it is > max_frame (default 150 ≃ 5sec)
+            if frame_count > self.max_frame:
+                break
+
+        return np.array(frame_array)
 
     def _load_label_mapping(self) -> Dict[int, str]:
         """
@@ -62,5 +127,5 @@ class LsfbIsolDataset(Dataset):
 
         """
         unique_gloss = self.clips_info["gloss"].unique().tolist()
-        label_mapping = dict(map(lambda x: (unique_gloss.index(x), x), unique_gloss))
+        label_mapping = dict(map(lambda x: (x, unique_gloss.index(x)), unique_gloss))
         return label_mapping
