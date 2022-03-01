@@ -3,10 +3,28 @@ import matplotlib.pyplot as plt
 import seaborn as sn
 from sklearn.metrics import confusion_matrix, roc_curve, auc, RocCurveDisplay
 from ..utils.annotations import get_annotations_durations, create_coerc_vec
+from typing import Optional
 
 
 def compute_accuracy(conf):
     return np.trace(conf) / conf.sum()
+
+
+def windowed_matching(y_true, y_pred, w: int):
+    assert y_true.shape == y_pred.shape, 'target and predicted vectors have different shapes'
+    n = y_true.shape[0]
+    offset = w // 2
+
+    if w == 0:
+        return y_true & y_true
+
+    dist_vec = np.zeros(n, dtype=bool)
+    for idx in range(n):
+        in_true = y_true[idx - offset:idx - offset + w].any()
+        in_pred = y_pred[idx - offset:idx - offset + w].any()
+        dist_vec[idx] = in_true == in_pred
+
+    return dist_vec
 
 
 def plot_distributions(dist_true, dist_pred, title=None):
@@ -26,19 +44,21 @@ class ClassifierMetrics:
         if labels is None:
             labels = range(num_classes)
         else:
-            assert len(labels) == num_classes,\
+            assert len(labels) == num_classes, \
                 'The number of labels must be the same as the number of classes'
 
         self.labels = labels
+        self.best_iter_index = -1
 
         self.loss_evolution = []
         self.accuracy_evolution = []
+
         self.true_duration = []
         self.pred_duration = []
         self.true_transitions = []
         self.pred_transitions = []
-        self.roc_curves = []
 
+        self.roc_curves = []
         self.confs = []
 
         self.current_conf = None
@@ -47,21 +67,45 @@ class ClassifierMetrics:
         self.current_true_transitions = []
         self.current_pred_transitions = []
 
-    @property
+    def state_dict(self):
+        return {
+            'best_iter_index': self.best_iter_index,
+            'loss_evolution': self.loss_evolution,
+            'accuracy_evolution': self.accuracy_evolution,
+            'true_duration': self.true_duration,
+            'pred_duration': self.pred_duration,
+            'true_transitions': self.true_transitions,
+            'pred_transitions': self.pred_transitions,
+            'roc_curves': self.roc_curves,
+            'confs': self.confs,
+        }
+
+    def load_state_dict(self, state):
+        self.best_iter_index = state['best_iter_index']
+        self.loss_evolution = state['loss_evolution']
+        self.accuracy_evolution = state['accuracy_evolution']
+        self.true_duration = state['true_duration']
+        self.pred_duration = state['pred_duration']
+        self.true_transitions = state['true_transitions']
+        self.pred_transitions = state['pred_transitions']
+        self.roc_curves = state['roc_curves']
+        self.confs = state['confs']
+
     def conf(self):
-        return self.confs[-1]
+        return self.confs[self.best_iter_index]
 
     @property
     def loss(self):
-        return self.loss_evolution[-1]
+        return self.loss_evolution[self.best_iter_index]
 
     @property
     def accuracy(self):
-        return self.accuracy_evolution[-1]
+        return self.accuracy_evolution[self.best_iter_index]
 
-    @property
-    def recall(self):
-        conf = self.conf
+    def recall(self, index: Optional[int] = None):
+        if index is None:
+            index = self.best_iter_index
+        conf = self.confs[index]
         recall = []
         for c in range(self.num_classes):
             recall.append(conf[c, c] / conf[c, :].sum())
@@ -69,15 +113,23 @@ class ClassifierMetrics:
 
     @property
     def balanced_accuracy(self):
-        return self.recall.sum() / self.num_classes
+        return self.recall().sum() / self.num_classes
+
+    @property
+    def balanced_accuracy_evolution(self):
+        acc = []
+        for idx, conf in enumerate(self.confs):
+            acc.append(self.recall(index=idx).sum() / self.num_classes)
+        return acc
 
     @property
     def roc_curve(self):
-        return self.roc_curves[-1]
+        return self.roc_curves[self.best_iter_index]
 
-    @property
-    def roc_auc(self):
-        curves = self.roc_curve
+    def roc_auc(self, index=None):
+        if index is None:
+            index = self.best_iter_index
+        curves = self.roc_curves[index]
 
         auc_scores = []
         for c in range(len(curves)):
@@ -100,7 +152,7 @@ class ClassifierMetrics:
             self.current_pred_durations += get_annotations_durations(y_pred[idx] > 0)
 
     def add_transition_distributions(self, y_true, y_pred):
-        assert self.num_classes == 2 or self.num_classes == 3,\
+        assert self.num_classes == 2 or self.num_classes == 3, \
             'Wrong classes number for transitions.'
 
         for idx in range(y_true.shape[0]):
@@ -121,7 +173,7 @@ class ClassifierMetrics:
             curves.append((fpr, tpr, thresholds))
         self.roc_curves.append(curves)
 
-    def add_loss(self, loss):
+    def add_loss(self, loss: float):
         self.loss_evolution.append(loss)
 
     def commit(self):
@@ -139,22 +191,34 @@ class ClassifierMetrics:
             self.current_true_transitions = []
             self.current_pred_transitions = []
 
-    def plot_conf(self):
+    def plot_conf(self, index=None):
+        if index is None:
+            index = self.best_iter_index
+
         plt.figure()
         plt.title('Confusion matrix')
-        sn.heatmap(self.confs[-1], annot=True, fmt='.0f', cmap='flare')
+        sn.heatmap(self.confs[index], annot=True, fmt='.0f', cmap='flare')
         plt.show()
 
-    def plot_duration_distributions(self):
-        plot_distributions(self.true_duration[-1], self.pred_duration[-1], 'Annotation duration distributions')
+    def plot_duration_distributions(self, index=None):
+        if index is None:
+            index = self.best_iter_index
 
-    def plot_transition_distributions(self):
-        plot_distributions(self.true_transitions[-1], self.pred_transitions[-1],
+        plot_distributions(self.true_duration[index], self.pred_duration[index], 'Annotation duration distributions')
+
+    def plot_transition_distributions(self, index=None):
+        if index is None:
+            index = self.best_iter_index
+
+        plot_distributions(self.true_transitions[index], self.pred_transitions[index],
                            'Annotation transition duration distributions')
 
-    def plot_roc_curve(self):
-        curves = self.roc_curve
-        roc_auc = self.roc_auc
+    def plot_roc_curve(self, index=None):
+        if index is None:
+            index = self.best_iter_index
+
+        curves = self.roc_curves[index]
+        roc_auc = self.roc_auc(index)
 
         fig, ax1 = plt.subplots()
         ax1.set_title('Roc curve')
@@ -162,6 +226,5 @@ class ClassifierMetrics:
             fpr, tpr, _ = curves[c]
             score = roc_auc[c]
             display = RocCurveDisplay(fpr=fpr, tpr=tpr, roc_auc=score)
-            display.plot(ax=ax1, label=f'class {c}')
+            display.plot(ax=ax1, label=f'AUC of class {c}: {score:.4f}')
         plt.show()
-
