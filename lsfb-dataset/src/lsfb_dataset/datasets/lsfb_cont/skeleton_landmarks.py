@@ -146,6 +146,7 @@ class SkeletonLandmarksWindowedDataset(Dataset):
         """
 
         self.root = root_dir
+        self.transform = transform
 
         video_information = video_information[[
             'frames_nb',
@@ -156,7 +157,7 @@ class SkeletonLandmarksWindowedDataset(Dataset):
 
         self.data = _load_data(root_dir, video_information, isolate_transitions)
         self.window_size = window_size
-        self.windows = _make_windows(video_information, window_size, stride)
+        self.windows = _make_windows(video_information, window_size, window_stride)
 
         if isolate_transitions:
             self.class_names = ['waiting', 'talking', 'transition']
