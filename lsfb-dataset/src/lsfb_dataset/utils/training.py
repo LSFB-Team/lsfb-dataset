@@ -50,10 +50,10 @@ def train_rnn_model(
     -------
     nn.Module
         The model with the best balanced accuracy.
-    ClassifierMetrics
-        The metrics about the training phases
-    ClassifierMetrics
-        The metrics about the validation phases
+    Tuple[Dict, Dict]
+        The last model state and the best model state
+    Tuple[ClassifierMetrics, ClassifierMetrics]
+        The training and validation metrics.
     """
     since = time.time()
 
@@ -159,6 +159,7 @@ def train_rnn_model(
     logging.info(f'Training complete in {time_elapsed // 60:.0f}min {time_elapsed % 60:.0f}s')
     logging.info(f'Best balanced accuracy: {best_acc:.4f}')
 
+    last_model_wts = copy.deepcopy(model.state_dict())
     model.load_state_dict(best_model_wts)
     model.eval()
-    return model, (train_metrics, val_metrics)
+    return model, (last_model_wts, best_model_wts), (train_metrics, val_metrics)

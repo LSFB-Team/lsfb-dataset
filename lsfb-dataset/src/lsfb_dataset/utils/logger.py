@@ -3,7 +3,7 @@ import sys
 from typing import Optional
 
 
-def init_root_logger(filepath: Optional[str], stdout=True):
+def init_root_logger(filepath: Optional[str] = None, stdout=True):
     """
     Initialise the root logger.
 

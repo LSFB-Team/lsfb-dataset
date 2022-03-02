@@ -1,47 +1,54 @@
 import torch
 import torch.nn as nn
+import torch.jit as jit
+
+from torch import Tensor
+from typing import Tuple
 
 
-class MogrifierLSTMCell(nn.Module):
+class MogrifierLSTMCell(jit.ScriptModule):
     """
     https://github.com/fawazsammani/mogrifier-lstm-pytorch
     """
-    def __init__(self, input_size, hidden_size, mogrify_steps):
+
+    def __init__(self, input_size, hidden_size):
         super(MogrifierLSTMCell, self).__init__()
-        self.mogrify_steps = mogrify_steps
         self.lstm = nn.LSTMCell(input_size, hidden_size)
         self.mogrifier_list = nn.ModuleList([nn.Linear(hidden_size, input_size)])
 
-        for i in range(1, mogrify_steps):
+        for i in range(1, 5):
             if i % 2 == 0:
                 self.mogrifier_list.extend([nn.Linear(hidden_size, input_size)])
             else:
                 self.mogrifier_list.extend([nn.Linear(input_size, hidden_size)])
 
-    def mogrify(self, x, h):
-        for i in range(self.mogrify_steps):
-            if (i+1) % 2 == 0:
-                h = (2 * torch.sigmoid(self.mogrifier_list[i](x))) * h
-            else:
-                x = (2 * torch.sigmoid(self.mogrifier_list[i](h))) * x
+    @jit.script_method
+    def mogrify(self, x: Tensor, h: Tensor):
+        x = (2 * torch.sigmoid(self.mogrifier_list[0](h))) * x
+        h = (2 * torch.sigmoid(self.mogrifier_list[1](x))) * h
+        x = (2 * torch.sigmoid(self.mogrifier_list[2](h))) * x
+        h = (2 * torch.sigmoid(self.mogrifier_list[3](x))) * h
+        x = (2 * torch.sigmoid(self.mogrifier_list[4](h))) * x
 
         return x, h
 
-    def forward(self, x, states):
+    @jit.script_method
+    def forward(self, x: Tensor, states: Tuple[Tensor, Tensor]):
         ht, ct = states
         x, ht = self.mogrify(x, ht)
         ht, ct = self.lstm(x, (ht, ct))
         return ht, ct
 
 
-class MogrifierLSTM(nn.Module):
+class MogrifierLSTM(jit.ScriptModule):
     def __init__(self, input_size, hidden_size):
         super(MogrifierLSTM, self).__init__()
         self.input_size = input_size
         self.hidden_size = hidden_size
-        self.mogrifier_lstm_cell = MogrifierLSTMCell(input_size, hidden_size, mogrify_steps=5)
+        self.mogrifier_lstm_cell = MogrifierLSTMCell(input_size, hidden_size)
 
-    def forward(self, x):
+    @jit.script_method
+    def forward(self, x: Tensor):
         bs, seq_len, _ = x.size()
 
         h_t = torch.zeros(bs, self.hidden_size).to(x.device)
