@@ -9,6 +9,7 @@ from torch.nn.functional import pad
 from torch.utils.data import Dataset
 import os
 from ...utils.annotations import annotations_to_vec, create_coerc_vec
+from ...utils.datasets import make_windows, load_data
 from tqdm.auto import tqdm
 from typing import Optional, Callable
 
@@ -82,33 +83,33 @@ class SkeletonLandmarksDataset(Dataset):
         return features, classes
 
 
-def _make_windows(videos: pd.DataFrame, window_size: int, stride: int):
-    frames = []
-    # (video_idx, start, off)
-
-    for idx, video in videos.iterrows():
-        frames_nb = int(video['frames_nb'])
-        for f in range(0, frames_nb, stride):
-            frames.append((idx, f, f + window_size))
-
-    return frames
-
-
-def _load_data(root: str, videos: pd.DataFrame, isolate_transition=False):
-    print('Loading skeletons and classes...')
-    data = {}
-
-    for idx, video in tqdm(videos.iterrows(), total=videos.shape[0]):
-        skeleton = pd.read_csv(os.path.join(root, video['upper_skeleton'])).values
-
-        annot_right = pd.read_csv(os.path.join(root, video['right_hand_annotations']))
-        annot_left = pd.read_csv(os.path.join(root, video['left_hand_annotations']))
-        classes = annotations_to_vec(annot_right, annot_left, int(video['frames_nb']))
-        if isolate_transition:
-            classes = create_coerc_vec(classes)
-
-        data[idx] = skeleton, classes
-    return data
+# def _make_windows(videos: pd.DataFrame, window_size: int, stride: int):
+#     frames = []
+#     # (video_idx, start, off)
+#
+#     for idx, video in videos.iterrows():
+#         frames_nb = int(video['frames_nb'])
+#         for f in range(0, frames_nb, stride):
+#             frames.append((idx, f, f + window_size))
+#
+#     return frames
+#
+#
+# def _load_data(root: str, videos: pd.DataFrame, isolate_transition=False):
+#     print('Loading skeletons and classes...')
+#     data = {}
+#
+#     for idx, video in tqdm(videos.iterrows(), total=videos.shape[0]):
+#         skeleton = pd.read_csv(os.path.join(root, video['upper_skeleton'])).values
+#
+#         annot_right = pd.read_csv(os.path.join(root, video['right_hand_annotations']))
+#         annot_left = pd.read_csv(os.path.join(root, video['left_hand_annotations']))
+#         classes = annotations_to_vec(annot_right, annot_left, int(video['frames_nb']))
+#         if isolate_transition:
+#             classes = create_coerc_vec(classes)
+#
+#         data[idx] = skeleton, classes
+#     return data
 
 
 class SkeletonLandmarksWindowedDataset(Dataset):
@@ -155,9 +156,9 @@ class SkeletonLandmarksWindowedDataset(Dataset):
             'upper_skeleton'
         ]].dropna()
 
-        self.data = _load_data(root_dir, video_information, isolate_transitions)
+        self.data = load_data(root_dir, 'upper_skeleton', video_information, isolate_transitions)
         self.window_size = window_size
-        self.windows = _make_windows(video_information, window_size, window_stride)
+        self.windows = make_windows(video_information, window_size, window_stride)
 
         if isolate_transitions:
             self.class_names = ['waiting', 'talking', 'transition']
