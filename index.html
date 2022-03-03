@@ -18,7 +18,7 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "LSFB Dataset";
+    var mkdocs_page_name = "Home";
     var mkdocs_page_input_path = "index.md";
     var mkdocs_page_url = null;
   </script>
@@ -47,19 +47,27 @@
 
       <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
                 <ul class="current">
-                    <li class="toctree-l1 current"><a class="reference internal current" href=".">LSFB Dataset</a>
+                    <li class="toctree-l1 current"><a class="reference internal current" href=".">Home</a>
     <ul class="current">
-    <li class="toctree-l2"><a class="reference internal" href="#content">Content</a>
+    <li class="toctree-l2"><a class="reference internal" href="#datasets">Datasets</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#modules">Modules</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#sponsors">Sponsors</a>
     </li>
     </ul>
                     </li>
                 </ul>
                 <ul>
-                    <li class="toctree-l1"><a class="reference internal" href="lsfb_cont/">LSFB-CONT</a>
+                    <li class="toctree-l1"><a class="reference internal" href="lsfb_isol/">LSFB Isol</a>
                     </li>
                 </ul>
                 <ul>
-                    <li class="toctree-l1"><a class="reference internal" href="lsfb_isol/">LSFB-ISOL</a>
+                    <li class="toctree-l1"><a class="reference internal" href="lsfb_cont/">LSFB Cont</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="visualisation/">Visualisation</a>
                     </li>
                 </ul>
                 <ul>
@@ -87,7 +95,7 @@
     
       
     
-    <li>LSFB Dataset</li>
+    <li>Home</li>
     <li class="wy-breadcrumbs-aside">
       
     </li>
@@ -99,13 +107,28 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="lsfb-dataset">LSFB Dataset</h1>
+                <h1 id="lsfb-dataset-companion-library">LSFB Dataset Companion Library</h1>
 <p>LSFB Dataset is a companion library for the <a href="https://lsfb.info.unamur.be/">French Belgian Sign Language (LSFB) dataset</a> released by the University of Namur. The library provides a set of tools helping to load the dataset in python data structures or to visualize the data. </p>
 <p>This library reduce drastically the time you will spend on data loading and preprocessing allowing you to focus on your research.</p>
-<h2 id="content">Content</h2>
-<p>The dataset is available in two versions :
-* LSFB Isol : depicting isolated signs
-* LSFB cont : depicting continuous signs</p>
+<h2 id="datasets">Datasets</h2>
+<p>Both datasets are based on the <a href="https://www.corpus-lsfb.be/">LSFB Corpus</a>. The corpus is the result of the a tremendous work achieved by the members of the <a href="https://www.unamur.be/lettres/romanes/lsfb-lab">LSFB labl</a> from the university of Namur.</p>
+<p>The corpus data were sanatized in order to make them easier to use. Additional metadata were added to enhance the datasets. Two versions of the dataset are available:</p>
+<ul>
+<li><strong><a href="lsfb_isol/">LSFB Isol</a></strong> : Suitable for the isolated sign language recognition task.</li>
+<li><strong><a href="lsfb_cont/">LSFB Cont</a></strong> : Suitable for the continuous sign language recognition task.</li>
+</ul>
+<h2 id="modules">Modules</h2>
+<p>This library offers a set of modules designed to help you manipulating the datasets with minimal effort. The modules are:</p>
+<ul>
+<li><strong>datasets</strong> : contains pre-written <a href="https://pytorch.org/">Pytorch</a> Dataset classes that can be used to load and feed directly the data into a Pytorch model.</li>
+<li><strong><a href="transforms/">transforms</a></strong> : contains <a href="https://pytorch.org/vision/stable/transforms.html">transforms</a> designed to apply various pre-processing to the videos.</li>
+<li><strong>visualisation</strong> : contains helper function enabling you to visualise the data.</li>
+<li><strong>utils</strong>: contains function helping to load the various csv and video into dataframes</li>
+</ul>
+<h2 id="sponsors">Sponsors</h2>
+<p>Without our sponsors, this library would not be possible.</p>
+<p><img alt="UNamur" src="ressources/img/logo-unamur.png" />
+<img alt="Fond Baillet Latour" src="ressources/img/baillet.png" /></p>
               
             </div>
           </div>
@@ -113,7 +136,7 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="lsfb_cont/" class="btn btn-neutral float-right" title="LSFB-CONT">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="lsfb_isol/" class="btn btn-neutral float-right" title="LSFB Isol">Next <span class="icon icon-circle-arrow-right"></span></a>
       
       
     </div>
@@ -141,7 +164,7 @@
     
     
     
-      <span><a href="lsfb_cont/" style="color: #fcfcfc">Next &raquo;</a></span>
+      <span><a href="lsfb_isol/" style="color: #fcfcfc">Next &raquo;</a></span>
     
   </span>
 </div>
@@ -160,5 +183,5 @@
 
 <!--
 MkDocs version : 1.2.3
-Build Date UTC : 2022-01-25 12:36:27.962470+00:00
+Build Date UTC : 2022-03-03 15:47:06.312686+00:00
 -->
