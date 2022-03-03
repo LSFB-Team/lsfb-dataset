@@ -1,5 +1,5 @@
 from torch.utils.data import Dataset
-from typing import Tuple, Dict, Optional, Callable
+from typing import Tuple, Dict, Optional, Callable, List
 import cv2
 import pandas as pd
 import numpy as np
@@ -25,10 +25,10 @@ class LsfbIsolDataset(Dataset):
     def __init__(
         self,
         root: str,
-        transforms: Optional[Callable] = None,
-        features: Optional[list[str]] = None,
+        transforms: Optional[List[Callable]] = None,
+        features: Optional[List[str]] = None,
         labels: Optional[Dict[int, str]] = None,
-        max_frame: Optional[int] = 150,
+        max_frame: Optional[int] = 50,
     ):
         """
         Load the dataset.
