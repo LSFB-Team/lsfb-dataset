@@ -1,4 +1,11 @@
 site_name: LSFB Dataset
 
+nav:
+    - Home: index.md
+    - LSFB Isol: lsfb_isol.md
+    - LSFB Cont: lsfb_cont.md
+    - Visualisation: visualisation.md
+    - Transforms: transforms.md
+
 theme:
     name: readthedocs

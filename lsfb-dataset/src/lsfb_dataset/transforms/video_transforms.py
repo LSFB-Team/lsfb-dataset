@@ -157,8 +157,7 @@ class CenterCropVideo(object):
 
 
 class TrimVideo(object):
-    """Trim each video the same way. Waiting shape TCHW
-    """
+    """Trim each video the same way. Waiting shape TCHW"""
 
     def __init__(self, size, offset=None):
         self.end = size
@@ -177,8 +176,7 @@ class TrimVideo(object):
 
 
 class RandomTrimVideo(object):
-    """Trim randomly the video. Waiting shape TCHW
-    """
+    """Trim randomly the video. Waiting shape TCHW"""
 
     def __init__(self, size):
         self.size = size

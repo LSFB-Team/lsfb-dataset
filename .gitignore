@@ -5,3 +5,7 @@ dist
 **.pyc
 .pytest_cache
 site
+.idea/
+lsfb-dataset/src/notebooks/
+__pycache__
+build
