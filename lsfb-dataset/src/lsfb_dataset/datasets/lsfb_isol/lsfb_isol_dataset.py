@@ -25,7 +25,7 @@ class LsfbIsolDataset(Dataset):
     def __init__(
         self,
         root: str,
-        transform: Optional[Callable] = None,
+        transforms: Optional[Callable] = None,
         features: Optional[list[str]] = None,
         labels: Optional[Dict[int, str]] = None,
         max_frame: Optional[int] = 150,
@@ -46,7 +46,7 @@ class LsfbIsolDataset(Dataset):
         """
 
         self.root: str = root
-        self.transform = transform
+        self.transforms = transforms
         self.features = features
         self.labels = labels
         self.max_frame = max_frame
@@ -89,6 +89,10 @@ class LsfbIsolDataset(Dataset):
         if "pose_landmarks" in self.features:
             landmarks_path = os.path.join(self.root, item["pose_landmarks"])
             X["pose_landmarks"] = pd.read_csv(landmarks_path).to_numpy()
+
+        # Applying the transform
+        for transform in self.transforms:
+            X = transform(X)
 
         return X, y
 
