@@ -6,8 +6,16 @@ from ..utils.annotations import get_annotations_durations, create_coerc_vec
 from typing import Optional
 
 
-def compute_accuracy(conf):
+def compute_accuracy_from_conf_matrix(conf):
     return np.trace(conf) / conf.sum()
+
+
+def compute_accuracy(y_true, y_pred):
+    assert y_true.shape == y_pred.shape, 'True sequence has not the same shape than predicted one.'
+    assert len(y_true.shape) != 1, 'Sequences are not 1-D vectors.'
+    length = len(y_true.shape[0])
+    assert length != 0, 'The length of the sequence is 0.'
+    np.sum((y_true == y_pred)) / length
 
 
 def windowed_matching(y_true, y_pred, w: int):
@@ -25,6 +33,16 @@ def windowed_matching(y_true, y_pred, w: int):
         dist_vec[idx] = in_true == in_pred
 
     return dist_vec
+
+
+def get_transition_matrix(y, num_classes=3):
+    trans_mat = np.zeros((num_classes, num_classes))
+    last_x = y[0]
+    for x in y:
+        if x != last_x:
+            trans_mat[last_x][x] += 1
+            last_x = x
+    return trans_mat
 
 
 def plot_distributions(dist_true, dist_pred, title=None):
@@ -71,7 +89,6 @@ class ClassifierMetrics:
         return {
             'best_iter_index': self.best_iter_index,
             'loss_evolution': self.loss_evolution,
-            'accuracy_evolution': self.accuracy_evolution,
             'true_duration': self.true_duration,
             'pred_duration': self.pred_duration,
             'true_transitions': self.true_transitions,
@@ -83,7 +100,6 @@ class ClassifierMetrics:
     def load_state_dict(self, state):
         self.best_iter_index = state['best_iter_index']
         self.loss_evolution = state['loss_evolution']
-        self.accuracy_evolution = state['accuracy_evolution']
         self.true_duration = state['true_duration']
         self.pred_duration = state['pred_duration']
         self.true_transitions = state['true_transitions']
@@ -91,8 +107,16 @@ class ClassifierMetrics:
         self.roc_curves = state['roc_curves']
         self.confs = state['confs']
 
+        self.accuracy_evolution = [compute_accuracy_from_conf_matrix(conf) for conf in self.confs]
+
     def conf(self):
         return self.confs[self.best_iter_index]
+
+    def normalized_conf(self, index=None):
+        if index is None:
+            index = self.best_iter_index
+        conf = self.confs[index]
+        return conf / conf.sum()
 
     @property
     def loss(self):
@@ -108,8 +132,18 @@ class ClassifierMetrics:
         conf = self.confs[index]
         recall = []
         for c in range(self.num_classes):
-            recall.append(conf[c, c] / conf[c, :].sum())
+            class_total = conf[:, c].sum()
+            if class_total == 0:
+                recall.append(0)
+            else:
+                recall.append(conf[c, c] / class_total)
         return np.array(recall)
+
+    def recall_evolution(self):
+        recall_evo = []
+        for index in range(len(self.confs)):
+            recall_evo.append(self.recall(index=index))
+        return recall_evo
 
     @property
     def balanced_accuracy(self):
@@ -177,7 +211,7 @@ class ClassifierMetrics:
         self.loss_evolution.append(loss)
 
     def commit(self):
-        self.accuracy_evolution.append(compute_accuracy(self.current_conf))
+        self.accuracy_evolution.append(compute_accuracy_from_conf_matrix(self.current_conf))
         self.confs.append(self.current_conf)
         self.current_conf = None
 
@@ -191,13 +225,18 @@ class ClassifierMetrics:
             self.current_true_transitions = []
             self.current_pred_transitions = []
 
-    def plot_conf(self, index=None):
+    def plot_conf(self, normalized=False, index=None):
         if index is None:
             index = self.best_iter_index
 
         plt.figure()
         plt.title('Confusion matrix')
-        sn.heatmap(self.confs[index], annot=True, fmt='.0f', cmap='flare')
+
+        if normalized:
+            sn.heatmap(self.normalized_conf(index), annot=True, fmt='.4f', cmap='flare')
+        else:
+            sn.heatmap(self.confs[index], annot=True, fmt='.0f', cmap='flare')
+
         plt.show()
 
     def plot_duration_distributions(self, index=None):
