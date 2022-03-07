@@ -40,14 +40,16 @@ class SkeletonLandmarksDataset(Dataset):
             A transition is less than 1 second between two annotations.
         """
         self.root = root_dir
-        self.video_information = video_information[[
+        self.transform = transform
+
+        video_information = video_information[[
             'frames_nb',
             'right_hand_annotations',
             'left_hand_annotations',
             'upper_skeleton'
         ]].dropna()
-        self.transform = transform
-        self.transitions = isolate_transitions
+
+        self.data = list(load_data(root_dir, 'upper_skeleton', video_information, isolate_transitions).values())
 
         if isolate_transitions:
             self.class_names = ['waiting', 'talking', 'transition']
@@ -64,52 +66,17 @@ class SkeletonLandmarksDataset(Dataset):
         int
             the length of the dataset.
         """
-        return self.video_information.shape[0]
+        return len(self.data)
 
     def __getitem__(self, index):
-        video = self.video_information.iloc[index]
-        features = pd.read_csv(os.path.join(self.root, video['upper_skeleton'])).values
+        features, classes = self.data[index]
+        features = torch.from_numpy(features).float()
+        classes = torch.from_numpy(classes).long()
 
-        annot_right = pd.read_csv(os.path.join(self.root, video['right_hand_annotations']))
-        annot_left = pd.read_csv(os.path.join(self.root, video['left_hand_annotations']))
-        classes = annotations_to_vec(annot_right, annot_left, int(video['frames_nb']))
-
-        if self.transitions:
-            classes = create_coerc_vec(classes)
-
-        if self.transform:
+        if self.transform is not None:
             features = self.transform(features)
 
         return features, classes
-
-
-# def _make_windows(videos: pd.DataFrame, window_size: int, stride: int):
-#     frames = []
-#     # (video_idx, start, off)
-#
-#     for idx, video in videos.iterrows():
-#         frames_nb = int(video['frames_nb'])
-#         for f in range(0, frames_nb, stride):
-#             frames.append((idx, f, f + window_size))
-#
-#     return frames
-#
-#
-# def _load_data(root: str, videos: pd.DataFrame, isolate_transition=False):
-#     print('Loading skeletons and classes...')
-#     data = {}
-#
-#     for idx, video in tqdm(videos.iterrows(), total=videos.shape[0]):
-#         skeleton = pd.read_csv(os.path.join(root, video['upper_skeleton'])).values
-#
-#         annot_right = pd.read_csv(os.path.join(root, video['right_hand_annotations']))
-#         annot_left = pd.read_csv(os.path.join(root, video['left_hand_annotations']))
-#         classes = annotations_to_vec(annot_right, annot_left, int(video['frames_nb']))
-#         if isolate_transition:
-#             classes = create_coerc_vec(classes)
-#
-#         data[idx] = skeleton, classes
-#     return data
 
 
 class SkeletonLandmarksWindowedDataset(Dataset):
@@ -181,7 +148,7 @@ class SkeletonLandmarksWindowedDataset(Dataset):
         video_idx, start, end = self.windows[index]
         features, classes = self.data[video_idx]
         features = features[start:end]
-        features = torch.from_numpy(features)
+        features = torch.from_numpy(features).float()
         features = pad(features, (0, 0, 0, self.window_size - features.shape[0]))
 
         if self.transform is not None:
