@@ -91,8 +91,9 @@ class LsfbIsolDataset(Dataset):
             X["pose_landmarks"] = pd.read_csv(landmarks_path).to_numpy()
 
         # Applying the transform
-        for transform in self.transforms:
-            X = transform(X)
+        if self.transforms:
+            for transform in self.transforms:
+                X = transform(X)
 
         return X, y
 
