@@ -7,10 +7,12 @@ def draw_line(img, start_pos, end_pos, color=(255, 255, 255), thickness=2):
 
 
 def draw_connections(img, positions, connections, color=(255, 0, 0), thickness=2):
+    pos_nb = len(positions)
     for i, j in connections:
-        x1, y1 = absolute_position(img, positions[i])
-        x2, y2 = absolute_position(img, positions[j])
-        cv2.line(img, (x1, y1), (x2, y2), color, thickness)
+        if i < pos_nb and j < pos_nb:
+            x1, y1 = absolute_position(img, positions[i])
+            x2, y2 = absolute_position(img, positions[j])
+            cv2.line(img, (x1, y1), (x2, y2), color, thickness)
 
 
 def draw_points(img, positions, color=(0, 0, 255), thickness=cv2.FILLED):
