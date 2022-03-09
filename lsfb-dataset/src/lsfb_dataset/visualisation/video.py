@@ -1,5 +1,6 @@
 from cv2 import cv2
 from os import path
+import random
 from typing import Optional
 import pandas as pd
 from .features import draw_holistic_landmarks, draw_holistic_boxes, get_holistic_features_img,\
@@ -92,6 +93,19 @@ class VideoPlayer:
 
         cv2.destroyAllWindows()
         cap.release()
+
+    def get_random_frame(self):
+        cap = cv2.VideoCapture(self.video_path)
+        frame_count = cap.get(cv2.CAP_PROP_FRAME_COUNT)
+        frame_nb = random.randint(0, frame_count-1)
+
+        cap.set(cv2.CAP_PROP_POS_FRAMES, frame_nb)
+        success, frame = cap.read()
+        if not success:
+            raise ValueError('Cannot read the frame.')
+        cap.release()
+
+        return cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
     def _show_frame(self, frame, current_frame, current_time, total_duration):
         if self.pose_features is not None:

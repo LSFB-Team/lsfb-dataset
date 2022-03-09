@@ -87,7 +87,7 @@ def get_annotations_img(df_annot, time, time_offset=3000):
 
 def draw_pose_landmarks(img, positions):
     connections = mp.solutions.pose.POSE_CONNECTIONS
-    draw_connections(img, positions, connections)
+    draw_connections(img, positions, connections, color=(0, 255, 0))
     draw_points(img, positions)
 
 
