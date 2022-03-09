@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sn
+import pandas as pd
 from sklearn.metrics import confusion_matrix, roc_curve, auc, RocCurveDisplay
 from ..utils.annotations import get_annotations_durations, create_coerc_vec
 from typing import Optional
@@ -116,7 +117,7 @@ class ClassifierMetrics:
         if index is None:
             index = self.best_iter_index
         conf = self.confs[index]
-        return conf / conf.sum()
+        return conf / conf.sum(axis=0)
 
     @property
     def loss(self):
@@ -141,13 +142,17 @@ class ClassifierMetrics:
 
     def recall_evolution(self):
         recall_evo = []
+        for class_index in range(self.num_classes):
+            recall_evo.append([])
         for index in range(len(self.confs)):
-            recall_evo.append(self.recall(index=index))
+            recall = self.recall(index=index)
+            for class_index, value in enumerate(recall):
+                recall_evo[class_index].append(value)
+
         return recall_evo
 
-    @property
-    def balanced_accuracy(self):
-        return self.recall().sum() / self.num_classes
+    def balanced_accuracy(self, index=None):
+        return self.recall(index=index).sum() / self.num_classes
 
     @property
     def balanced_accuracy_evolution(self):
@@ -215,6 +220,12 @@ class ClassifierMetrics:
         self.confs.append(self.current_conf)
         self.current_conf = None
 
+        current_balanced_acc = self.balanced_accuracy(index=-1)
+        best_balanced_acc = self.balanced_accuracy()
+
+        if current_balanced_acc > best_balanced_acc:
+            self.best_iter_index = len(self.confs) - 1
+
         if len(self.current_true_durations) > 0:
             self.true_duration.append(self.current_true_durations)
             self.pred_duration.append(self.current_pred_durations)
@@ -267,3 +278,23 @@ class ClassifierMetrics:
             display = RocCurveDisplay(fpr=fpr, tpr=tpr, roc_auc=score)
             display.plot(ax=ax1, label=f'AUC of class {c}: {score:.4f}')
         plt.show()
+
+    def get_results(self):
+        if len(self.confs) == 0:
+            return None
+
+        data = {
+            'epoch': range(1, len(self.confs) + 1),
+            'accuracy': self.accuracy_evolution,
+            'balanced_accuracy': self.balanced_accuracy_evolution,
+            'loss': self.loss_evolution,
+        }
+
+        recall_evolution = self.recall_evolution()
+        for class_index, class_recall_evo in enumerate(recall_evolution):
+            data[f'recall_{class_index}'] = class_recall_evo
+
+        return pd.DataFrame.from_dict(data)
+
+
+
