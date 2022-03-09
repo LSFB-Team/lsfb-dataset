@@ -82,9 +82,6 @@ def train_rnn_model(
             # features : (batch_size, seq_len, features_nb)
             # targets  : (batch_size, seq_len)
 
-            batch_size = targets.size(0)
-            seq_len = targets.size(1)
-
             # --- forward
             scores = model(features)
             _, pred = torch.max(scores, 2)
@@ -99,7 +96,7 @@ def train_rnn_model(
 
             optimizer.step()
 
-            epoch_loss += loss.item()# / (seq_len * batch_size)
+            epoch_loss += loss.item()
             epoch_batches += 1
 
         train_metrics.add_loss(epoch_loss/epoch_batches)
@@ -107,7 +104,7 @@ def train_rnn_model(
 
         logging.info(f'Training: loss = {train_metrics.loss:.4f} ; accuracy = {train_metrics.accuracy:.4f}')
         logging.info(f'Recall: {train_metrics.recall()}')
-        logging.info(f'Balanced accuracy: {train_metrics.balanced_accuracy:.4f}')
+        logging.info(f'Balanced accuracy: {train_metrics.balanced_accuracy(index=-1):.4f}')
 
         epoch_loss = 0
         epoch_batches = 0
@@ -119,22 +116,17 @@ def train_rnn_model(
             # features : (batch_size, seq_len, features_nb)
             # targets  : (batch_size, seq_len)
 
-            batch_size = targets.size(0)
-            seq_len = targets.size(1)
-
             # forward
             with torch.no_grad():
                 scores = model(features)
                 _, pred = torch.max(scores, 2)
                 loss = criterion(scores.view(-1, num_classes), targets.to(device).view(-1))
 
-            epoch_loss += loss.item()# / (seq_len * batch_size)
+            epoch_loss += loss.item()
             epoch_batches += 1
 
             pred = pred.cpu()
             val_metrics.add_predictions(targets, pred)
-            # val_metrics.add_duration_distributions(targets, pred)
-            # val_metrics.add_transition_distributions(targets, pred)
 
         val_metrics.add_loss(epoch_loss/epoch_batches)
         val_metrics.commit()
@@ -145,7 +137,7 @@ def train_rnn_model(
             scores.detach().view(-1, num_classes).cpu().numpy()
         )
 
-        epoch_balanced_acc = val_metrics.balanced_accuracy
+        epoch_balanced_acc = val_metrics.balanced_accuracy(index=-1)
         epoch_time_elapsed = time.time() - epoch_time_elapsed
 
         logging.info(f'Epoch complete in {epoch_time_elapsed // 60}min {epoch_time_elapsed % 60:.0f}s')
