@@ -1,11 +1,10 @@
 import torch
 import torch.nn as nn
-import torch.jit as jit
 
 import math
 
 
-class EDRN(jit.ScriptModule):
+class EDRN(nn.Module):
     def __init__(self, input_size, hidden_size, substates=2):
         super().__init__()
         self.input_sz = input_size
@@ -36,7 +35,6 @@ class EDRN(jit.ScriptModule):
         for weight in self.parameters():
             weight.data.uniform_(-stdv, stdv)
 
-    @jit.script_method
     def forward(self, x):
         """Assumes x is of shape (batch, sequence, feature)"""
         batch_size, seq_len, _ = x.size()

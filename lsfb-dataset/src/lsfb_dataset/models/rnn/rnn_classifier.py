@@ -18,9 +18,6 @@ class LSTMClassifier(nn.Module):
     ):
         super(LSTMClassifier, self).__init__()
 
-        self.input_size = input_size
-        self.n_classes = n_classes
-
         if dropout_in or dropout_w or dropout_out:
             self.rnn = LSTM(
                 input_size=input_size,
