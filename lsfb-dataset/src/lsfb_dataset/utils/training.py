@@ -19,11 +19,11 @@ from lsfb_dataset.utils.metrics import ClassifierMetrics
 
 
 def train_rnn_model(
-        model: nn.Module, criterion: nn.Module, optimizer: torch.optim.Optimizer, model_name: str,
+        model: nn.Module, criterion: nn.Module, optimizer: torch.optim.Optimizer, # model_name: str,
         data_loaders: Dict[str, DataLoader],
         scheduler=None, num_epochs=5, num_classes=2,
         progress_bar=True,
-        jit=True, dest_dir='./models'
+        jit=True,
 ):
     """
     Train a recurrent neural network like an LSTM using the PyTorch library.
@@ -47,6 +47,8 @@ def train_rnn_model(
         The number of classes of the items.
     progress_bar : bool
         If true, show a progress bar. Otherwise, it does not.
+    jit : bool
+        If true, compile the model with JIT before training.
 
     Returns
     -------
@@ -58,21 +60,16 @@ def train_rnn_model(
         The training and validation metrics.
     """
     since = time.time()
-
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model = torch.jit.script(model)
     model = model.to(device)
+
+    if jit:
+        model = torch.jit.script(model)
+
     model.train()
     criterion = criterion.to(device)
 
-    dest_dir = os.path.join(dest_dir, model_name)
-    os.makedirs(dest_dir)
-
-    best_model_path = os.path.join(dest_dir, 'best.pt')
-    last_model_path = os.path.join(dest_dir, 'last.pt')
-    metrics_path = os.path.join(dest_dir, 'metrics.tar')
-
-    torch.jit.save(model, best_model_path)
+    best_model_wts = copy.deepcopy(model.state_dict())
     best_acc = 0.0
     train_metrics = ClassifierMetrics(num_classes=num_classes)
     val_metrics = ClassifierMetrics(num_classes=num_classes)
@@ -161,17 +158,15 @@ def train_rnn_model(
 
         if epoch_balanced_acc > best_acc:
             best_acc = epoch_balanced_acc
-            torch.jit.save(model, best_model_path)
+            best_model_wts = copy.deepcopy(model.state_dict())
+            # torch.jit.save(model, best_model_path)
 
     time_elapsed = time.time() - since
     logging.info(f'Training complete in {time_elapsed // 60:.0f}min {time_elapsed % 60:.0f}s')
     logging.info(f'Best balanced accuracy: {best_acc:.4f}')
 
-    torch.jit.save(model, last_model_path)
-    torch.save({
-        'val_metrics': val_metrics,
-        'train_metrics': train_metrics,
-    }, metrics_path)
-    model = torch.jit.load(best_model_path)
+    last_model_wts = copy.deepcopy(model.state_dict())
+    model.load_state_dict(best_model_wts)
     model.eval()
-    return model, (last_model_path, best_model_path), (train_metrics, val_metrics)
+
+    return model, (last_model_wts, best_model_wts), (train_metrics, val_metrics)
