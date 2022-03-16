@@ -43,6 +43,10 @@ class DatasetDownloader:
             if "video" not in self.exclude:
                 self.download_video(row)
 
+            if self.dataset == "cont" and "annotations" not in self.exclude:
+                self.download_annotations(row, "right_hand")
+                self.download_annotations(row, "left_hand")
+
     def download_csv(self):
 
         if self.dataset == "isol":
@@ -80,6 +84,19 @@ class DatasetDownloader:
 
             if dest_md5 != src_md5:
                 urllib.request.urlretrieve(video_url, video_destination)
+
+    def download_annotations(self, row, hand):
+
+        col = hand + "_annotations"
+        location = row[col]
+
+        annotation_url = os.path.join(self.src, urllib.parse.quote(location))
+        annotation_destination = os.path.join(self.destination, location)
+
+        self._create_directories(annotation_destination)
+
+        if not os.path.exists(annotation_destination):
+            urllib.request.urlretrieve(annotation_url, annotation_destination)
 
     def _create_directories(self, path):
         """
