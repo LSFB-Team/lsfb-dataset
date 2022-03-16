@@ -77,3 +77,62 @@ def test_video_annotations_download_cont():
 
         assert os.path.exists(right_path)
         assert os.path.getsize(right_path) != 0
+
+
+def test_landmarks_download_isol():
+    """
+    Test the download of landmarks for the Isolated dataset.
+    """
+
+    landmarks_list = [
+        "face_landmarks",
+        "pose_landmarks",
+        "hands_landmarks",
+        "holistic_landmarks",
+        "holistic_landmarks_clean",
+    ]
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        ds = DatasetDownloader(tmpdir)
+        csv_path = ds.download_csv()
+
+        data = pd.read_csv(csv_path)
+        row = data.iloc[0]
+
+        for landmark in landmarks_list:
+            ds.download_landmarks(row[landmark])
+
+            expected_path = os.path.join(tmpdir, row[landmark])
+
+            assert os.path.exists(expected_path)
+            assert os.path.getsize(expected_path) != 0
+
+
+def test_landmarks_download_cont():
+    """
+    Test the download of landmarks for the Isolated dataset.
+    """
+
+    landmarks_list = [
+        "face_landmarks",
+        "pose_landmarks",
+        "hands_landmarks",
+        "holistic_landmarks",
+        "holistic_landmarks_clean",
+    ]
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        ds = DatasetDownloader(tmpdir, dataset="cont")
+        csv_path = ds.download_csv()
+
+        data = pd.read_csv(csv_path)
+        row = data.iloc[16]
+
+        for landmark in landmarks_list:
+
+            ds.download_landmarks(row[landmark])
+
+            expected_path = os.path.join(tmpdir, row[landmark])
+
+            assert os.path.exists(expected_path)
+            assert os.path.getsize(expected_path) != 0

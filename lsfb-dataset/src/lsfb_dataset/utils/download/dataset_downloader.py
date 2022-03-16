@@ -1,6 +1,7 @@
 import urllib
 import hashlib
 import pandas as pd
+import numpy as np
 from tqdm import tqdm
 import os
 
@@ -46,6 +47,20 @@ class DatasetDownloader:
             if self.dataset == "cont" and "annotations" not in self.exclude:
                 self.download_annotations(row, "right_hand")
                 self.download_annotations(row, "left_hand")
+
+            if "landmarks" not in self.exclude:
+
+                available_landmarks = [
+                    "face_landmarks",
+                    "pose_landmarks",
+                    "hands_landmarks",
+                    "holistic_landmarks",
+                    "holistic_landmarks_clean",
+                ]
+
+                for landmark in available_landmarks:
+                    if not np.isnan(row[landmark]) and row[landmark] != "":
+                        self.download_landmarks(row[landmark])
 
     def download_csv(self):
 
@@ -97,6 +112,15 @@ class DatasetDownloader:
 
         if not os.path.exists(annotation_destination):
             urllib.request.urlretrieve(annotation_url, annotation_destination)
+
+    def download_landmarks(self, relative_path):
+        landmarks_url = os.path.join(self.src, urllib.parse.quote(relative_path))
+        landmarks_destination = os.path.join(self.destination, relative_path)
+
+        self._create_directories(landmarks_destination)
+
+        if not os.path.exists(landmarks_destination):
+            urllib.request.urlretrieve(landmarks_url, landmarks_destination)
 
     def _create_directories(self, path):
         """
