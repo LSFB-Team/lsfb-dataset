@@ -1,4 +1,5 @@
 import urllib
+import urllib.request
 import hashlib
 import pandas as pd
 import numpy as np
@@ -16,7 +17,7 @@ class DatasetDownloader:
         self,
         destination,
         dataset="isol",
-        exclude=None,
+        exclude=[],
         src=None,
     ):
 
@@ -39,7 +40,7 @@ class DatasetDownloader:
         data = pd.read_csv(csv_path)
 
         # processing the CSV file
-        for idx, row in tqdm(data.iterrows()):
+        for idx, row in tqdm(data.iterrows(), total=data.shape[0]):
 
             if "video" not in self.exclude:
                 self.download_video(row)
@@ -59,7 +60,7 @@ class DatasetDownloader:
                 ]
 
                 for landmark in available_landmarks:
-                    if not np.isnan(row[landmark]) and row[landmark] != "":
+                    if type(row[landmark]) == str and row[landmark] != "":
                         self.download_landmarks(row[landmark])
 
     def download_csv(self):
