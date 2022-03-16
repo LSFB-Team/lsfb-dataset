@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sn
 import pandas as pd
+import torch
 from sklearn.metrics import confusion_matrix, roc_curve, auc, RocCurveDisplay
 from ..utils.annotations import get_annotations_durations, create_coerc_vec
 from typing import Optional
@@ -9,6 +10,11 @@ from typing import Optional
 
 def compute_accuracy_from_conf_matrix(conf):
     return np.trace(conf) / conf.sum()
+
+
+def compute_balanced_accuracy_from_conf_matrix(conf):
+    recall = np.diag(conf) / conf.sum(axis=0)
+    return recall.sum() / recall.shape[0]
 
 
 def compute_accuracy(y_true, y_pred):
@@ -70,7 +76,6 @@ class ClassifierMetrics:
         self.best_iter_index = -1
 
         self.loss_evolution = []
-        self.accuracy_evolution = []
 
         self.true_duration = []
         self.pred_duration = []
@@ -81,10 +86,15 @@ class ClassifierMetrics:
         self.confs = []
 
         self.current_conf = None
+
+        # Testing metrics
+
         self.current_true_durations = []
         self.current_pred_durations = []
         self.current_true_transitions = []
         self.current_pred_transitions = []
+
+        self.transitions = None
 
     def state_dict(self):
         return {
@@ -96,6 +106,7 @@ class ClassifierMetrics:
             'pred_transitions': self.pred_transitions,
             'roc_curves': self.roc_curves,
             'confs': self.confs,
+            'transitions': self.transitions,
         }
 
     def load_state_dict(self, state):
@@ -108,7 +119,8 @@ class ClassifierMetrics:
         self.roc_curves = state['roc_curves']
         self.confs = state['confs']
 
-        self.accuracy_evolution = [compute_accuracy_from_conf_matrix(conf) for conf in self.confs]
+        if 'transitions' in state:
+            self.transitions = state['transitions']
 
     def conf(self):
         return self.confs[self.best_iter_index]
@@ -123,9 +135,17 @@ class ClassifierMetrics:
     def loss(self):
         return self.loss_evolution[self.best_iter_index]
 
+    def accuracy(self, index=None):
+        if index is None:
+            index = self.best_iter_index
+        return compute_accuracy_from_conf_matrix(self.confs[index])
+
     @property
-    def accuracy(self):
-        return self.accuracy_evolution[self.best_iter_index]
+    def accuracy_evolution(self):
+        acc = []
+        for conf in self.confs:
+            acc.append(compute_accuracy_from_conf_matrix(conf))
+        return acc
 
     def recall(self, index: Optional[int] = None):
         if index is None:
@@ -215,6 +235,12 @@ class ClassifierMetrics:
     def add_loss(self, loss: float):
         self.loss_evolution.append(loss)
 
+    def add_transitions_matrix(self, y_pred):
+        if self.transitions is None:
+            self.transitions = torch.zeros((self.num_classes, self.num_classes))
+        for pred in y_pred:
+            self.transitions += get_transition_matrix(pred, num_classes=self.num_classes)
+
     def commit(self):
         self.accuracy_evolution.append(compute_accuracy_from_conf_matrix(self.current_conf))
         self.confs.append(self.current_conf)
@@ -247,6 +273,16 @@ class ClassifierMetrics:
             sn.heatmap(self.normalized_conf(index), annot=True, fmt='.4f', cmap='flare')
         else:
             sn.heatmap(self.confs[index], annot=True, fmt='.0f', cmap='flare')
+
+        plt.show()
+
+    def plot_transition_matrix(self):
+        assert self.transitions is not None, 'Transition matrix not added to this metric.'
+
+        plt.figure()
+        plt.title('Transition matrix')
+
+        sn.heatmap(self.transitions, annot=True, fmt='.0f', cmap='flare')
 
         plt.show()
 

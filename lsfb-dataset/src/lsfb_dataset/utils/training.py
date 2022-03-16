@@ -13,7 +13,6 @@ import time
 from tqdm.auto import tqdm
 import numpy as np
 import logging
-import os
 
 from lsfb_dataset.utils.metrics import ClassifierMetrics
 
@@ -109,7 +108,7 @@ def train_rnn_model(
         train_metrics.add_loss(epoch_loss/epoch_batches)
         train_metrics.commit()
 
-        logging.info(f'Training: loss = {train_metrics.loss:.4f} ; accuracy = {train_metrics.accuracy:.4f}')
+        logging.info(f'Training: loss = {train_metrics.loss:.4f} ; accuracy = {train_metrics.accuracy(index=-1):.4f}')
         logging.info(f'Recall: {train_metrics.recall()}')
         logging.info(f'Balanced accuracy: {train_metrics.balanced_accuracy(index=-1):.4f}')
 
@@ -148,7 +147,7 @@ def train_rnn_model(
         epoch_time_elapsed = time.time() - epoch_time_elapsed
 
         logging.info(f'Epoch complete in {epoch_time_elapsed // 60}min {epoch_time_elapsed % 60:.0f}s')
-        logging.info(f'Validation: loss = {val_metrics.loss:.4f} ; accuracy = {val_metrics.accuracy:.4f}')
+        logging.info(f'Validation: loss = {val_metrics.loss:.4f} ; accuracy = {val_metrics.accuracy(index=-1):.4f}')
         logging.info(f'Recall: {val_metrics.recall()}')
         logging.info(f'Balanced accuracy: {epoch_balanced_acc:.4f}')
 
