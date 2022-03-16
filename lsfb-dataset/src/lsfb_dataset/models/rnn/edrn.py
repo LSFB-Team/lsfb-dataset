@@ -54,12 +54,12 @@ class EDRN(nn.Module):
 
             g_fg = torch.sigmoid(a_prim[:, :MD])
             g_in = torch.sigmoid(a_prim[:, MD:MD * 2])
-            g_th = torch.tanh(c_t @ self.A_pt + c_t[:, :-M] @ self.A_th + b_prim[:, MD * 2:MD * 3])
+            g_th = torch.tanh(c_t @ self.A_pt + c_t[:, -M:] @ self.A_th + b_prim[:, MD * 2:MD * 3])
             c_t = c_t * g_fg + g_th * g_in
-            g_ot = torch.sigmoid(c_t[:, :-M] @ self.A_ot + b_prim[:, MD * 3:])
+            g_ot = torch.sigmoid(c_t[:, -M:] @ self.A_ot + b_prim[:, MD * 3:])
             cc_t = torch.tanh(c_t) * g_ot
 
-            h_t = cc_t[:, :-M] @ self.A_st
+            h_t = cc_t[:, -M:] @ self.A_st
             for d in range(1, self.substates):
                 h_t = h_t + cc_t[:, (d - 1) * M:d * M]
 
