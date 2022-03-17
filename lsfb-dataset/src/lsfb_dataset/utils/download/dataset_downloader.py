@@ -44,7 +44,7 @@ class DatasetDownloader:
         elif dataset == "cont":
             self.src = "https://lsfb.info.unamur.be/static/datasets/LSFB/lsfb_cont"
 
-    def download_and_sync(self):
+    def download(self):
         """
         The main function orchestrating all the download. Call it to start downloading data.
         """
