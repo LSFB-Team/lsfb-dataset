@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="lsfb-dataset",
-    version="0.0.3",
+    version="0.0.4",
     author="Jérôme Fink",
     author_email="jerome.fink@unamur.be",
     description="A companion library for the LSFB-dataset",
