@@ -5,25 +5,37 @@ import pandas as pd
 import numpy as np
 from tqdm import tqdm
 import os
+from typing import Optional, Callable, List
 
 
 class DatasetDownloader:
     """
-    This dataloader allows you to retrieve and sync the LSFB_CONT dataset.
-
+    DatasetDownloader is an easy to use interface for downloading the LSFB datasets. The download is done via http.
     """
 
     def __init__(
         self,
-        destination,
-        dataset="isol",
-        exclude=[],
-        src=None,
+        destination: str,
+        dataset: str = "isol",
+        exclude: List[str] = [],
+        src: str = None,
+        warning_message: bool = True,
     ):
+        """
+        The constructor initialize the setting you want for the download.
+
+        INPUT:
+        - destination: the destination folder where the dataset will be downloaded.
+        - dataset: the dataset you want to download. either "isol" or "cont". (default: "isol")
+        - exclude: a list of strings containing the element you want to exclude from the download. The excluded element could be video, annotations or landmarks (default: [])
+        - src: the source url of the dataset. By default, the dataset is downloaded from the unamur server located here : lsfb.info.unamur.be
+        - warning_message: if True, a warning message will be displayed to warn you about the size of the download. (default: True)
+        """
 
         self.destination = destination
         self.dataset = dataset
         self.exclude = exclude
+        self.warning_message = warning_message
 
         if src != None:
             self.src = src
@@ -34,10 +46,13 @@ class DatasetDownloader:
 
     def download_and_sync(self):
         """
-        Orchestrate the download and sync of the LSFB_CONT dataset.
+        The main function orchestrating all the download. Call it to start downloading data.
         """
         csv_path = self.download_csv()
         data = pd.read_csv(csv_path)
+
+        if not self._display_warning():
+            return
 
         # processing the CSV file
         for idx, row in tqdm(data.iterrows(), total=data.shape[0]):
@@ -78,7 +93,15 @@ class DatasetDownloader:
         return destination
 
     def download_video(self, row):
+        """
+        Download the video from the source url if the video was not yet downloaded by the client.
+        This function also checks the integrity of the video already downloaded. If the md5 sum doesn't match
+        the video is redownloaded.
 
+        Input:
+
+        row : The dataframe row containing the information for that video.
+        """
         location = row["relative_path"]
 
         # Test if the video exists
@@ -102,6 +125,13 @@ class DatasetDownloader:
                 urllib.request.urlretrieve(video_url, video_destination)
 
     def download_annotations(self, row, hand):
+        """
+        Download the annotations file for a video. There is one file for each hand.
+
+        Input:
+        row : The dataframe row containing the information for that video.
+        hand : The hand you want to download the annotations for. Either "right_hand" or "left_hand".
+        """
 
         col = hand + "_annotations"
         location = row[col]
@@ -126,6 +156,9 @@ class DatasetDownloader:
     def _create_directories(self, path):
         """
         Create the directories in the destination if they don't exist.
+
+        Input:
+        path : The path to the file you want to create the directories for.
         """
 
         directories = os.sep.join(path.split(os.sep)[:-1])
@@ -133,3 +166,41 @@ class DatasetDownloader:
         # Creating missing directories in destination
         if not os.path.exists(directories):
             os.makedirs(directories)
+
+    def _ask_permission(self, message):
+        """
+        Ask the user for permission to download the file.
+
+        Input:
+        message : The message to display to the user.
+        """
+
+        print(message)
+        answer = input("Do you want to continue ? [Y/n] ")
+
+        if answer.lower() == "n":
+            raise Exception("User cancelled the download")
+
+    def _display_warning(self) -> bool:
+        """
+        Display a warning message to the user.
+        """
+        if not self.warning_message:
+            return True
+
+        if self.dataset == "isol":
+            size = "~100 GB"
+        else:
+            size = "~1 TB"
+
+        message = f"The dataset you are downloading is {size}."
+        message += (
+            f" Are you sure you want to download it here : {self.destination} (Y/N): "
+        )
+
+        response = input(message)
+
+        while response.lower() not in ["y", "n"]:
+            response = input("Answer should be Y or N :  ")
+
+        return response.lower() == "y"
