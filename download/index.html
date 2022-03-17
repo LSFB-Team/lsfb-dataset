@@ -9,7 +9,7 @@
   
   
   <link rel="shortcut icon" href="../img/favicon.ico">
-  <title>Visualisation - LSFB Dataset</title>
+  <title>Download Datasets - LSFB Dataset</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
 
   <link rel="stylesheet" href="../css/theme.css" />
@@ -18,8 +18,8 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "Visualisation";
-    var mkdocs_page_input_path = "visualisation.md";
+    var mkdocs_page_name = "Download Datasets";
+    var mkdocs_page_input_path = "download.md";
     var mkdocs_page_url = null;
   </script>
   
@@ -58,18 +58,22 @@
                     <li class="toctree-l1"><a class="reference internal" href="../lsfb_cont/">LSFB Cont</a>
                     </li>
                 </ul>
-                <ul class="current">
-                    <li class="toctree-l1 current"><a class="reference internal current" href="./">Visualisation</a>
-    <ul class="current">
-    </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../visualisation/">Visualisation</a>
                     </li>
                 </ul>
                 <ul>
                     <li class="toctree-l1"><a class="reference internal" href="../transforms/">Transforms</a>
                     </li>
                 </ul>
-                <ul>
-                    <li class="toctree-l1"><a class="reference internal" href="../download/">Download Datasets</a>
+                <ul class="current">
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">Download Datasets</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#basic-usage">Basic Usage</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#advanced-usage">Advanced Usage</a>
+    </li>
+    </ul>
                     </li>
                 </ul>
       </div>
@@ -93,7 +97,7 @@
     
       
     
-    <li>Visualisation</li>
+    <li>Download Datasets</li>
     <li class="wy-breadcrumbs-aside">
       
     </li>
@@ -105,38 +109,28 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="visualisation">Visualisation</h1>
-<p>The visualisation module allows you to visualise the video present in the dataset along with all the metadata associated with them (landmarks, labels).</p>
-<p>The main class of this module is the <code>VideoPlayer</code> class : </p>
-<pre><code class="language-python">from lsfb_dataset.visualisation.video import VideoPlayer
+                <h1 id="download-datasets">Download Datasets</h1>
+<p>To ease the download of the datasets, we provide a python script that will download the datasets for you. The script is desined to download the dataset in an incremental way. Thus, no worries if you stop the download midway. The script will resume the download where it left off. It is also able to update the dataset if new videos or feature are added. </p>
+<h2 id="basic-usage">Basic Usage</h2>
+<p>Here is a simple snippet of code to download the isolated version of the dataset : </p>
+<pre><code class="language-python">from lsfb_dataset.utils.download.dataset_downloader import DatasetDownloader
 
-video_path = &quot;./path/to/video.mp4&quot;
+destination_folder = './path/to/your/datasets/folder'
 
-player = VideoPlayer(video_path)
-player.play()
-
-</code></pre>
-<p>The <code>VideoPlayer</code> accept the path (<code>str</code>) to the video as an argument. The <code>play</code> function is then called to display the video selected using OpenCV.</p>
-<p>The class also provides methods to attach metadata to the video :</p>
-<pre><code class="language-python">from lsfb_dataset.visualisation.video import VideoPlayer
-
-# Creating the VideoPlayer for the video
-player = VideoPlayer(vid_path)
-
-# Attaching the csv file to the video
-player.attach_holistic_features(hollistic_features_path)
-player.attach_annotations(right_hand_path, hand='right')
-player.attach_annotations(left_hand_path, hand='left')
-
-# Telling the player that those information should be displayed
-player.show_landmarks(True)
-player.show_boxes(True)
-player.show_duration(True)
-
-player.play()
+ds = DatasetDownloader(destination_folder, dataset=&quot;isol&quot;)
+ds.download()
 
 </code></pre>
-<p>In this more complex example, we attach the csv file containing the corresponding metadata to the video and we tell the player which additional information should be displayed.</p>
+<p>To download the continuous version, just replace <code>dataset="isol"</code> with <code>dataset="cont"</code></p>
+<h2 id="advanced-usage">Advanced Usage</h2>
+<p>To give you more control about what is downloaded, the <code>DatasetDownloader</code> class propose several parameters : </p>
+<ul>
+<li><strong>destination</strong> : Path to the folder where the dataset will be downloaded. (str)</li>
+<li><strong>dataset</strong> : Type of dataset to download. Must be either <code>isol</code> or <code>cont</code> (str)</li>
+<li><strong>exclude</strong> : A list of the data to exclude from the download. The possible values are <code>video</code> (to skip the download of the videos), <code>landmarks</code> (to skip the download of the mediapipe skeleton information) and <code>annotations</code> (to skip the download of gloss annotation for the continuous dataset).  (list)</li>
+<li><strong>src</strong> : The source url of the dataset. By default, the dataset is downloaded from our server. (str)</li>
+<li><strong>warning_message</strong> : By default, the script display a warning message to the user. If you want to disable this message, set this parameter to <code>False</code>. (bool)</li>
+</ul>
               
             </div>
           </div>
@@ -144,10 +138,8 @@ player.play()
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../transforms/" class="btn btn-neutral float-right" title="Transforms">Next <span class="icon icon-circle-arrow-right"></span></a>
       
-      
-        <a href="../lsfb_cont/" class="btn btn-neutral" title="LSFB Cont"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../transforms/" class="btn btn-neutral" title="Transforms"><span class="icon icon-circle-arrow-left"></span> Previous</a>
       
     </div>
   
@@ -173,10 +165,8 @@ player.play()
   <span class="rst-current-version" data-toggle="rst-current-version">
     
     
-      <span><a href="../lsfb_cont/" style="color: #fcfcfc">&laquo; Previous</a></span>
+      <span><a href="../transforms/" style="color: #fcfcfc">&laquo; Previous</a></span>
     
-    
-      <span><a href="../transforms/" style="color: #fcfcfc">Next &raquo;</a></span>
     
   </span>
 </div>
