@@ -25,8 +25,8 @@ def _check_feature(feature: str):
     ValueError if the feature is unknown.
     """
 
-    if feature not in ['right_hand', 'left_hand', 'face']:
-        raise ValueError(f'Unknown feature: {feature}')
+    if feature not in ["right_hand", "left_hand", "face"]:
+        raise ValueError(f"Unknown feature: {feature}")
 
 
 def _get_sample_size(sample: dict) -> int:
@@ -51,13 +51,13 @@ def _get_sample_size(sample: dict) -> int:
 
     keys = list(sample.keys())
     if len(keys) < 1:
-        raise ValueError('Sample has no feature.')
+        raise ValueError("Sample has no feature.")
 
     size = len(sample[keys[0]])
     for k in keys:
         if len(sample[k]) != size:
             raise ValueError(
-                f'Different number of items in features ({size} in {keys[0]} and {len(sample[k])} in {k}).'
+                f"Different number of items in features ({size} in {keys[0]} and {len(sample[k])} in {k})."
             )
 
     return size
@@ -78,7 +78,7 @@ def _get_category_name(cat_nb: int) -> str:
     str
         The name of the category
     """
-    return f'CLSFB - {cat_nb:02d} ok'
+    return f"CLSFB - {cat_nb:02d} ok"
 
 
 def _get_class_index(filename: str) -> int:
@@ -95,7 +95,7 @@ def _get_class_index(filename: str) -> int:
     int
         The index of the class
     """
-    return 1 if filename[-5] == 'W' else 0
+    return 1 if filename[-5] == "W" else 0
 
 
 def _make_dataset(directory: str, categories: list[str], features: list[str]) -> dict:
@@ -126,9 +126,9 @@ def _make_dataset(directory: str, categories: list[str], features: list[str]) ->
     ------
     ValueError if the folder containing the images of a feature is not found
     """
-    print('Loading dataset...')
+    print("Loading dataset...")
 
-    pbar = tqdm(categories, unit='cat')
+    pbar = tqdm(categories, unit="cat")
 
     instances = {x: [] for x in features}
 
@@ -138,13 +138,15 @@ def _make_dataset(directory: str, categories: list[str], features: list[str]) ->
             pbar.write(f'Category "{cat}" not found. Skipped.')
         else:
             # noinspection PyUnresolvedReferences
-            for video in sorted(entry.name for entry in os.scandir(cat_dir) if entry.is_dir()):
-                pbar.set_description(f'[ {cat} / {video} ]')
+            for video in sorted(
+                entry.name for entry in os.scandir(cat_dir) if entry.is_dir()
+            ):
+                pbar.set_description(f"[ {cat} / {video} ]")
                 for feat in features:
                     video_dir = os.path.join(cat_dir, video, feat)
 
                     if not os.path.isdir(video_dir):
-                        raise ValueError(f'Feature folder not found: {video_dir}')
+                        raise ValueError(f"Feature folder not found: {video_dir}")
 
                     for root, _, fnames in sorted(os.walk(video_dir, followlinks=True)):
                         for fname in fnames:
@@ -169,9 +171,9 @@ def _load_image(img_path: str) -> Image:
     Image.pyi
         The image object
     """
-    with open(img_path, 'rb') as f:
+    with open(img_path, "rb") as f:
         img = Image.open(f)
-        return img.convert('RGB')
+        return img.convert("RGB")
 
 
 class ImageDataset(Dataset):
@@ -213,9 +215,14 @@ class ImageDataset(Dataset):
         The size of the sample
     """
 
-    def __init__(self, root: str, transform: Optional[Callable] = None,
-                 categories_nb: Optional[int] = 50, categories_offset: Optional[int] = 0,
-                 features: Optional[list[str]] = None):
+    def __init__(
+        self,
+        root: str,
+        transform: Optional[Callable] = None,
+        categories_nb: Optional[int] = 50,
+        categories_offset: Optional[int] = 0,
+        features: Optional[list[str]] = None,
+    ):
         """
         Load the dataset.
 
@@ -234,14 +241,16 @@ class ImageDataset(Dataset):
         """
         self.root: str = root
         self.transform = transform
-        self.categories = [_get_category_name(n) for n in
-                           range(categories_offset + 1, categories_offset + categories_nb + 1)]
+        self.categories = [
+            _get_category_name(n)
+            for n in range(categories_offset + 1, categories_offset + categories_nb + 1)
+        ]
 
         if features is None:
-            features = ['right_hand']
+            features = ["right_hand"]
 
         self.features = features
-        self.class_names = ['waiting', 'talking']
+        self.class_names = ["waiting", "talking"]
         self.sample = _make_dataset(root, self.categories, features)
         self.size = _get_sample_size(self.sample)
 
@@ -255,5 +264,5 @@ class ImageDataset(Dataset):
                 item[f] = self.transform(_load_image(self.sample[f][index][0]))
             else:
                 item[f] = _load_image(self.sample[f][index][0])
-            item[f'{f}_label'] = self.sample[f][index][1]
+            item[f"{f}_label"] = self.sample[f][index][1]
         return item

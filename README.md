@@ -24,7 +24,19 @@ Writting good test is trickier, please refer to the [pytest documentation](https
 
 You can always install the library locally by running the command `python -m pip install ./lsfb-dataset` in the root directory.
 
-# Sources 
+ ## Cite
 
-[Testing your python package as installed](https://blog.ganssle.io/articles/2019/08/test-as-installed.html)
-[Testing & Packaging](https://hynek.me/articles/testing-packaging/)
+ If you use this library or the associated dataset, please cite the following paper:
+
+```
+@inproceedings{Fink2021,
+  doi = {10.1109/ijcnn52387.2021.9534336},
+  url = {https://doi.org/10.1109/ijcnn52387.2021.9534336},
+  year = {2021},
+  month = jul,
+  publisher = {{IEEE}},
+  author = {Jerome Fink and Benoit Frenay and Laurence Meurant and Anthony Cleve},
+  title = {{LSFB}-{CONT} and {LSFB}-{ISOL}: Two New Datasets for Vision-Based Sign Language Recognition},
+  booktitle = {2021 International Joint Conference on Neural Networks ({IJCNN})}
+}
+```
