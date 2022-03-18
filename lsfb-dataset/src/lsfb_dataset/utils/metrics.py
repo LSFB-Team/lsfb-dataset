@@ -291,8 +291,9 @@ class ClassifierMetrics:
 
     def commit(self):
         current_balanced_acc = compute_balanced_accuracy_from_conf_matrix(self.current_conf)
-        if current_balanced_acc > self.balanced_accuracy():
-            self.best_iter_index = len(self.confs)
+        idx = len(self.confs)
+        if idx == 0 or current_balanced_acc > self.balanced_accuracy():
+            self.best_iter_index = idx
 
         self.confs.append(self.current_conf)
         self.current_conf = None
