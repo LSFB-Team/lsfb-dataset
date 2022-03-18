@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sn
@@ -6,6 +8,8 @@ import torch
 from sklearn.metrics import confusion_matrix, roc_curve, auc, RocCurveDisplay
 from ..utils.annotations import get_annotations_durations, create_coerc_vec
 from typing import Optional
+from os import path
+from lsfb_dataset.visualisation.annotations import plot_annotations_prediction
 
 
 def compute_accuracy_from_conf_matrix(conf):
@@ -13,8 +17,26 @@ def compute_accuracy_from_conf_matrix(conf):
 
 
 def compute_balanced_accuracy_from_conf_matrix(conf):
-    recall = np.diag(conf) / conf.sum(axis=0)
+    recall = compute_recall_from_conf_matrix(conf)
     return recall.sum() / recall.shape[0]
+
+
+def compute_recall_from_conf_matrix(conf):
+    total = conf.sum(axis=0)
+    return np.divide(np.diag(conf), total, where=(total != 0))
+    #return np.diag(conf) / conf.sum(axis=0)
+
+
+def get_binary_conf_matrix(conf):
+    if conf.shape == (2, 2):
+        return conf
+    assert conf.shape == (3, 3), 'Unsupported confusion matrix size.'
+    bin_conf = np.zeros((2, 2))
+    bin_conf[0, 0] = conf[0, 0] + conf[2, 2]
+    bin_conf[1, 0] = conf[1:, 0].sum() + conf[:-1, 2].sum()
+    bin_conf[0, 1] = conf[0, 1] + conf[0, 2]
+    bin_conf[1, 1] = conf[1, 1]
+    return bin_conf
 
 
 def compute_accuracy(y_true, y_pred):
@@ -147,6 +169,19 @@ class ClassifierMetrics:
             acc.append(compute_accuracy_from_conf_matrix(conf))
         return acc
 
+    def binary_accuracy(self, index=None):
+        if index is None:
+            index = self.best_iter_index
+        conf = get_binary_conf_matrix(self.confs[index])
+        return compute_accuracy_from_conf_matrix(conf)
+
+    @property
+    def binary_accuracy_evolution(self):
+        acc = []
+        for idx in range(len(self.confs)):
+            acc.append(self.binary_accuracy(index=idx))
+        return acc
+
     def recall(self, index: Optional[int] = None):
         if index is None:
             index = self.best_iter_index
@@ -179,6 +214,19 @@ class ClassifierMetrics:
         acc = []
         for idx, conf in enumerate(self.confs):
             acc.append(self.recall(index=idx).sum() / self.num_classes)
+        return acc
+
+    def binary_balanced_accuracy(self, index=None):
+        if index is None:
+            index = self.best_iter_index
+        conf = get_binary_conf_matrix(self.confs[index])
+        return compute_balanced_accuracy_from_conf_matrix(conf)
+
+    @property
+    def binary_balanced_accuracy_evolution(self):
+        acc = []
+        for idx in range(len(self.confs)):
+            acc.append(self.binary_balanced_accuracy(index=idx))
         return acc
 
     @property
@@ -242,15 +290,12 @@ class ClassifierMetrics:
             self.transitions += get_transition_matrix(pred, num_classes=self.num_classes)
 
     def commit(self):
-        self.accuracy_evolution.append(compute_accuracy_from_conf_matrix(self.current_conf))
+        current_balanced_acc = compute_balanced_accuracy_from_conf_matrix(self.current_conf)
+        if current_balanced_acc > self.balanced_accuracy():
+            self.best_iter_index = len(self.confs)
+
         self.confs.append(self.current_conf)
         self.current_conf = None
-
-        current_balanced_acc = self.balanced_accuracy(index=-1)
-        best_balanced_acc = self.balanced_accuracy()
-
-        if current_balanced_acc > best_balanced_acc:
-            self.best_iter_index = len(self.confs) - 1
 
         if len(self.current_true_durations) > 0:
             self.true_duration.append(self.current_true_durations)
@@ -261,6 +306,9 @@ class ClassifierMetrics:
             self.current_pred_durations = []
             self.current_true_transitions = []
             self.current_pred_transitions = []
+
+    def refresh_best_iter_index(self):
+        self.best_iter_index = np.argmax(self.balanced_accuracy_evolution)
 
     def plot_conf(self, normalized=False, index=None):
         if index is None:
@@ -333,4 +381,56 @@ class ClassifierMetrics:
         return pd.DataFrame.from_dict(data)
 
 
+class VideoSegmentationRecords:
+    def __init__(self, model_name: str, isolate_transitions=False, video_names=None, plots_dir=None):
+        self.model_name = model_name
+        self.isolate_transitions = isolate_transitions
 
+        self.video_names = video_names.reset_index(drop=True)
+        self.plots_dir = plots_dir
+
+        self.num_classes = 2
+        self.columns = ['acc', 'balanced_acc', 'recall_waiting', 'recall_talking']
+
+        if isolate_transitions:
+            self.num_classes = 3
+            self.columns += ['acc_with_transitions', 'balanced_acc_with_transitions',
+                             'recall_waiting_with_transitions', 'recall_talking_with_transitions', 'recall_transitions']
+
+        self.records = []
+
+    def add_record(self, y_true: torch.Tensor, y_pred: torch.Tensor, likelihood=None):
+        conf = confusion_matrix(y_true, y_pred, labels=range(self.num_classes))
+        acc = compute_accuracy_from_conf_matrix(conf)
+        balanced_acc = compute_balanced_accuracy_from_conf_matrix(conf)
+        recall = compute_recall_from_conf_matrix(conf)
+
+        if self.plots_dir is not None:
+            video_idx = len(self.records)
+            filename = f'Video_{video_idx}.png'
+            if self.video_names is not None:
+                filename = f'{self.video_names.iloc[video_idx]}.png'
+
+            fig, _ = plot_annotations_prediction(filename, y_true, y_pred, likelihood=likelihood)
+            fig.savefig(path.join(self.plots_dir, filename), dpi=300)
+            plt.close()
+
+        if self.isolate_transitions:
+            bin_conf = get_binary_conf_matrix(conf)
+            bin_balanced_acc = compute_balanced_accuracy_from_conf_matrix(bin_conf)
+            bin_acc = compute_accuracy_from_conf_matrix(bin_conf)
+            bin_recall = compute_recall_from_conf_matrix(bin_conf)
+            record = (bin_acc, bin_balanced_acc, *bin_recall, acc, balanced_acc, *recall)
+            self.records.append(record)
+        else:
+            record = (acc, balanced_acc, *recall)
+            self.records.append(record)
+
+    def get_records(self) -> pd.DataFrame:
+        records = pd.DataFrame.from_records(self.records, columns=self.columns)
+
+        if self.video_names is not None:
+            assert self.video_names.shape[0] == records.shape[0], 'Invalid number of video names.'
+            records['filename'] = self.video_names
+
+        return records
