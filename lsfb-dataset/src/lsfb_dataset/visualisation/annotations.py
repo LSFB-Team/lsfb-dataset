@@ -67,3 +67,32 @@ def compare_with_prediction(true_vec, pred_vec, with_transitions=False):
         plot_annotation_vector(pred_vec == 1, y_max=0.5, ax=ax, label='Prediction', color=Color.PRED_BLUE)
 
     return fig, ax
+
+def plot_annotations_prediction(title, y_true, y_pred, likelihood=None):
+    seq_len = len(y_true)
+
+    fig, (ax0, ax1) = plt.subplots(2, figsize=(40, 8))
+    fig.patch.set_facecolor('#cccaca')
+    fig.suptitle(title, fontsize=16)
+
+    talking = np.where(y_true == 1)[0]
+    pred_talking = np.where(y_pred == 1)[0]
+
+    ax0.set_title('Ground truth')
+    ax0.set_ylim(0, 1)
+    ax0.set_xlim(0, seq_len)
+    ax0.vlines(talking, ymin=0.0, ymax=1.0, label='Annotations')
+    ax0.margins(x=0, y=0)
+    ax0.get_yaxis().set_visible(False)
+    ax0.legend()
+
+    ax1.set_title('Result')
+    ax1.set_ylim(0, 1)
+    ax1.set_xlim(0, seq_len)
+    ax1.vlines(pred_talking, ymin=0.0, ymax=1.0, color='#ffccab', label='Prediction')
+    if likelihood is not None:
+        ax1.plot(likelihood, label='Likelihood')
+    ax1.margins(x=0, y=0)
+    ax1.legend()
+
+    return fig, (ax0, ax1)
