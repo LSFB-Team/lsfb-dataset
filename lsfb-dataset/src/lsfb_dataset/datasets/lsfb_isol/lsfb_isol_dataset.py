@@ -52,6 +52,7 @@ class LsfbIsolDataset(Dataset):
         self.max_frame = max_frame
 
         self.clips_info = pd.read_csv(os.path.join(root, "clips.csv"))
+        self.clips_info = self._filter_clips_info(self.clips_info, features)
 
         if self.features == None:
             self.features = ["video"]
@@ -134,3 +135,15 @@ class LsfbIsolDataset(Dataset):
         unique_gloss = self.clips_info["gloss"].unique().tolist()
         label_mapping = dict(map(lambda x: (x, unique_gloss.index(x)), unique_gloss))
         return label_mapping
+
+    def _filter_clips_info(
+        self, clips_info: pd.DataFrame, feature: list[str]
+    ) -> pd.DataFrame:
+        for feature in feature:
+            if feature == "video":
+                clips_info = clips_info[~clips_info["relative_path"].isnull()]
+
+            else:
+                clips_info = clips_info[~clips_info[feature].isnull()]
+
+        return clips_info
