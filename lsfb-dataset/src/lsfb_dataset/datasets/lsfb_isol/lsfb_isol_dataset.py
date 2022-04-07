@@ -3,6 +3,7 @@ from typing import Tuple, Dict, Optional, Callable, List
 import cv2
 import pandas as pd
 import numpy as np
+from typing import List
 import os
 
 
@@ -137,7 +138,7 @@ class LsfbIsolDataset(Dataset):
         return label_mapping
 
     def _filter_clips_info(
-        self, clips_info: pd.DataFrame, feature: list[str]
+        self, clips_info: pd.DataFrame, feature: List[str]
     ) -> pd.DataFrame:
         for feature in feature:
             if feature == "video":
