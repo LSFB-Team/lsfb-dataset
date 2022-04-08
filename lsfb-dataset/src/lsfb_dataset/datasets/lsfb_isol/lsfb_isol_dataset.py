@@ -30,6 +30,7 @@ class LsfbIsolDataset(Dataset):
         features: Optional[List[str]] = None,
         labels: Optional[Dict[int, str]] = None,
         max_frame: Optional[int] = 50,
+        min_instance: Optional[int] = None,
     ):
         """
         Load the dataset.
@@ -53,7 +54,9 @@ class LsfbIsolDataset(Dataset):
         self.max_frame = max_frame
 
         self.clips_info = pd.read_csv(os.path.join(root, "clips.csv"))
-        self.clips_info = self._filter_clips_info(self.clips_info, features)
+        self.clips_info = self._filter_clips_info(
+            self.clips_info, features, min_instance
+        )
 
         if self.features == None:
             self.features = ["video"]
@@ -138,13 +141,24 @@ class LsfbIsolDataset(Dataset):
         return label_mapping
 
     def _filter_clips_info(
-        self, clips_info: pd.DataFrame, feature: List[str]
+        self,
+        clips_info: pd.DataFrame,
+        feature: List[str],
+        min_instance: Optional[int] = None,
     ) -> pd.DataFrame:
-        for feature in feature:
-            if feature == "video":
-                clips_info = clips_info[~clips_info["relative_path"].isnull()]
 
-            else:
-                clips_info = clips_info[~clips_info[feature].isnull()]
+        if feature:
+            for feature in feature:
+                if feature == "video":
+                    clips_info = clips_info[~clips_info["relative_path"].isnull()]
+
+                else:
+                    clips_info = clips_info[~clips_info[feature].isnull()]
+
+        if min_instance:
+            counts = clips_info["gloss"].value_counts()
+            clips_info = clips_info[
+                clips_info["gloss"].isin(counts[counts >= min_instance].index)
+            ]
 
         return clips_info

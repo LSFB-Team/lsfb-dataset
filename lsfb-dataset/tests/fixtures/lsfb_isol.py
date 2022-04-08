@@ -116,10 +116,3 @@ def create_fake_video(video_path, len=30):
         out.write(frame)
 
     out.release()
-
-
-def create_csv_file(path, type, len=30):
-    """
-    Create a csv file with the given data.
-    """
-    pass

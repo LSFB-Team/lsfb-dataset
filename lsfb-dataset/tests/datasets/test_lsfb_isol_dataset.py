@@ -24,3 +24,14 @@ def test_data_iteration(lsfb_isol_path):
     for X, y in ds:
         assert y in {v: k for k, v in ds.labels.items()}
         assert X["video"].shape == (30, 224, 224, 3)
+
+
+def test_min_instance(lsfb_isol_path):
+
+    ds = LsfbIsolDataset(lsfb_isol_path, min_instance=3)
+
+    assert len(ds) == 7
+
+    ds = LsfbIsolDataset(lsfb_isol_path, min_instance=4)
+
+    assert len(ds) == 4

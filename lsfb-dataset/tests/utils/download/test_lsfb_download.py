@@ -97,7 +97,7 @@ def test_landmarks_download_isol():
         csv_path = ds.download_csv()
 
         data = pd.read_csv(csv_path)
-        row = data.iloc[0]
+        row = data.iloc[1627]
 
         for landmark in landmarks_list:
             ds.download_landmarks(row[landmark])
