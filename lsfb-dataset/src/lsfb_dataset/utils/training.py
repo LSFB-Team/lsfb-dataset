@@ -5,12 +5,13 @@
 
 import torch
 import torch.nn as nn
+from torch.nn.functional import one_hot
 from torch.utils.data import DataLoader
 
 from typing import Dict, Optional
 import copy
 import time
-from tqdm.auto import tqdm
+from tqdm import tqdm
 import numpy as np
 import logging
 
@@ -18,7 +19,7 @@ from lsfb_dataset.utils.metrics import ClassifierMetrics
 
 
 def train_rnn_model(
-        model: nn.Module, criterion: nn.Module, optimizer: torch.optim.Optimizer, # model_name: str,
+        model: nn.Module, criterion: nn.Module, optimizer: torch.optim.Optimizer,
         data_loaders: Dict[str, DataLoader],
         scheduler=None, num_epochs=5, num_classes=2,
         progress_bar=True,
@@ -73,10 +74,10 @@ def train_rnn_model(
     train_metrics = ClassifierMetrics(num_classes=num_classes)
     val_metrics = ClassifierMetrics(num_classes=num_classes)
 
-    np.set_printoptions(precision=4)
+    np.set_printoptions(precision=4, floatmode='fixed')
 
     for epoch in range(1, num_epochs + 1):
-        logging.info(f'{"-"*10} EPOCH {epoch}')
+        logging.info(f'{"-"*10} EPOCH {epoch} {"-"*10}')
         epoch_time_elapsed = time.time()
         epoch_loss = 0
         epoch_batches = 0
@@ -84,14 +85,15 @@ def train_rnn_model(
         logging.info('Training model...')
         for features, targets in tqdm(data_loaders['train'], disable=(not progress_bar)):
             features = features.to(device).float()
-            targets = targets
             # features : (batch_size, seq_len, features_nb)
             # targets  : (batch_size, seq_len)
 
             # --- forward
             scores = model(features)
             _, pred = torch.max(scores, 2)
-            loss = criterion(scores.view(-1, num_classes), targets.to(device).view(-1))
+            # loss = criterion(scores, targets.to(device))
+
+            loss = criterion(scores.permute(0, 2, 1), targets.to(device))
 
             train_metrics.add_predictions(targets, pred.cpu())
 
@@ -99,7 +101,6 @@ def train_rnn_model(
             optimizer.zero_grad()
             loss.backward()
             nn.utils.clip_grad_norm_(model.parameters(), 1)
-
             optimizer.step()
 
             epoch_loss += loss.item()
@@ -108,9 +109,10 @@ def train_rnn_model(
         train_metrics.add_loss(epoch_loss/epoch_batches)
         train_metrics.commit()
 
-        logging.info(f'Training: loss = {train_metrics.loss:.4f} ; accuracy = {train_metrics.accuracy(index=-1):.4f}')
-        logging.info(f'Recall: {train_metrics.recall()}')
-        logging.info(f'Balanced accuracy: {train_metrics.balanced_accuracy(index=-1):.4f}')
+        logging.info(f'Training: loss = {train_metrics.loss:.4f}')
+        logging.info(f'-- Recall: {train_metrics.recall()}')
+        logging.info(f'-- Accuracy: {train_metrics.accuracy(index=-1):.4f}')
+        logging.info(f'-- Balanced accuracy: {train_metrics.balanced_accuracy(index=-1):.4f}')
 
         epoch_loss = 0
         epoch_batches = 0
@@ -126,7 +128,7 @@ def train_rnn_model(
             with torch.no_grad():
                 scores = model(features)
                 _, pred = torch.max(scores, 2)
-                loss = criterion(scores.view(-1, num_classes), targets.to(device).view(-1))
+                loss = criterion(scores.permute(0, 2, 1), targets.to(device))
 
             epoch_loss += loss.item()
             epoch_batches += 1
@@ -137,19 +139,21 @@ def train_rnn_model(
         val_metrics.add_loss(epoch_loss/epoch_batches)
         val_metrics.commit()
 
-        # noinspection PyUnboundLocalVariable
-        val_metrics.add_roc_curve(
-            targets.view(-1).numpy(),
-            scores.detach().view(-1, num_classes).cpu().numpy()
-        )
+        # # noinspection PyUnboundLocalVariable
+        # val_metrics.add_roc_curve(
+        #     targets.view(-1).numpy(),
+        #     scores.detach().view(-1, num_classes).cpu().numpy()
+        # )
 
         epoch_balanced_acc = val_metrics.balanced_accuracy(index=-1)
+
         epoch_time_elapsed = time.time() - epoch_time_elapsed
 
+        logging.info(f'Validation: loss = {val_metrics.loss:.4f}')
+        logging.info(f'-- Recall: {val_metrics.recall(index=-1)}')
+        logging.info(f'-- Accuracy: {val_metrics.accuracy(index=-1):.4f}')
+        logging.info(f'-- Balanced accuracy: {val_metrics.balanced_accuracy(index=-1):.4f}')
         logging.info(f'Epoch complete in {epoch_time_elapsed // 60}min {epoch_time_elapsed % 60:.0f}s')
-        logging.info(f'Validation: loss = {val_metrics.loss:.4f} ; accuracy = {val_metrics.accuracy(index=-1):.4f}')
-        logging.info(f'Recall: {val_metrics.recall()}')
-        logging.info(f'Balanced accuracy: {epoch_balanced_acc:.4f}')
 
         if scheduler is not None:
             # noinspection PyUnresolvedReferences
@@ -158,7 +162,6 @@ def train_rnn_model(
         if epoch_balanced_acc > best_acc:
             best_acc = epoch_balanced_acc
             best_model_wts = copy.deepcopy(model.state_dict())
-            # torch.jit.save(model, best_model_path)
 
     time_elapsed = time.time() - since
     logging.info(f'Training complete in {time_elapsed // 60:.0f}min {time_elapsed % 60:.0f}s')

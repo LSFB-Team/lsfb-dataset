@@ -1,5 +1,3 @@
-import os
-
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sn
@@ -9,7 +7,7 @@ from sklearn.metrics import confusion_matrix, roc_curve, auc, RocCurveDisplay
 from ..utils.annotations import get_annotations_durations, create_coerc_vec
 from typing import Optional
 from os import path
-from lsfb_dataset.visualisation.annotations import plot_annotations_prediction
+from lsfb_dataset.visualisation.annotations import plot_labels
 
 
 def compute_accuracy_from_conf_matrix(conf):
@@ -21,10 +19,39 @@ def compute_balanced_accuracy_from_conf_matrix(conf):
     return recall.sum() / recall.shape[0]
 
 
-def compute_recall_from_conf_matrix(conf):
+def compute_precision_from_conf_matrix(conf):
     total = conf.sum(axis=0)
-    return np.divide(np.diag(conf), total, where=(total != 0))
-    #return np.diag(conf) / conf.sum(axis=0)
+    return np.divide(np.diag(conf), total, out=np.zeros_like(total, dtype='float'), where=(total != 0))
+
+
+def compute_recall_from_conf_matrix(conf):
+    total = conf.sum(axis=1)
+    return np.divide(np.diag(conf), total, out=np.zeros_like(total, dtype='float'), where=(total != 0))
+
+
+def compute_multi_class_dice_coefficient_from_conf_matrix(conf):
+    assert len(conf.shape) == 2, 'The confusion matrix must be in 2D.'
+    assert conf.shape[0] == conf.shape[1], 'The confusion matrix is not squared.'
+
+    num_classes = conf.shape[0]
+    dice = []
+
+    for c in range(num_classes):
+        TP = conf[c, c]
+        FP = conf[:, c].sum() - TP
+        FN = conf[c, :].sum() - TP
+        dice.append( (2 * TP) / (2 * TP + FP + FN) )
+
+    return dice
+
+def compute_dice_coefficient_from_conf_matrix(conf):
+    assert conf.shape == (2, 2), 'Unable to compute dice coefficient for multi-class segmentation.'
+
+    TP = conf[1, 1]
+    FP = conf[1, 0]
+    FN = conf[0, 1]
+
+    return (2*TP) / (2*TP + FP + FN)
 
 
 def get_binary_conf_matrix(conf):
@@ -74,14 +101,23 @@ def get_transition_matrix(y, num_classes=3):
     return trans_mat
 
 
-def plot_distributions(dist_true, dist_pred, title=None):
-    plt.figure()
-    if title is not None:
-        plt.title(title)
-    plt.hist(dist_true, bins=100, range=(0, 5000), alpha=0.4, density=True, label='Target')
-    plt.hist(dist_pred, bins=100, range=(0, 5000), alpha=0.4, density=True, label='Prediction')
-    plt.legend()
+def plot_distributions(dist_true: list[int], dist_pred: list[int],
+                       title: str, x_label: str,
+                       bin_width=50, max_value=2000):
+    fig, ax = plt.subplots(1)
+
+    x1 = pd.Series(data=dist_true, name='True durations')
+    x2 = pd.Series(data=dist_pred, name='Pred durations')
+
+    sn.histplot(data=x1, binwidth=bin_width, binrange=(0, max_value), stat='density', ax=ax)
+    sn.histplot(data=x2, binwidth=bin_width, binrange=(0, max_value), stat='density', ax=ax, color='orange', alpha=0.4)
+
+    ax.set_xlabel(title)
+    ax.set_title(x_label)
+
     plt.show()
+
+    return fig
 
 
 class ClassifierMetrics:
@@ -132,7 +168,6 @@ class ClassifierMetrics:
         }
 
     def load_state_dict(self, state):
-        self.best_iter_index = state['best_iter_index']
         self.loss_evolution = state['loss_evolution']
         self.true_duration = state['true_duration']
         self.pred_duration = state['pred_duration']
@@ -143,6 +178,8 @@ class ClassifierMetrics:
 
         if 'transitions' in state:
             self.transitions = state['transitions']
+
+        self.refresh_best_iter_index()
 
     def conf(self):
         return self.confs[self.best_iter_index]
@@ -156,6 +193,8 @@ class ClassifierMetrics:
     @property
     def loss(self):
         return self.loss_evolution[self.best_iter_index]
+
+    # ------- Accuracy
 
     def accuracy(self, index=None):
         if index is None:
@@ -182,19 +221,14 @@ class ClassifierMetrics:
             acc.append(self.binary_accuracy(index=idx))
         return acc
 
+    # ------- Recall
+
     def recall(self, index: Optional[int] = None):
         if index is None:
             index = self.best_iter_index
-        conf = self.confs[index]
-        recall = []
-        for c in range(self.num_classes):
-            class_total = conf[:, c].sum()
-            if class_total == 0:
-                recall.append(0)
-            else:
-                recall.append(conf[c, c] / class_total)
-        return np.array(recall)
+        return compute_recall_from_conf_matrix(self.confs[index])
 
+    @property
     def recall_evolution(self):
         recall_evo = []
         for class_index in range(self.num_classes):
@@ -206,14 +240,69 @@ class ClassifierMetrics:
 
         return recall_evo
 
+    def binary_recall(self, index=None):
+        if index is None:
+            index = self.best_iter_index
+        return compute_recall_from_conf_matrix(get_binary_conf_matrix(self.confs[index]))
+
+    @property
+    def binary_recall_evolution(self):
+        recall_evo = []
+        for class_index in range(self.num_classes):
+            recall_evo.append([])
+        for index in range(len(self.confs)):
+            recall = self.binary_recall(index=index)
+            for class_index, value in enumerate(recall):
+                recall_evo[class_index].append(value)
+
+        return recall_evo
+
+    # ------- Precision
+
+    def precision(self, index: Optional[int] = None):
+        if index is None:
+            index = self.best_iter_index
+        return compute_precision_from_conf_matrix(self.confs[index])
+
+    @property
+    def precision_evolution(self):
+        prec_evo = []
+        for class_index in range(self.num_classes):
+            prec_evo.append([])
+        for index in range(len(self.confs)):
+            prec = self.precision(index=index)
+            for class_index, value in enumerate(prec):
+                prec_evo[class_index].append(value)
+
+        return prec_evo
+
+    def binary_precision(self, index: Optional[int] = None):
+        if index is None:
+            index = self.best_iter_index
+        return compute_precision_from_conf_matrix(get_binary_conf_matrix(self.confs[index]))
+
+    @property
+    def binary_precision_evolution(self):
+        prec_evo = []
+        for class_index in range(self.num_classes):
+            prec_evo.append([])
+        for index in range(len(self.confs)):
+            prec = self.binary_precision(index=index)
+            for class_index, value in enumerate(prec):
+                prec_evo[class_index].append(value)
+
+        return prec_evo
+
+    # ------- Balanced Accuracy
+
     def balanced_accuracy(self, index=None):
         return self.recall(index=index).sum() / self.num_classes
 
     @property
     def balanced_accuracy_evolution(self):
         acc = []
-        for idx, conf in enumerate(self.confs):
-            acc.append(self.recall(index=idx).sum() / self.num_classes)
+        for conf in self.confs:
+            acc.append(compute_balanced_accuracy_from_conf_matrix(conf))
         return acc
 
     def binary_balanced_accuracy(self, index=None):
@@ -228,6 +317,30 @@ class ClassifierMetrics:
         for idx in range(len(self.confs)):
             acc.append(self.binary_balanced_accuracy(index=idx))
         return acc
+
+    # ------- Dice Coefficient
+
+    def dice_coefficient(self, index=None):
+        if index is None:
+            index = self.best_iter_index
+        return compute_multi_class_dice_coefficient_from_conf_matrix(self.confs[index])
+
+    @property
+    def dice_coefficient_evolution(self):
+        coef = [self.dice_coefficient(idx) for idx in range(len(self.confs))]
+        return np.array(coef)
+
+    def binary_dice_coefficient(self, index=None):
+        if index is None:
+            index = self.best_iter_index
+        conf = get_binary_conf_matrix(self.confs[index])
+        return compute_dice_coefficient_from_conf_matrix(conf)
+
+    @property
+    def binary_dice_coefficient_evolution(self):
+        return [self.binary_dice_coefficient(idx) for idx in range(len(self.confs))]
+
+    # ------- ROC AUC
 
     @property
     def roc_curve(self):
@@ -244,6 +357,8 @@ class ClassifierMetrics:
             auc_scores.append(auc(fpr, tpr))
 
         return auc_scores
+
+    # ------- Update methods
 
     def add_predictions(self, y_true, y_pred):
         if self.current_conf is None:
@@ -315,38 +430,49 @@ class ClassifierMetrics:
         if index is None:
             index = self.best_iter_index
 
-        plt.figure()
-        plt.title('Confusion matrix')
+        fig, ax0 = plt.subplots(1, figsize=(12, 12))
+        ax0.set_title('Confusion matrix')
 
         if normalized:
-            sn.heatmap(self.normalized_conf(index), annot=True, fmt='.4f', cmap='flare')
+            sn.heatmap(self.normalized_conf(index), annot=True, fmt='.4f', cmap='flare', ax=ax0)
         else:
-            sn.heatmap(self.confs[index], annot=True, fmt='.0f', cmap='flare')
+            sn.heatmap(self.confs[index], annot=True, fmt='.0f', cmap='flare', ax=ax0)
 
-        plt.show()
+        return fig
 
     def plot_transition_matrix(self):
         assert self.transitions is not None, 'Transition matrix not added to this metric.'
 
-        plt.figure()
-        plt.title('Transition matrix')
+        fig, ax0 = plt.subplots(1, figsize=(12, 12))
+        ax0.set_title('Transition matrix')
 
-        sn.heatmap(self.transitions, annot=True, fmt='.0f', cmap='flare')
+        sn.heatmap(self.transitions, annot=True, fmt='.0f', cmap='flare', ax=ax0)
 
-        plt.show()
+        return fig
 
     def plot_duration_distributions(self, index=None):
         if index is None:
             index = self.best_iter_index
 
-        plot_distributions(self.true_duration[index], self.pred_duration[index], 'Annotation duration distributions')
+        return plot_distributions(
+            self.true_duration[index],
+            self.pred_duration[index],
+            title='Sign duration distribution',
+            x_label='Sign duration (ms)'
+        )
 
     def plot_transition_distributions(self, index=None):
         if index is None:
             index = self.best_iter_index
 
-        plot_distributions(self.true_transitions[index], self.pred_transitions[index],
-                           'Annotation transition duration distributions')
+        return plot_distributions(
+            self.true_transitions[index],
+            self.pred_transitions[index],
+            title='Transition duration distribution',
+            x_label='Transition duration (ms)',
+            bin_width=20,
+            max_value=1000,
+        )
 
     def plot_roc_curve(self, index=None):
         if index is None:
@@ -364,7 +490,7 @@ class ClassifierMetrics:
             display.plot(ax=ax1, label=f'AUC of class {c}: {score:.4f}')
         plt.show()
 
-    def get_results(self):
+    def get_results_evolution(self):
         if len(self.confs) == 0:
             return None
 
@@ -375,7 +501,7 @@ class ClassifierMetrics:
             'loss': self.loss_evolution,
         }
 
-        recall_evolution = self.recall_evolution()
+        recall_evolution = self.recall_evolution
         for class_index, class_recall_evo in enumerate(recall_evolution):
             data[f'recall_{class_index}'] = class_recall_evo
 
@@ -395,10 +521,13 @@ class VideoSegmentationRecords:
 
         if isolate_transitions:
             self.num_classes = 3
-            self.columns += ['acc_with_transitions', 'balanced_acc_with_transitions',
-                             'recall_waiting_with_transitions', 'recall_talking_with_transitions', 'recall_transitions']
+            self.columns += [
+                'acc_with_transitions', 'balanced_acc_with_transitions',
+                'recall_waiting_with_transitions', 'recall_talking_with_transitions', 'recall_transitions'
+            ]
 
         self.records = []
+        self.likelihoods = []
 
     def add_record(self, y_true: torch.Tensor, y_pred: torch.Tensor, likelihood=None):
         conf = confusion_matrix(y_true, y_pred, labels=range(self.num_classes))
@@ -412,7 +541,7 @@ class VideoSegmentationRecords:
             if self.video_names is not None:
                 filename = f'{self.video_names.iloc[video_idx]}.png'
 
-            fig, _ = plot_annotations_prediction(filename, y_true, y_pred, likelihood=likelihood)
+            fig = plot_labels(filename, y_true, y_pred, likelihood=likelihood)
             fig.savefig(path.join(self.plots_dir, filename), dpi=300)
             plt.close()
 
@@ -427,6 +556,9 @@ class VideoSegmentationRecords:
             record = (acc, balanced_acc, *recall)
             self.records.append(record)
 
+    def add_prediction(self, y_true, likelihood):
+        self.likelihoods.append((y_true, likelihood))
+
     def get_records(self) -> pd.DataFrame:
         records = pd.DataFrame.from_records(self.records, columns=self.columns)
 
@@ -435,3 +567,6 @@ class VideoSegmentationRecords:
             records['filename'] = self.video_names
 
         return records
+
+    def get_likelihoods(self):
+        return self.likelihoods

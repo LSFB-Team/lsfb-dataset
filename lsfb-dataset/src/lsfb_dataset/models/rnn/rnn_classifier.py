@@ -1,8 +1,10 @@
 import torch.nn as nn
-from .lstm import LSTM
-from .edrn import EDRN
+import torch.jit as jit
+from .lstm_old import LSTM
+from .edrn_old import EDRN
 from .plstm import PhasedLSTM
 from .mogrifier_lstm import MogrifierLSTM
+from .mogrifier_edrn import MogrifierEDRN
 
 
 class LSTMClassifier(nn.Module):
@@ -12,28 +14,15 @@ class LSTMClassifier(nn.Module):
             hidden_size,
             n_classes,
             n_layers=1,
-            dropout_in=0.0,
-            dropout_w=0.0,
-            dropout_out=0.0,
     ):
         super(LSTMClassifier, self).__init__()
 
-        if dropout_in or dropout_w or dropout_out:
-            self.rnn = LSTM(
-                input_size=input_size,
-                hidden_size=hidden_size,
-                num_layers=n_layers,
-                dropout_in=dropout_in,
-                dropout_w=dropout_w,
-                dropout_out=dropout_out,
-            )
-        else:
-            self.rnn = nn.LSTM(
-                input_size=input_size,
-                hidden_size=hidden_size,
-                num_layers=n_layers,
-            )
-
+        self.rnn = nn.LSTM(
+            input_size=input_size,
+            hidden_size=hidden_size,
+            num_layers=n_layers,
+            batch_first=True,
+        )
         self.fc = nn.Linear(hidden_size, n_classes)
 
     def forward(self, x):
@@ -57,7 +46,7 @@ class EDRNClassifier(nn.Module):
         self.rnn = EDRN(
             input_size=input_size,
             hidden_size=hidden_size,
-            substates=substates,
+            num_substates=substates,
         )
 
         self.fc = nn.Linear(hidden_size, n_classes)
@@ -111,6 +100,34 @@ class MogrifierLSTMClassifier(nn.Module):
         self.n_classes = n_classes
 
         self.rnn = MogrifierLSTM(input_size, hidden_size, mogrify_steps=mogrify_steps)
+
+        self.fc = nn.Linear(hidden_size, n_classes)
+
+    def forward(self, x):
+        outputs, _ = self.rnn(x)
+        return self.fc(outputs)
+
+
+class MogrifierEDRNClassifier(nn.Module):
+    def __init__(
+            self,
+            input_size,
+            hidden_size,
+            n_classes,
+            substates=2,
+            mogrify_steps=5,
+    ):
+        super(MogrifierEDRNClassifier, self).__init__()
+
+        self.input_size = input_size
+        self.n_classes = n_classes
+
+        self.rnn = MogrifierEDRN(
+            input_size=input_size,
+            hidden_size=hidden_size,
+            substates=substates,
+            mogrify_steps=mogrify_steps,
+        )
 
         self.fc = nn.Linear(hidden_size, n_classes)
 

@@ -1,3 +1,4 @@
+
 import torch
 from torch import jit, nn, Tensor
 from torch.nn import init, Parameter
@@ -5,20 +6,29 @@ from typing import List, Tuple
 import math
 
 
-class LSTMCell(jit.ScriptModule):
-    def __init__(self, input_size: int, hidden_size: int):
-        super(LSTMCell, self).__init__()
+class PLSTMCell(jit.ScriptModule):
+    """
+    Reference
+        https://github.com/Marcovaldong/lstmp.pytorch
+    """
+
+    def __init__(self, input_size: int, hidden_size: int, projection_size: int):
+        super(PLSTMCell, self).__init__()
 
         self.weight_ih = Parameter(torch.randn(4 * hidden_size, input_size))
-        self.weight_hh = Parameter(torch.randn(4 * hidden_size, hidden_size))
+        self.weight_hh = Parameter(torch.randn(4 * hidden_size, projection_size))
+        self.weight_hr = Parameter(torch.randn(projection_size, hidden_size))
+
         self.bias_ih = Parameter(torch.randn(4 * hidden_size))
         self.bias_hh = Parameter(torch.randn(4 * hidden_size))
+
         self.init_weights(hidden_size)
 
     def init_weights(self, hidden_size: int):
         stdv = 1.0 / math.sqrt(hidden_size)
         init.uniform_(self.weight_ih, -stdv, stdv)
         init.uniform_(self.weight_hh, -stdv, stdv)
+        init.uniform_(self.weight_hr, -stdv, stdv)
         init.uniform_(self.bias_ih)
         init.uniform_(self.bias_hh)
 
@@ -39,21 +49,22 @@ class LSTMCell(jit.ScriptModule):
 
         cy = (forget_gate * cx) + (in_gate * cell_gate)
         hy = out_gate * torch.tanh(cy)
+        hy = torch.mm(hy, self.weight_hr.t())
 
         return hy, (hy, cy)
 
 
-class LSTMLayer(jit.ScriptModule):
-    def __init__(self, input_size: int, hidden_size: int):
-        super(LSTMLayer, self).__init__()
+class PLSTMLayer(jit.ScriptModule):
+    def __init__(self, input_size: int, hidden_size: int, projection_size: int):
+        super(PLSTMLayer, self).__init__()
         self.hidden_size = hidden_size
-        self.cell = LSTMCell(input_size, hidden_size)
+        self.projection_size = projection_size
+        self.cell = PLSTMCell(input_size, hidden_size, projection_size)
 
     @jit.script_method
-    def init_state(self, x: Tensor):
-        batch_size = x.size(0)
-        hx = x.new_zeros(batch_size, self.hidden_size)
-        cx = x.new_zeros(batch_size, self.hidden_size)
+    def init_state(self, x: Tensor) -> Tuple[Tensor, Tensor]:
+        hx = x.new_zeros(x.size(1), self.projection_size)
+        cx = x.new_zeros(x.size(1), self.hidden_size)
         hx.requires_grad_(False)
         cx.requires_grad_(False)
         return hx, cx
@@ -61,23 +72,21 @@ class LSTMLayer(jit.ScriptModule):
     @jit.script_method
     def forward(self, x: Tensor) -> Tuple[Tensor, Tuple[Tensor, Tensor]]:
         state = self.init_state(x)
-        inputs = x.permute(1, 0, 2).unbind(0)
-        outputs = torch.jit.annotate(List[Tensor], [])
-
+        inputs = x.unbind(0)
+        outputs = jit.annotate(List[Tensor], [])
         for x_t in inputs:
             out, state = self.cell(x_t, state)
             outputs.append(out)
+        return torch.stack(outputs), state
 
-        return torch.stack(outputs).permute(1, 0, 2), state
 
-
-class LSTMClassifier(jit.ScriptModule):
-    def __init__(self, input_size: int, hidden_size: int, num_classes: int):
-        super(LSTMClassifier, self).__init__()
-        self.lstm = LSTMLayer(input_size, hidden_size)
-        self.fc = nn.Linear(hidden_size, num_classes)
+class PLSTMClassifier(jit.ScriptModule):
+    def __init__(self, input_size: int, hidden_size: int, projection_size: int, num_classes: int):
+        super(PLSTMClassifier, self).__init__()
+        self.plstm = PLSTMLayer(input_size, hidden_size, projection_size)
+        self.fc = nn.Linear(projection_size, num_classes)
 
     @jit.script_method
     def forward(self, x: Tensor):
-        x, _ = self.lstm(x)
+        x, _ = self.plstm(x)
         return self.fc(x)
