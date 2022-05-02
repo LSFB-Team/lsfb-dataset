@@ -1,3 +1,4 @@
+import numpy as np
 from cv2 import cv2
 from os import path
 import random
@@ -27,6 +28,12 @@ class VideoPlayer:
         self.pose_features: Optional[pd.DataFrame] = None
         self.hands_features: Optional[pd.DataFrame] = None
         self.face_features: Optional[pd.DataFrame] = None
+
+        self.isolate_landmarks = False
+        self.isolate_original = False
+        self.crop = None
+
+        self.pause = False
 
     def attach_holistic_features(self, holistic_filepath: str):
         if not path.isfile(holistic_filepath):
@@ -73,22 +80,37 @@ class VideoPlayer:
         frame_rate = cap.get(cv2.CAP_PROP_FPS)
         frame_count = cap.get(cv2.CAP_PROP_FRAME_COUNT)
 
-        current_frame = 0
+        frame_nb = 0
         delay = int(1000 / frame_rate)
         total_duration = int(frame_count * 1000 / frame_rate)
         current_time = 0
 
-        while current_frame < frame_count and cap.isOpened():
+        while frame_nb < frame_count and cap.isOpened():
             success, frame = cap.read()
 
             if not success:
                 break
-            if cv2.waitKey(delay) & 0xFF == ord('q'):
+
+            key = cv2.waitKeyEx(delay)
+            if key == ord('q'):
                 break
+            elif key == 32:
+                self.pause = True
+            elif key == 2424832:
+                frame_nb = max(0, frame_nb - 50)
+                cap.set(cv2.CAP_PROP_POS_FRAMES, frame_nb)
+            elif key == 2555904:
+                frame_nb = min(int(frame_count), frame_nb + 50)
+                cap.set(cv2.CAP_PROP_POS_FRAMES, frame_nb)
 
-            self._show_frame(frame, current_frame, current_time, total_duration)
+            while self.pause:
+                key = cv2.waitKeyEx(0)
+                if key == 32:
+                    self.pause = False
 
-            current_frame += 1
+            self._show_frame(frame, frame_nb, current_time, total_duration)
+
+            frame_nb += 1
             current_time += delay
 
         cv2.destroyAllWindows()
@@ -108,17 +130,20 @@ class VideoPlayer:
         return cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
     def _show_frame(self, frame, current_frame, current_time, total_duration):
-        if self.pose_features is not None:
-            draw_pose_landmarks(frame, self.pose_features.iloc[current_frame].values.reshape((-1, 2)))
-        if self.hands_features is not None:
-            draw_hands_landmarks(frame, self.hands_features.iloc[current_frame].values.reshape((-1, 2)))
-        if self.face_features is not None:
-            draw_face_landmarks(frame, self.face_features.iloc[current_frame].values.reshape((-1, 2)))
+        landmarks_frame = None
+        original_frame = None
+
+        if self.isolate_landmarks:
+            landmarks_frame = np.zeros(frame.shape, dtype='uint8')
+        if self.isolate_original:
+            original_frame = frame.copy()
+
+        self._draw_landmarks(frame, current_frame)
+        if landmarks_frame is not None:
+            self._draw_landmarks(landmarks_frame, current_frame)
 
         if self.holistic_features is not None:
             cv2.imshow('Features', get_holistic_features_img(frame, self.holistic_features.iloc[current_frame]))
-            if self.draw_landmarks:
-                draw_holistic_landmarks(frame, self.holistic_features.iloc[current_frame])
             if self.draw_boxes:
                 draw_holistic_boxes(frame, self.holistic_features.iloc[current_frame])
 
@@ -127,10 +152,34 @@ class VideoPlayer:
         if self.left_hand_annotations is not None:
             cv2.imshow('Left hand annotations', get_annotations_img(self.left_hand_annotations, current_time))
 
+        if landmarks_frame is not None:
+            landmarks_frame = self._crop_frame(landmarks_frame)
+            cv2.imshow('Landmarks', landmarks_frame)
+        if original_frame is not None:
+            original_frame = self._crop_frame(original_frame)
+            cv2.imshow('Original', original_frame)
+
+        frame = self._crop_frame(frame)
         if self.draw_duration:
             self._show_duration(frame, current_time, total_duration)
-
         cv2.imshow('Video', frame)
+
+    def _draw_landmarks(self, frame, current_frame):
+        if self.pose_features is not None:
+            draw_pose_landmarks(frame, self.pose_features.iloc[current_frame].values.reshape((-1, 2)))
+        if self.hands_features is not None:
+            draw_hands_landmarks(frame, self.hands_features.iloc[current_frame].values.reshape((-1, 2)))
+        if self.face_features is not None:
+            draw_face_landmarks(frame, self.face_features.iloc[current_frame].values.reshape((-1, 2)))
+        if self.holistic_features is not None:
+            draw_holistic_landmarks(frame, self.holistic_features.iloc[current_frame])
+
+    def _crop_frame(self, frame):
+        if self.crop is None:
+            return frame
+
+        x1, y1, x2, y2 = self.crop
+        return frame[y1:y2, x1:x2]
 
     def _show_duration(self, frame, current_time: int, total_duration: int):
         duration_info = f'{self._duration_to_str(current_time)} / {self._duration_to_str(total_duration)}'

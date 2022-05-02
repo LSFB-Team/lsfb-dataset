@@ -31,12 +31,6 @@ class MogrifierLSTMCell(jit.ScriptModule):
                 x = (2 * torch.sigmoid(mogrifier(h))) * x
             else:
                 h = (2 * torch.sigmoid(mogrifier(x))) * h
-        #
-        # x = (2 * torch.sigmoid(self.mogrifier_list[0](h))) * x
-        # h = (2 * torch.sigmoid(self.mogrifier_list[1](x))) * h
-        # x = (2 * torch.sigmoid(self.mogrifier_list[2](h))) * x
-        # h = (2 * torch.sigmoid(self.mogrifier_list[3](x))) * h
-        # x = (2 * torch.sigmoid(self.mogrifier_list[4](h))) * x
 
         return x, h
 
@@ -64,7 +58,7 @@ class MogrifierLSTM(jit.ScriptModule):
 
         hidden_seq = []
         for t in range(seq_len):
-            x_t = x[:, t, :]
+            x_t = x[:, t, :].contiguous()
             h_t, c_t = self.mogrifier_lstm_cell(x_t, (h_t, c_t))
             hidden_seq.append(h_t)
 

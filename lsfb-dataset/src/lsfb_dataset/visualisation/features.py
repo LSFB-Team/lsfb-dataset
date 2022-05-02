@@ -71,11 +71,8 @@ def draw_annotation(img, annot, time, index=0):
                 (255, 255, 255), 1, 2)
 
 
-def get_annotations_img(df_annot, time, time_offset=3000):
-    w = 512
-    h = 256
-
-    annot_img = np.zeros((h, w, 3), dtype='uint8')
+def get_annotations_img(df_annot, time, time_offset=3000, width=512, height=256):
+    annot_img = np.zeros((height, width, 3), dtype='uint8')
 
     df_current_annotations = get_annotations_in_time_range(df_annot, (time - time_offset, time + time_offset))
     for index, annot in df_current_annotations.iterrows():

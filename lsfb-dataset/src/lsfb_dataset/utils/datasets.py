@@ -34,9 +34,9 @@ def load_data(root: str, feature_name, videos: pd.DataFrame, isolate_transition=
 
 
 def train_split_videos(df_videos: pd.DataFrame, signers_frac=0.6, seed=42):
-    signers = pd.Series(df_videos['signers'].unique())
+    signers = pd.Series(df_videos['signer'].unique())
     train_signers = signers.sample(frac=signers_frac, random_state=seed)
     val_signers = signers.drop(index=train_signers.index)
-    train_df = df_videos[df_videos['signers'].isin(train_signers)]
-    val_df = df_videos[df_videos['signers'].isin(val_signers)]
+    train_df = df_videos[df_videos['signer'].isin(train_signers)]
+    val_df = df_videos[df_videos['signer'].isin(val_signers)]
     return train_df, val_df

@@ -1,6 +1,9 @@
 import matplotlib.pyplot as plt
+from matplotlib.cm import get_cmap
+from matplotlib.patches import Rectangle
 import numpy as np
 from enum import Enum
+from ..utils.annotations import vec_to_annotations
 
 
 class Color(Enum):
@@ -68,6 +71,7 @@ def compare_with_prediction(true_vec, pred_vec, with_transitions=False):
 
     return fig, ax
 
+
 def plot_annotations_prediction(title, y_true, y_pred, likelihood=None):
     seq_len = len(y_true)
 
@@ -96,3 +100,61 @@ def plot_annotations_prediction(title, y_true, y_pred, likelihood=None):
     ax1.legend()
 
     return fig, (ax0, ax1)
+
+
+def plot_labels(title, y_true, y_pred=None, likelihood=None):
+    seq_len = len(y_true)
+    annots_true = vec_to_annotations(y_true)
+    colors = get_cmap('Paired').colors
+    colors_nb = len(colors)
+
+    if y_pred is not None:
+        annots_pred = vec_to_annotations(y_pred)
+        fig, (ax0, ax1) = plt.subplots(2, figsize=(40, 8))
+        ax1.set_title('Result')
+        ax1.set_ylim(0, 1)
+        ax1.set_xlim(0, seq_len)
+
+        for idx, (start, end) in enumerate(annots_pred):
+            ax1.add_patch(Rectangle((start, 0.), end - start, 1., facecolor=colors[idx % colors_nb]))
+
+        if likelihood is not None:
+            ax1.plot(likelihood, label='Likelihood')
+        ax1.margins(x=0, y=0)
+        ax1.legend()
+    else:
+        fig, ax0 = plt.subplots(1, figsize=(40, 4))
+
+    fig.patch.set_facecolor('#ffffff')
+    fig.suptitle(title, fontsize=16)
+
+    ax0.set_title('Ground truth')
+    ax0.set_ylim(0, 1)
+    ax0.set_xlim(0, seq_len)
+
+    for idx, (start, end) in enumerate(annots_true):
+        ax0.add_patch(Rectangle((start, 0.), end-start, 1., facecolor=colors[idx % colors_nb]))
+
+    ax0.margins(x=0, y=0)
+    ax0.get_yaxis().set_visible(False)
+
+    return fig
+
+
+def create_annot_fig(vec):
+    fig, ax0 = plt.subplots(1, figsize=(30, 2))
+    fig.patch.set_facecolor('#ffffff')
+
+    ax0.set_ylim(0, 1)
+    ax0.set_xlim(0, len(vec))
+
+    ax0.get_yaxis().set_visible(False)
+    ax0.get_xaxis().set_visible(False)
+
+    colors = ['black', '#aaa']
+
+    for idx, (start, end) in enumerate(vec_to_annotations(vec)):
+        ax0.add_patch(Rectangle((start, 0.), end - start, 1., facecolor=colors[idx % len(colors)]))
+
+    fig.tight_layout()
+    return fig

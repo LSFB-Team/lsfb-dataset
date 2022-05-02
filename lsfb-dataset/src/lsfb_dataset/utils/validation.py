@@ -1,6 +1,5 @@
 import logging
 
-import pandas as pd
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
@@ -8,6 +7,7 @@ from tqdm.auto import tqdm
 from os import path
 import os
 import matplotlib.pyplot as plt
+import pickle
 
 from lsfb_dataset.utils.metrics import ClassifierMetrics, VideoSegmentationRecords
 from lsfb_dataset.datasets.lsfb_cont.skeleton_landmarks import SkeletonLandmarksDataset
@@ -21,6 +21,7 @@ def evaluate_rnn_model(
         dest_dir=None,
         progress_bar=True,
         plots_dir=None,
+        predictions_dir=None,
         video_names=None,
 ):
     assert 0 < num_classes <= 3, 'Unsupported number of classes.'
@@ -70,10 +71,18 @@ def evaluate_rnn_model(
 
             recorder.add_record(targets, pred, likelihood[:, 1])
 
+            if predictions_dir is not None:
+                recorder.add_prediction(targets, likelihood)
+
             epoch_batches += batch_size
 
     metrics.commit()
     records = recorder.get_records()
+
+    if predictions_dir is not None:
+        os.makedirs(predictions_dir, exist_ok=True)
+        with open(os.path.join(predictions_dir, f'{model_name}.preds'), 'wb') as file:
+            pickle.dump(recorder.get_likelihoods(), file)
 
     logging.info(f'Accuracy: {metrics.accuracy()}')
     logging.info(f'Balanced accuracy: {metrics.balanced_accuracy()}')
