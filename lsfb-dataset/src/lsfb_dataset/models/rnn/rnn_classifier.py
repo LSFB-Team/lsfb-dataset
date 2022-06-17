@@ -14,6 +14,7 @@ class LSTMClassifier(nn.Module):
             hidden_size,
             n_classes,
             n_layers=1,
+            bidirectional=False,
     ):
         super(LSTMClassifier, self).__init__()
 
@@ -21,9 +22,10 @@ class LSTMClassifier(nn.Module):
             input_size=input_size,
             hidden_size=hidden_size,
             num_layers=n_layers,
+            bidirectional=bidirectional,
             batch_first=True,
         )
-        self.fc = nn.Linear(hidden_size, n_classes)
+        self.fc = nn.Linear(2*hidden_size if bidirectional else hidden_size, n_classes)
 
     def forward(self, x):
         outputs, _ = self.rnn(x)
