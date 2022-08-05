@@ -101,3 +101,9 @@ def draw_hand_landmarks(img, positions, color=(0, 0, 255)):
 def draw_face_landmarks(img, positions, color=(0, 255, 0)):
     connections = mp.solutions.face_mesh.FACEMESH_CONTOURS
     draw_connections(img, positions, connections, color, thickness=1)
+
+
+def draw_face_mesh(img, positions, color=(0, 255, 0)):
+    connections = mp.solutions.face_mesh.FACEMESH_TESSELATION
+    draw_connections(img, positions, connections, color, thickness=1)
+

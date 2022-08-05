@@ -4,15 +4,9 @@ from os import path
 import random
 from typing import Optional
 import pandas as pd
-from .features import (
-    draw_holistic_landmarks,
-    draw_holistic_boxes,
-    get_holistic_features_img,
-    get_annotations_img,
-    draw_pose_landmarks,
-    draw_hands_landmarks,
-    draw_face_landmarks,
-)
+from .features import draw_holistic_landmarks, draw_holistic_boxes, get_holistic_features_img,\
+    get_annotations_img,\
+    draw_pose_landmarks, draw_hands_landmarks, draw_face_landmarks, draw_face_mesh
 
 
 class VideoPlayer:
@@ -33,6 +27,8 @@ class VideoPlayer:
         self.pose_features: Optional[pd.DataFrame] = None
         self.hands_features: Optional[pd.DataFrame] = None
         self.face_features: Optional[pd.DataFrame] = None
+
+        self.face_meshing = False
 
         self.isolate_landmarks = False
         self.isolate_original = False
@@ -185,7 +181,10 @@ class VideoPlayer:
         if self.hands_features is not None:
             draw_hands_landmarks(frame, self.hands_features.iloc[current_frame].values.reshape((-1, 2)))
         if self.face_features is not None:
-            draw_face_landmarks(frame, self.face_features.iloc[current_frame].values.reshape((-1, 2)))
+            if self.face_meshing:
+                draw_face_mesh(frame, self.face_features.iloc[current_frame].values.reshape((-1, 2)))
+            else:
+                draw_face_landmarks(frame, self.face_features.iloc[current_frame].values.reshape((-1, 2)))
         if self.holistic_features is not None:
             draw_holistic_landmarks(frame, self.holistic_features.iloc[current_frame])
 

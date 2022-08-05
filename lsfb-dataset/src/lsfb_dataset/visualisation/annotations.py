@@ -141,7 +141,7 @@ def plot_labels(title, y_true, y_pred=None, likelihood=None):
     return fig
 
 
-def create_annot_fig(vec):
+def create_annot_fig(vec, style='black', likelihood=None, threshold=None):
     fig, ax0 = plt.subplots(1, figsize=(30, 2))
     fig.patch.set_facecolor('#ffffff')
 
@@ -151,10 +151,21 @@ def create_annot_fig(vec):
     ax0.get_yaxis().set_visible(False)
     ax0.get_xaxis().set_visible(False)
 
-    colors = ['black', '#aaa']
+    if style == 'black':
+        colors = ['black']
+    elif style == 'colored':
+        colors = plt.get_cmap('Dark2').colors
+    else:
+        raise ValueError(f'Unknown style: {style}.')
 
     for idx, (start, end) in enumerate(vec_to_annotations(vec)):
         ax0.add_patch(Rectangle((start, 0.), end - start, 1., facecolor=colors[idx % len(colors)]))
+
+    if likelihood is not None:
+        ax0.plot(likelihood, color='red')
+
+    if threshold is not None:
+        ax0.hlines([threshold], xmin=0, xmax=len(vec), color='blue')
 
     fig.tight_layout()
     return fig
