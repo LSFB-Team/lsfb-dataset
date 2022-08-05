@@ -3,6 +3,7 @@ from os import path
 
 import pandas as pd
 import torch
+from torch import Tensor
 from torch.utils.data import Dataset
 from torch.nn.functional import pad
 from tqdm import tqdm
@@ -23,23 +24,71 @@ Hand = NewType('Hand', Literal['right', 'left', 'both'])
 Target = NewType('Target', Literal['activity', 'signs', 'signs_and_transitions'])
 
 
-class LandmarksDataset(Dataset):
+class Landmarks(Dataset):
+    """
+    LSFB_CONT landmarks Dataset.
+
+    For each video of LSFB_CONT, this dataset provides per-frame 2D-landmarks (skeletons)
+    associated with per-frame activity of the signer in the video.
+
+    For each instance (video):
+    Features are of size (F, L, 2) where
+        - F is the number of frames (or the size of the selected window)
+        - L the number of landmarks
+    Target is the list of label-index of size F where labels are:
+        - waiting (0): the signer is inactive/listening
+        - signing (1): the signer is doing a sign
+        - coarticulation (2): the signer does an intermediate movement between two signs
+
+    Args:
+        root (str): Root directory of the LSFB_CONT dataset.
+            The dataset must already be downloaded.
+        subset (str, optional): Select a specific subset of the dataset. Default = 'all'.
+            'training' for training set;
+            'validation' for the validation set;
+            'all' for all the instances of the dataset.
+        landmarks (str, optional): Select which landmarks (features) to use. Default = 'skeleton'.
+            'skeleton' for pose skeleton (23 landmarks);
+            'hand' for hand skeleton (21 landmarks per hand);
+            'all' the all the landmarks.
+        hands (str, optional): Select targeted hands for the signer activity. Default = 'right'.
+            'right' for the signs from the right hand of the signer;
+            'left' for the signs from the left hand of the signer;
+            'both' for the signs from both hands of the signer.
+        only_selected_hands (bool, optional): Specify if the landmarks of the non-targeted hand are used.
+            Default = False.
+        target (str, optional): Select which target to use. Default = 'signs'.
+            'signs' to use labels waiting and signing only.
+            'signs_and_transitions' to use labels waiting, signing and coarticulation.
+            'activity' to use labels waiting and signing only with intermediate movements include in signing label.
+        masked (bool, optional): If True, use only frames where the signer is active (is moving).
+            Otherwise, it does not use any mask. Default = False.
+        window ((int, int), optional): If not None, the dataset is windowed with (window_size, window_stride).
+            This option changes the number of instances in the dataset. Default = None.
+        video_file (str, optional): The path of the video list file. Default = 'videos.csv'.
+        targets_file (str, optional): The path of the file that contains target annotations.
+            Default = 'annotations.pkl'.
+        skeletons_dir (str, optional): The path of the directory that contains the pose landmarks.
+            Default = 'features/upper_skeleton'.
+        hands_dir (str, optional): The path of the directory that contains the hands landmarks.
+            Default = 'features/cleaned_hands'.
+    """
     def __init__(
             self,
-            root='./data',
+            root: str,
             subset: DataSubset = 'all',
             landmarks: LandmarkSet = 'skeleton',
             hands: Hand = 'right',
             target: Target = 'signs',
-            video_file='videos.csv',
-            targets_file='annotations.pkl',
-            skeletons_dir='features/upper_skeleton',
-            hands_dir='features/cleaned_hands',
-            masked=False,
-            only_selected_hands=True,
+            masked: bool = False,
+            only_selected_hands: bool = True,
             window: Optional[Tuple[int, int]] = None,
+            video_file: str = 'videos.csv',
+            targets_file: str = 'annotations.pkl',
+            skeletons_dir: str = 'features/upper_skeleton',
+            hands_dir: str = 'features/cleaned_hands',
     ):
-        super(LandmarksDataset, self).__init__()
+        super(Landmarks, self).__init__()
         assert subset in ['all', 'training', 'validation'], f'Unknown subset of the dataset: {subset}'
         assert landmarks in ['skeleton', 'hand', 'all'], f'Unknown landmarks: {landmarks}'
         assert hands in ['right', 'left', 'both'], f'Unknown hands: {hands}'
@@ -83,7 +132,7 @@ class LandmarksDataset(Dataset):
 
         assert len(self.landmarks) == len(self.targets), 'Different number of landmarks and targets.'
 
-    def __len__(self):
+    def __len__(self) -> int:
         """
         Return
         ------
@@ -95,7 +144,7 @@ class LandmarksDataset(Dataset):
 
         return len(self.landmarks)
 
-    def __getitem__(self, index: int):
+    def __getitem__(self, index: int) -> Tuple[Tensor, Tensor]:
 
         if self.windows is None:
             landmarks = self.landmarks[index]
@@ -121,7 +170,7 @@ class LandmarksDataset(Dataset):
             load_skeleton = False
 
         landmarks_nb = self.videos.shape[0]
-        print(f'Loading {landmarks_nb} {landmark_kind} landmarks...')
+        print(f'Loading {landmark_kind} landmarks for {landmarks_nb} videos...')
         for idx, (_, video) in enumerate(tqdm(self.videos.iterrows(), total=landmarks_nb)):
             filename = video['filename']
 
@@ -205,3 +254,53 @@ class LandmarksDataset(Dataset):
                 padding = window_size - (end - start)
                 self.windows.append((idx, start, end, padding))
         print('Windows successfully created.')
+
+
+POSE_CONNECTIONS = [
+    (15, 21),
+    (16, 20),
+    (18, 20),
+    (3, 7),
+    (14, 16),
+    (6, 8),
+    (15, 17),
+    (16, 22),
+    (4, 5),
+    (5, 6),
+    (0, 1),
+    (9, 10),
+    (1, 2),
+    (0, 4),
+    (11, 13),
+    (15, 19),
+    (16, 18),
+    (12, 14),
+    (17, 19),
+    (2, 3),
+    (11, 12),
+    (13, 15),
+]
+
+HAND_CONNECTIONS = [
+    (3, 4),
+    (0, 5),
+    (17, 18),
+    (0, 17),
+    (13, 14),
+    (13, 17),
+    (18, 19),
+    (5, 6),
+    (5, 9),
+    (14, 15),
+    (0, 1),
+    (9, 10),
+    (1, 2),
+    (9, 13),
+    (10, 11),
+    (19, 20),
+    (6, 7),
+    (15, 16),
+    (2, 3),
+    (11, 12),
+    (7, 8),
+]
