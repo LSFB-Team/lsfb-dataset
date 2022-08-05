@@ -1,9 +1,9 @@
 import mediapipe as mp
 import numpy as np
-from cv2 import cv2
-from .shapes import draw_connections, draw_points, draw_line, draw_rect
-from ..utils.annotations import get_annotations_in_time_range
-from ..utils.holistic_features import get_feature_box, absolute_position, extract_box_img
+import cv2
+from lsfb_dataset.visualisation.cv_shapes import draw_connections, draw_points, draw_line, draw_rect
+from lsfb_dataset.utils.annotations import get_annotations_in_time_range
+from lsfb_dataset.utils.holistic_features import get_feature_box, absolute_position, extract_box_img
 
 
 def draw_feature_box(img, box: (int, int, int, int), color=(0, 255, 0), thickness=1):
@@ -101,9 +101,17 @@ def draw_hand_landmarks(img, positions, color=(0, 0, 255)):
 def draw_face_landmarks(img, positions, color=(0, 255, 0)):
     connections = mp.solutions.face_mesh.FACEMESH_CONTOURS
     draw_connections(img, positions, connections, color, thickness=1)
+    draw_points(img, positions, color=(0, 0, 255), radius=1)
 
 
 def draw_face_mesh(img, positions, color=(0, 255, 0)):
     connections = mp.solutions.face_mesh.FACEMESH_TESSELATION
     draw_connections(img, positions, connections, color, thickness=1)
 
+
+def draw_indices(img, positions, color=(0, 0, 255), font_scale=1, thickness=2, offset=(10, 10)):
+    for index, pos in enumerate(positions):
+        x, y = absolute_position(img, pos)
+        x += offset[0]
+        y += offset[1]
+        cv2.putText(img, str(index), (x, y), cv2.FONT_HERSHEY_SIMPLEX, font_scale, color, thickness, cv2.LINE_AA)

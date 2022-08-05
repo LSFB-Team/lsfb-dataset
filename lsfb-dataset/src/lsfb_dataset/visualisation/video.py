@@ -4,7 +4,7 @@ from os import path
 import random
 from typing import Optional
 import pandas as pd
-from .features import draw_holistic_landmarks, draw_holistic_boxes, get_holistic_features_img,\
+from lsfb_dataset.visualisation.cv import draw_holistic_landmarks, draw_holistic_boxes, get_holistic_features_img,\
     get_annotations_img,\
     draw_pose_landmarks, draw_hands_landmarks, draw_face_landmarks, draw_face_mesh
 
