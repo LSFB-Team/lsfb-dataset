@@ -1,11 +1,8 @@
-from cProfile import label
-from email.policy import default
 import tkinter as tk
 from tkinter import Label, filedialog as fd
-from cv2 import cv2
+import cv2
 from PIL import Image, ImageTk, ImageOps
 import time
-from matplotlib.pyplot import text
 import numpy as np
 
 
@@ -64,7 +61,7 @@ class SignSegmentor(tk.Tk):
         model_threshold_label = Label(frame_right_menu, text="Prediction threshold")
         model_threshold_label.pack(side=tk.TOP)
 
-        model_threshold = tk.Scale(frame_right_menu, from_=0, to=100, length=100, tickinterval=25, orien=tk.HORIZONTAL)
+        model_threshold = tk.Scale(frame_right_menu, from_=0, to=100, length=100, tickinterval=25, orient=tk.HORIZONTAL)
         model_threshold.set(50)
         model_threshold.pack(side=tk.TOP)
 
