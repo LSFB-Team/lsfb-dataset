@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Literal, NewType
 from os import path
 
 import pandas as pd
@@ -11,36 +11,28 @@ from ...utils.datasets import train_split_videos
 import pickle
 
 # Dataset subsets
-ALL = 'all'
-TRAINING = 'training'
-VALIDATION = 'validation'
+DataSubset = NewType('DataSubset', Literal['all', 'training', 'validation'])
 
 # Landmarks choice
-SKELETONS = 'skeleton'
-HANDS_LANDMARKS = 'hand'
-ALL_LANDMARKS = 'all'
+LandmarkSet = NewType('LandmarkSet', Literal['skeleton', 'hand', 'all'])
 
 # Hands choice
-RIGHT_HAND = 'right'
-LEFT_HAND = 'left'
-BOTH_HANDS = 'both'
+Hand = NewType('Hand', Literal['right', 'left', 'both'])
 
 # Target choice
-ACTIVITY_SPAN = 'activity'
-SIGNS = 'signs'
-SIGNS_AND_TRANSITIONS = 'signs_and_transitions'
+Target = NewType('Target', Literal['activity', 'signs', 'signs_and_transitions'])
 
 
 class LandmarksDataset(Dataset):
     def __init__(
             self,
-            subset=ALL,
-            landmarks=SKELETONS,
-            hands=RIGHT_HAND,
-            target=SIGNS,
-            root: Optional[str] = None,
+            root='./data',
+            subset: DataSubset = 'all',
+            landmarks: LandmarkSet = 'skeleton',
+            hands: Hand = 'right',
+            target: Target = 'signs',
             video_file='videos.csv',
-            targets_file='features/annotations.pickle',
+            targets_file='annotations.pkl',
             skeletons_dir='features/upper_skeleton',
             hands_dir='features/cleaned_hands',
             masked=False,
@@ -48,10 +40,10 @@ class LandmarksDataset(Dataset):
             window: Optional[Tuple[int, int]] = None,
     ):
         super(LandmarksDataset, self).__init__()
-        assert subset in [ALL, TRAINING, VALIDATION], f'Unknown subset of the dataset: {subset}'
-        assert landmarks in [SKELETONS, HANDS_LANDMARKS, ALL_LANDMARKS], f'Unknown landmarks: {landmarks}'
-        assert hands in [RIGHT_HAND, LEFT_HAND, BOTH_HANDS], f'Unknown hands: {hands}'
-        assert target in [ACTIVITY_SPAN, SIGNS, SIGNS_AND_TRANSITIONS], f'Unknown target: {target}'
+        assert subset in ['all', 'training', 'validation'], f'Unknown subset of the dataset: {subset}'
+        assert landmarks in ['skeleton', 'hand', 'all'], f'Unknown landmarks: {landmarks}'
+        assert hands in ['right', 'left', 'both'], f'Unknown hands: {hands}'
+        assert target in ['activity', 'signs', 'signs_and_transitions'], f'Unknown target: {target}'
 
         self.root = root
         self.video_file = video_file
@@ -69,11 +61,11 @@ class LandmarksDataset(Dataset):
 
         self.videos: pd.DataFrame = pd.read_csv(self.video_file)
 
-        if subset != ALL:
+        if subset != 'all':
             train_videos, val_videos = train_split_videos(self.videos, signers_frac=0.6, seed=42)
-            if subset == TRAINING:
+            if subset == 'training':
                 self.videos = train_videos
-            elif subset == VALIDATION:
+            elif subset == 'validation':
                 self.videos = val_videos
 
         self.masks = []
@@ -123,9 +115,9 @@ class LandmarksDataset(Dataset):
         load_hands = True
         load_skeleton = True
 
-        if landmark_kind == SKELETONS:
+        if landmark_kind == 'skeleton':
             load_hands = False
-        elif landmark_kind == HANDS_LANDMARKS:
+        elif landmark_kind == 'hand':
             load_skeleton = False
 
         landmarks_nb = self.videos.shape[0]
@@ -139,9 +131,9 @@ class LandmarksDataset(Dataset):
             if load_hands:
                 df_hands = pd.read_csv(path.join(self.hands_dir, f'{filename}_hands.csv'))
                 if self.only_selected_hands:
-                    if self.hands == RIGHT_HAND:
+                    if self.hands == 'right':
                         df_hands = df_hands.loc[:, df_hands.columns.str.startswith('RIGHT')]
-                    elif self.hands == LEFT_HAND:
+                    elif self.hands == 'left':
                         df_hands = df_hands.loc[:, df_hands.columns.str.startswith('LEFT')]
             if load_skeleton:
                 df_skeleton = pd.read_csv(path.join(self.skeletons_dir, f'{filename}_skeleton.csv'))
@@ -178,7 +170,7 @@ class LandmarksDataset(Dataset):
 
             mask = torch.from_numpy(video_targets['mask'])
 
-            if target == ACTIVITY_SPAN:
+            if target == 'activity':
                 self.targets.append(mask)
             else:
                 r_hand = video_targets['right_hand']
@@ -186,12 +178,12 @@ class LandmarksDataset(Dataset):
 
                 vec = r_hand
 
-                if hands == LEFT_HAND:
+                if hands == 'left':
                     vec = l_hand
-                elif hands == BOTH_HANDS:
+                elif hands == 'both':
                     vec = (r_hand | l_hand)
 
-                if target == SIGNS_AND_TRANSITIONS:
+                if target == 'signs_and_transitions':
                     vec = fill_gaps(vec.astype(int), max_gap=50, no_gap=1, fill_with=2)
 
                 vec = torch.from_numpy(vec)
