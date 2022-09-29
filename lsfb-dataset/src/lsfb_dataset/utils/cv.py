@@ -1,18 +1,6 @@
-import pandas as pd
+import cv2
 import numpy as np
-from cv2 import cv2
-
-
-def squarify_image(img):
-    height = img.shape[0]
-    width = img.shape[1]
-
-    if height > width:
-        padding = ((0, 0), (0, height-width), (0, 0))
-    else:
-        padding = ((0, width-height), (0, 0), (0, 0))
-
-    return np.pad(img, padding, mode='constant', constant_values=0)
+import pandas as pd
 
 
 def absolute_position(img, pos):
@@ -40,10 +28,22 @@ def extract_box_img(img, box, dim=(256, 256)):
     return cv2.resize(box_img, dim, interpolation=cv2.INTER_AREA)
 
 
+def squarify_image(img):
+    height = img.shape[0]
+    width = img.shape[1]
+
+    if height > width:
+        padding = ((0, 0), (0, height-width), (0, 0))
+    else:
+        padding = ((0, width-height), (0, 0), (0, 0))
+
+    return np.pad(img, padding, mode='constant', constant_values=0)
+
+
 def get_feature_box(img, rel_pos: (float, float), holistic_features: pd.DataFrame, shoulder_length_factor: float):
     abs_pos = absolute_position(img, rel_pos)
 
-    right_shoulder = np.array(absolute_position(img,(
+    right_shoulder = np.array(absolute_position(img, (
         holistic_features['RIGHT_SHOULDER_X'],
         holistic_features['RIGHT_SHOULDER_Y']
     )))

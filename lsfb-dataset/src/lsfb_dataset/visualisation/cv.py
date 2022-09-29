@@ -3,7 +3,7 @@ import numpy as np
 import cv2
 from lsfb_dataset.visualisation.cv_shapes import draw_connections, draw_points, draw_line, draw_rect
 from lsfb_dataset.utils.annotations import get_annotations_in_time_range
-from lsfb_dataset.utils.holistic_features import get_feature_box, absolute_position, extract_box_img
+from lsfb_dataset.utils.cv import get_feature_box, absolute_position, extract_box_img
 
 
 def draw_feature_box(img, box: (int, int, int, int), color=(0, 255, 0), thickness=1):
@@ -67,7 +67,7 @@ def draw_annotation(img, annot, time, index=0):
 
     y_text = 0.4 - (index % 5) * 0.07
     draw_line(img, (x_start, 1), (x_start, y_text - 0.05), color=(51, 204, 51), thickness=1)
-    cv2.putText(img, annot['word'], absolute_position(img, (x_start, y_text)), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+    cv2.putText(img, annot['gloss'], absolute_position(img, (x_start, y_text)), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
                 (255, 255, 255), 1, 2)
 
 
