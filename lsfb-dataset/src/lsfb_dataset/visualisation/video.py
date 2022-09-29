@@ -1,12 +1,12 @@
 import numpy as np
-from cv2 import cv2
+import cv2
 from os import path
 import random
 from typing import Optional
 import pandas as pd
-from lsfb_dataset.visualisation.cv import draw_holistic_landmarks, draw_holistic_boxes, get_holistic_features_img,\
-    get_annotations_img,\
-    draw_pose_landmarks, draw_hands_landmarks, draw_face_landmarks, draw_face_mesh
+from .cv import draw_holistic_landmarks, draw_holistic_boxes, get_holistic_features_img,\
+    get_annotations_img, draw_pose_landmarks, draw_hands_landmarks, draw_face_landmarks, draw_face_mesh
+from ..utils.helpers import duration_to_str
 
 
 class VideoPlayer:
@@ -30,11 +30,16 @@ class VideoPlayer:
 
         self.face_meshing = False
 
-        self.isolate_landmarks = False
-        self.isolate_original = False
+        self.only_landmarks = False
+        self.only_original = False
         self.crop = None
 
         self.pause = False
+        self.speed = 1.0
+
+    def change_speed(self, speed: float):
+        assert 0 < speed, f'Invalid speed value ({speed}).'
+        self.speed = speed
 
     def attach_holistic_features(self, holistic_filepath: str):
         if not path.isfile(holistic_filepath):
@@ -80,13 +85,20 @@ class VideoPlayer:
     def show_duration(self, value: bool):
         self.draw_duration = value
 
+    def isolate_landmarks(self, value: bool):
+        self.only_landmarks = value
+
+    def isolate_original(self, value: bool):
+        self.only_original = value
+
     def play(self):
         cap = cv2.VideoCapture(self.video_path)
         frame_rate = cap.get(cv2.CAP_PROP_FPS)
         frame_count = cap.get(cv2.CAP_PROP_FRAME_COUNT)
 
         frame_nb = 0
-        delay = int(1000 / frame_rate)
+        frame_duration = int(1000 / frame_rate)
+        delay = int(frame_duration / self.speed)
         total_duration = int(frame_count * 1000 / frame_rate)
         current_time = 0
 
@@ -116,7 +128,7 @@ class VideoPlayer:
             self._show_frame(frame, frame_nb, current_time, total_duration)
 
             frame_nb += 1
-            current_time += delay
+            current_time += frame_duration
 
         cv2.destroyAllWindows()
         cap.release()
@@ -138,9 +150,9 @@ class VideoPlayer:
         landmarks_frame = None
         original_frame = None
 
-        if self.isolate_landmarks:
+        if self.only_landmarks:
             landmarks_frame = np.zeros(frame.shape, dtype='uint8')
-        if self.isolate_original:
+        if self.only_original:
             original_frame = frame.copy()
 
         self._draw_landmarks(frame, current_frame)
@@ -174,6 +186,7 @@ class VideoPlayer:
         if self.draw_duration:
             self._show_duration(frame, current_time, total_duration)
         cv2.imshow('Video', frame)
+        cv2.setWindowProperty('Video', cv2.WND_PROP_TOPMOST, 1)
 
     def _draw_landmarks(self, frame, current_frame):
         if self.pose_features is not None:
@@ -196,20 +209,5 @@ class VideoPlayer:
         return frame[y1:y2, x1:x2]
 
     def _show_duration(self, frame, current_time: int, total_duration: int):
-        duration_info = f"{self._duration_to_str(current_time)} / {self._duration_to_str(total_duration)}"
-        cv2.putText(
-            frame,
-            duration_info,
-            (20, 20),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.6,
-            (0, 255, 0),
-            1,
-            2,
-        )
-
-    def _duration_to_str(self, duration):
-        milli = duration % 1000
-        seconds = (duration // 1000) % 60
-        minutes = duration // 60000
-        return f"{minutes}min {seconds:2}s {milli:3}ms"
+        duration_info = f'{duration_to_str(current_time)} / {duration_to_str(total_duration)}'
+        cv2.putText(frame, duration_info, (20, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 1, 2)

@@ -1,5 +1,5 @@
 import cv2
-from ..utils.holistic_features import absolute_position
+from ..utils.cv import absolute_position
 
 
 def draw_line(img, start_pos, end_pos, color=(255, 255, 255), thickness=2):
