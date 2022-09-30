@@ -6,7 +6,9 @@ This library aims to reduce drastically the time you will spend on data loading 
 
 ## Datasets
 
-Two versions of the dataset are available : 
+Both datasets are based on the [LSFB Corpus](https://www.corpus-lsfb.be/). The corpus is the result of the tremendous work achieved by the members of the [LSFB labl](https://www.unamur.be/lettres/romanes/lsfb-lab) from the university of Namur.
+
+The corpus data were sanatized in order to make them easier to use. Additional metadata were added to enhance the datasets. Two versions of the dataset are available:
 
 - **[LSFB Isol](lsfb_isol.md)** : Suitable for the isolated sign language recognition task.
 - **[LSFB Cont](lsfb_cont.md)** : Suitable for the continuous sign language recognition task.
