@@ -1,8 +1,10 @@
 import os
 import pandas as pd
 from tqdm import tqdm
+from datetime import datetime
 
 from .types import *
+from typing import Optional, List
 from ..utils.landmarks import load_pose_landmarks, load_hands_landmarks, pad_landmarks
 from ..utils.datasets import split_isol, mini_sample, create_mask
 
@@ -25,33 +27,31 @@ def _select_videos(videos, lemmes, split: str):
 def _load_landmarks(
         root: str,
         videos: pd.DataFrame,
-        landmarks: str,
-        hands: str,
-        only_selected_hand: bool,
+        landmarks: List[str],
         sequence_max_length: int,
+        show_progress: bool,
 ):
-    load_pose = True
-    load_hands = True
-    if landmarks == 'pose':
-        load_hands = False
-    elif landmarks == 'hands':
-        load_pose = False
+    landmark_list = ', '.join(landmarks)
+    print(f'Loading features ({landmark_list}) and labels for each isolated sign...')
 
-    hands = hands if only_selected_hand else 'both'
     features = []
     targets = []
 
-    print('Loading features and labels for each isolated sign...')
-    progress_bar = tqdm(videos.iterrows(), total=videos.shape[0])
+    progress_bar = tqdm(videos.iterrows(), total=videos.shape[0], disable=(not show_progress))
     for index, video in progress_bar:
         data = []
-        if load_pose:
-            data.append(load_pose_landmarks(root, video['pose']))
-        if load_hands:
-            data.append(load_hands_landmarks(root, video['hands'], hands))
-        data = pd.concat(data, axis=1).values[:sequence_max_length]
 
-        features.append(data)
+        for lm_type in landmarks:
+            if lm_type == 'pose':
+                data.append(load_pose_landmarks(root, video['pose']))
+            elif lm_type == 'hand_left':
+                data.append(load_hands_landmarks(root, video['hands'], 'left'))
+            elif lm_type == 'hand_right':
+                data.append(load_hands_landmarks(root, video['hands'], 'right'))
+            else:
+                raise ValueError(f'Unknown landmarks: {lm_type}.')
+
+        features.append(pd.concat(data, axis=1).values[:sequence_max_length])
         targets.append(video['class'])
 
     return features, targets
@@ -62,6 +62,7 @@ class LSFBIsolLandmarks:
     def __init__(
             self,
             root: str,
+            landmarks: Optional[List[str]] = None,
             *,
             transform=None,
             target_transform=None,
@@ -70,14 +71,19 @@ class LSFBIsolLandmarks:
             lemme_list_path: str = 'lemmes.csv',
             videos_list_path: str = 'videos.csv',
             split: DataSubset = 'all',
-            landmarks: LandmarkSet = 'pose',
-            hands: Hand = 'both',
-            only_selected_hand: bool = False,
             sequence_max_length: int = 50,
             padding: bool = True,
             return_mask: bool = True,
             mask_value: int = 0,
+            show_progress=True,
     ):
+        print('-'*10, 'LSFB ISOL DATASET')
+        start_time = datetime.now()
+
+        if landmarks is None:
+            landmarks = ['pose', 'hand_left', 'hand_right']
+
+        self.landmarks = landmarks
         self.transform = transform
         self.target_transform = target_transform
         self.mask_transform = mask_transform
@@ -100,11 +106,13 @@ class LSFBIsolLandmarks:
             root,
             self.videos,
             landmarks,
-            hands,
-            only_selected_hand,
             sequence_max_length,
+            show_progress,
         )
         self.labels = lemmes['lemme']
+
+        print('-'*10)
+        print('loading time:', datetime.now() - start_time)
 
     def __len__(self):
         return len(self.features)
