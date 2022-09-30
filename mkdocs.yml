@@ -7,6 +7,13 @@ nav:
     - Visualisation: visualisation.md
     - Transforms: transforms.md
     - Download Datasets: download.md
+    - Reference : references.md
 
 theme:
     name: readthedocs
+
+plugins:
+    - mkdocstrings:
+        handlers:
+            python:
+                paths: [lsfb-dataset/src]  # search packages in the src folder
