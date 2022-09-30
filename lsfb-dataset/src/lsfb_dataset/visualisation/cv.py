@@ -1,9 +1,10 @@
-import mediapipe as mp
 import numpy as np
 import cv2
 from lsfb_dataset.visualisation.cv_shapes import draw_connections, draw_points, draw_line, draw_rect
 from lsfb_dataset.utils.annotations import get_annotations_in_time_range
 from lsfb_dataset.utils.cv import get_feature_box, absolute_position, extract_box_img
+from lsfb_dataset.datasets.landmark_connections import POSE_CONNECTIONS, HAND_CONNECTIONS,\
+    FACEMESH_TESSELATION, FACEMESH_CONTOURS
 
 
 def draw_feature_box(img, box: (int, int, int, int), color=(0, 255, 0), thickness=1):
@@ -83,8 +84,7 @@ def get_annotations_img(df_annot, time, time_offset=3000, width=512, height=256)
 
 
 def draw_pose_landmarks(img, positions):
-    connections = mp.solutions.pose.POSE_CONNECTIONS
-    draw_connections(img, positions, connections, color=(0, 255, 0))
+    draw_connections(img, positions, POSE_CONNECTIONS, color=(0, 255, 0))
     draw_points(img, positions)
 
 
@@ -94,19 +94,16 @@ def draw_hands_landmarks(img, positions):
 
 
 def draw_hand_landmarks(img, positions, color=(0, 0, 255)):
-    connections = mp.solutions.hands_connections.HAND_CONNECTIONS
-    draw_connections(img, positions, connections, color)
+    draw_connections(img, positions, HAND_CONNECTIONS, color)
 
 
 def draw_face_landmarks(img, positions, color=(0, 255, 0)):
-    connections = mp.solutions.face_mesh.FACEMESH_CONTOURS
-    draw_connections(img, positions, connections, color, thickness=1)
+    draw_connections(img, positions, FACEMESH_CONTOURS, color, thickness=1)
     draw_points(img, positions, color=(0, 0, 255), radius=1)
 
 
 def draw_face_mesh(img, positions, color=(0, 255, 0)):
-    connections = mp.solutions.face_mesh.FACEMESH_TESSELATION
-    draw_connections(img, positions, connections, color, thickness=1)
+    draw_connections(img, positions, FACEMESH_TESSELATION, color, thickness=1)
 
 
 def draw_indices(img, positions, color=(0, 0, 255), font_scale=1, thickness=2, offset=(10, 10)):

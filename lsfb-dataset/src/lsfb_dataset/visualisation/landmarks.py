@@ -1,9 +1,8 @@
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle
 from matplotlib.lines import Line2D
-from typing import Tuple, List, Optional, Literal
+from typing import Optional
 import numpy as np
-import random
 
 from ..datasets.landmark_connections import POSE_CONNECTIONS, HAND_CONNECTIONS
 
