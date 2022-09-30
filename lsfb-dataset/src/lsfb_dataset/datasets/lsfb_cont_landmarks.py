@@ -1,6 +1,8 @@
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List
 from os import path
+from datetime import datetime
 
+import numpy as np
 import pandas as pd
 import pickle
 from tqdm import tqdm
@@ -27,13 +29,17 @@ class LSFBContLandmarks:
         - coarticulation (2): the signer does an intermediate movement between two signs
 
     Args:
-        TODO : UPDATE docstring
         root: Root directory of the LSFB_CONT dataset.
             The dataset must already be downloaded.
+        transform: Callable object used to transform the features.
+        target_transform: Callable object used to transform the targets.
+        mask_transform: Callable object used to transform the masks.
+            You need to set return_mask to true to use this transform.
         split: Select a specific subset of the dataset. Default = 'all'.
             'train' for training set;
             'test' for the test set;
-            'all' for all the instances of the dataset.
+            'all' for all the instances of the dataset;
+            'mini_sample' for a tiny set of instances.
         landmarks: Select which landmarks (features) to use. Default = 'pose'.
             'pose' for pose skeleton (23 landmarks);
             'hands' for hand skeleton (21 landmarks per hand);
@@ -42,43 +48,45 @@ class LSFBContLandmarks:
             'right' for the signs from the right hand of the signer;
             'left' for the signs from the left hand of the signer;
             'both' for the signs from both hands of the signer.
-        only_selected_hands: If true, the landmarks of the non-targeted hand are not used.
-            Default = False.
         target: Select which target to use. Default = 'signs'.
             'signs' to use labels waiting and signing only.
             'signs_and_transitions' to use labels waiting, signing and coarticulation.
             'activity' to use labels waiting and signing only with intermediate movements include in signing label.
         window: If not None, the dataset is windowed with (window_size, window_stride).
             This option changes the number of instances in the dataset. Default = None.
+        return_mask: If true, return a mask in addition to the features and the target.
+            The mask is filled with 1's and 0's where the padding has been applied.
         video_list_file: The path of the video list file.
             If the root is specified, the path is relative.
         targets_dir: The path of the directory containing the target annotations.
             If the root is specified, the path is relative.
+        show_progress: If true, show a progress bar while the dataset is loading.
 
     """
     def __init__(
             self,
             root: str,
+            landmarks: Optional[List[str]] = None,
             transform=None,
             target_transform=None,
             mask_transform=None,
             split: DataSubset = 'all',
-            landmarks: LandmarkSet = 'all',
             hands: Hand = 'both',
             target: Target = 'signs',
-            only_selected_hands: bool = True,
             window: Optional[Tuple[int, int]] = None,
             return_mask: bool = False,
             video_list_file: str = 'valid_videos.csv',
-            targets_dir: str = 'annotations/hands',
+            targets_dir: str = 'annotations/vectors',
+            show_progress: bool = True,
     ):
         super(LSFBContLandmarks, self).__init__()
-        assert split in ['all', 'train', 'test', 'mini_sample'], f'Unknown subset of the dataset: {split}'
-        assert landmarks in ['pose', 'hands', 'all'], f'Unknown landmarks: {landmarks}'
-        assert hands in ['right', 'left', 'both'], f'Unknown hands: {hands}'
-        assert target in ['activity', 'signs', 'signs_and_transitions'], f'Unknown target: {target}'
-        assert not (mask_transform is not None and return_mask is False),\
-            f'Mask transform is defined, but the mask is not returned.'
+
+        print('-' * 10, 'LSFB CONT DATASET')
+        start_time = datetime.now()
+
+        self.landmarks = landmarks
+        if self.landmarks is None:
+            self.landmarks = ['pose', 'hand_left', 'hand_right']
 
         self.transform = transform
         self.target_transform = target_transform
@@ -88,20 +96,22 @@ class LSFBContLandmarks:
         self.video_list_file = video_list_file
         self.targets_dir = targets_dir
         self.hands = hands
-        self.only_selected_hands = only_selected_hands
+        self.show_progress = show_progress
 
         if root is not None:
             self.video_list_file = path.join(root, video_list_file)
             self.targets_dir = path.join(root, targets_dir)
 
+        if mask_transform is not None and return_mask is False:
+            raise ValueError('Mask transform is defined, but the mask is not returned.')
+
         self.videos = None
+        self.features = []
         self.targets = []
-        self.landmarks = []
-        self.landmark_types = []
 
         self.__load_video_metadata(split)
+        self.__load_landmarks()
         self.__load_targets(target)
-        self.__load_landmarks(landmarks)
 
         self.windows = None
         self.return_mask = return_mask
@@ -110,10 +120,8 @@ class LSFBContLandmarks:
             self.windows = []
             self.__make_windows(window_size, window_stride)
 
-        landmarks_nb = len(self.landmarks)
-        targets_nb = len(self.targets)
-        if landmarks_nb != targets_nb:
-            raise ValueError(f'Different number of landmarks ({landmarks_nb}) and targets ({targets_nb}).')
+        print('-' * 10)
+        print('loading time:', datetime.now() - start_time)
 
     def __len__(self) -> int:
         """
@@ -125,11 +133,11 @@ class LSFBContLandmarks:
         if self.windows is not None:
             return len(self.windows)
 
-        return len(self.landmarks)
+        return len(self.features)
 
     def __get_windowed_item(self, index):
         video_idx, start, end, padding = self.windows[index]
-        landmarks = pad_landmarks(self.landmarks[video_idx][start:end], padding)
+        landmarks = pad_landmarks(self.features[video_idx][start:end], padding)
         target = pad_target(self.targets[video_idx][start:end], padding)
         return landmarks, target, padding
 
@@ -137,7 +145,7 @@ class LSFBContLandmarks:
         if self.windows is not None:
             landmarks, target, padding = self.__get_windowed_item(index)
         else:
-            landmarks = self.landmarks[index]
+            landmarks = self.features[index]
             target = self.targets[index]
             padding = 0
 
@@ -165,69 +173,61 @@ class LSFBContLandmarks:
                 self.videos = train_videos
             elif split == 'test':
                 self.videos = test_videos
-
-    def __load_landmarks(self, landmark_kind: str):
-        landmarks_nb = self.videos.shape[0]
-        print(f'Loading {landmark_kind} landmarks for {landmarks_nb} videos...')
-
-        load_pose = False
-        load_hands = False
-
-        if landmark_kind == 'pose':
-            load_pose = True
-        elif landmark_kind == 'hands':
-            load_hands = True
-        elif landmark_kind == 'all':
-            load_pose = True
-            load_hands = True
-
-        hands = self.hands if self.only_selected_hands else 'both'
-
-        if load_pose:
-            self.landmark_types.append('pose')
-        if load_hands:
-            if hands == 'both':
-                self.landmark_types.append('hand_left')
-                self.landmark_types.append('hand_right')
             else:
-                self.landmark_types.append(f'hand_{hands}')
+                raise ValueError(f'Unknown split: {split}.')
 
-        progress_bar = tqdm(self.videos.iterrows(), total=landmarks_nb)
+    def __load_landmarks(self):
+        landmarks_nb = self.videos.shape[0]
+        landmarks_list = ', '.join(self.landmarks)
+        print(f'Loading landmarks {landmarks_list} for {landmarks_nb} videos...')
+
+        progress_bar = tqdm(self.videos.iterrows(), total=landmarks_nb, disable=(not self.show_progress))
         for _, video in progress_bar:
             video_lm = []
-            if load_pose:
-                video_lm.append(load_pose_landmarks(self.root, video['pose']))
-            if load_hands:
-                video_lm.append(load_hands_landmarks(self.root, video['hands'], hands))
-            video_lm = pd.concat(video_lm, axis=1)
-            self.landmarks.append(video_lm.values)
-
-        print('Landmarks successfully loaded.')
+            for lm_type in self.landmarks:
+                if lm_type == 'pose':
+                    video_lm.append(load_pose_landmarks(self.root, video['pose']))
+                elif lm_type == 'hand_left':
+                    video_lm.append(load_hands_landmarks(self.root, video['hands'], 'left'))
+                elif lm_type == 'hand_right':
+                    video_lm.append(load_hands_landmarks(self.root, video['hands'], 'right'))
+                else:
+                    raise ValueError(f'Unknown landmarks: {lm_type}.')
+            self.features.append(pd.concat(video_lm, axis=1).values)
 
     def __load_targets(self, target: str):
+
         if target == 'signs':
             filename = 'binary.pck'
-        elif target == 'activity':
-            filename = 'binary_activity.pck'
         elif target == 'signs_and_transitions':
             filename = 'binary_with_coarticulation.pck'
+        elif target == 'activity':
+            filename = 'activity.pck'
         else:
             raise ValueError(f'Unknown target: {target}.')
 
-        target_filepath = path.join(self.targets_dir, self.hands, filename)
+        target_filepath = path.join(self.targets_dir, filename)
         with open(target_filepath, 'rb') as file:
-            target_dict: dict = pickle.load(file)
+            target_vectors: dict = pickle.load(file)
 
         for _, video in self.videos.iterrows():
             filename = video['filename']
-            vec = target_dict.get(filename)
+            vec = target_vectors.get(filename)
+
+            if self.hands == 'left':
+                vec = vec[0]
+            elif self.hands == 'right':
+                vec = vec[1]
+            else:
+                vec = np.logical_or(vec[0], vec[1]).astype('uint8')
+
             assert vec is not None, f'Target not found for video {filename}.'
             self.targets.append(vec)
 
-        print('Targets successfully loaded.')
+        print('Target vectors loaded.')
 
     def __make_windows(self, window_size: int, window_stride: int):
-        for idx, landmarks in enumerate(self.landmarks):
+        for idx, landmarks in enumerate(self.features):
             landmarks_nb = landmarks.shape[0]
             for start in range(0, landmarks_nb, window_stride):
                 end = min(landmarks_nb, start + window_size)
