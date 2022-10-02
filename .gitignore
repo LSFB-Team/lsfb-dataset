@@ -9,3 +9,4 @@ site
 lsfb-dataset/src/notebooks/
 __pycache__
 build
+virtualenv
