@@ -10,45 +10,71 @@ from typing import Optional, Callable, List
 
 class DatasetDownloader:
     """
-    DatasetDownloader is an easy to use interface for downloading the LSFB datasets. The download is done via http.
+    DatasetDownloader 
+
+    This class provides an esay interface for downloading the LSFB dataset over http.
+
+    Args:
+        destination : Path to the destination folder for the dataset
+        dataset : The dataset to download. Default = 'isol'.
+            'isol' for the LSFB isol dataset;
+            'cont' for the LSFB cont dataset;
+        landmarks : Select which landmarks (features) to download. Default = ['pose', 'hands'].
+            'pose' for pose skeleton (23 landmarks);
+            'hands' for hand skeleton (21 landmarks per hand);
+            'face' for face skeleton (468 landmarks).
+        include_video : Download the raw video. Default = False.
+        include_raw : Download the raw landmarks (festures) without smoothing and interpolation.
+            Default = False.
+        compute_hash : Verify the hash of the video. Include_video should be set to true to use
+            this options. Default = False.
+        src : URL of the source of the dataset. Default = URL of the UNamur servers
+        verbose : Display warning message informing you about the size of the data you are going to download.
+            Default = True
     """
 
     def __init__(
         self,
         destination: str,
         dataset: str = "isol",
-        exclude: List[str] = [],
+        landmarks: List[str] = None,
+        include_video: bool = False,
+        include_raw: bool = False,
+        compute_hash: bool = False,
         src: str = None,
-        warning_message: bool = True,
+        verbose: bool = True,
     ):
-        """
-        The constructor initialize the setting you want for the download.
-
-        INPUT:
-        - destination: the destination folder where the dataset will be downloaded.
-        - dataset: the dataset you want to download. either "isol" or "cont". (default: "isol")
-        - exclude: a list of strings containing the element you want to exclude from the download. The excluded element could be video, annotations or landmarks (default: [])
-        - src: the source url of the dataset. By default, the dataset is downloaded from the unamur server located here : lsfb.info.unamur.be
-        - warning_message: if True, a warning message will be displayed to warn you about the size of the download. (default: True)
-        """
-
         self.destination = destination
         self.dataset = dataset
-        self.exclude = exclude
-        self.warning_message = warning_message
+
+        if landmarks == None:
+            self.landmarks = ["pose", "hands"]
+        else:
+            self.landmarks = landmarks
+
+        if include_raw:
+            landmarks = self.landmarks
+
+            for landmark in self.landmarks:
+                landmarks.append(landmark + "_raw")
+
+        self.include_video = include_video
+        self.compute_hash = compute_hash
+        self.verbose = verbose
 
         if src != None:
             self.src = src
         elif dataset == "isol":
-            self.src = "https://lsfb.info.unamur.be/static/datasets/LSFB/lsfb_isol"
+            self.src = "https://lsfb.info.unamur.be/static/datasets/LSFB/LSFB_ISOL"
         elif dataset == "cont":
-            self.src = "https://lsfb.info.unamur.be/static/datasets/LSFB/lsfb_cont"
+            self.src = "https://lsfb.info.unamur.be/static/datasets/LSFB/LSFB_CONT"
+
 
     def download(self):
         """
-        The main function orchestrating all the download. Call it to start downloading data.
+        Download the data accordingly to the downloader configuration.
         """
-        csv_path = self.download_csv()
+        csv_path = self._download_csv()
         data = pd.read_csv(csv_path)
 
         if not self._display_warning():
@@ -57,33 +83,24 @@ class DatasetDownloader:
         # processing the CSV file
         for idx, row in tqdm(data.iterrows(), total=data.shape[0]):
 
-            if "video" not in self.exclude:
+            if self.include_video:
                 self.download_video(row)
 
-            if self.dataset == "cont" and "annotations" not in self.exclude:
-                self.download_annotations(row, "right_hand")
-                self.download_annotations(row, "left_hand")
+            if self.dataset == "cont":
+                self._download_annotations(row, "annots_left")
+                self._download_annotations(row, "annots_right")
+                self._download_annotations(row, "annots_trad")
 
-            if "landmarks" not in self.exclude:
+            for landmark in self.landmarks:
+                if type(row[landmark]) == str and row[landmark] != "":
+                    self._download_landmarks(row[landmark])
 
-                available_landmarks = [
-                    "face_landmarks",
-                    "pose_landmarks",
-                    "hands_landmarks",
-                    "holistic_landmarks",
-                    "holistic_landmarks_clean",
-                ]
-
-                for landmark in available_landmarks:
-                    if type(row[landmark]) == str and row[landmark] != "":
-                        self.download_landmarks(row[landmark])
-
-    def download_csv(self):
+    def _download_csv(self):
 
         if self.dataset == "isol":
             csv_path = "clips.csv"
         elif self.dataset == "cont":
-            csv_path = "videos.csv"
+            csv_path = "valid_videos.csv"
 
         url = os.path.join(self.src, csv_path)
         destination = os.path.join(self.destination, csv_path)
@@ -102,7 +119,11 @@ class DatasetDownloader:
 
         row : The dataframe row containing the information for that video.
         """
-        location = row["relative_path"]
+
+        if self.dataset == 'isol':
+            location = row["video"]
+        else:
+            location = row["filepath"]
 
         # Test if the video exists
         video_url = os.path.join(self.src, urllib.parse.quote(location))
@@ -116,7 +137,7 @@ class DatasetDownloader:
         elif os.path.getsize(video_destination) == 0:
             urllib.request.urlretrieve(video_url, video_destination)
 
-        elif self.dataset == "cont":
+        elif self.dataset == "cont" and self.compute_hash:
             # Check md5sum
             dest_md5 = hashlib.md5(open(video_destination, "rb").read()).hexdigest()
             src_md5 = row["md5"]
@@ -124,7 +145,7 @@ class DatasetDownloader:
             if dest_md5 != src_md5:
                 urllib.request.urlretrieve(video_url, video_destination)
 
-    def download_annotations(self, row, hand):
+    def _download_annotations(self, row, col_name):
         """
         Download the annotations file for a video. There is one file for each hand.
 
@@ -133,8 +154,7 @@ class DatasetDownloader:
         hand : The hand you want to download the annotations for. Either "right_hand" or "left_hand".
         """
 
-        col = hand + "_annotations"
-        location = row[col]
+        location = row[col_name]
 
         annotation_url = os.path.join(self.src, urllib.parse.quote(location))
         annotation_destination = os.path.join(self.destination, location)
@@ -144,7 +164,7 @@ class DatasetDownloader:
         if not os.path.exists(annotation_destination):
             urllib.request.urlretrieve(annotation_url, annotation_destination)
 
-    def download_landmarks(self, relative_path):
+    def _download_landmarks(self, relative_path):
         landmarks_url = os.path.join(self.src, urllib.parse.quote(relative_path))
         landmarks_destination = os.path.join(self.destination, relative_path)
 
@@ -185,13 +205,13 @@ class DatasetDownloader:
         """
         Display a warning message to the user.
         """
-        if not self.warning_message:
+        if not self.verbose:
             return True
 
         if self.dataset == "isol":
             size = "~100 GB"
         else:
-            size = "~1 TB"
+            size = "~2 TB"
 
         message = f"The dataset you are downloading is {size}."
         message += (
