@@ -96,18 +96,25 @@ class DatasetDownloader:
                     self._download_landmarks(row[landmark])
 
     def _download_csv(self):
+        csv_files = []
 
         if self.dataset == "isol":
-            csv_path = "clips.csv"
+            csv_files.append("lemmes.csv")
+            csv_files.append("clips.csv")
+
+            detailed_csv_destination = os.path.join(self.destination, "clips.csv")
+
         elif self.dataset == "cont":
-            csv_path = "valid_videos.csv"
+            csv_files.append("valid_videos.csv")
+            detailed_csv_destination = os.path.join(self.destination, "valid_videos.csv")
 
-        url = os.path.join(self.src, csv_path)
-        destination = os.path.join(self.destination, csv_path)
+        for elem in csv_files:
+            url = os.path.join(self.src, elem)
+            destination = os.path.join(self.destination, elem)
 
-        urllib.request.urlretrieve(url, destination)
+            urllib.request.urlretrieve(url, destination)
 
-        return destination
+        return detailed_csv_destination
 
     def download_video(self, row):
         """
