@@ -40,10 +40,11 @@ class LSFBContLandmarks:
             'test' for the test set;
             'all' for all the instances of the dataset;
             'mini_sample' for a tiny set of instances.
-        landmarks: Select which landmarks (features) to use. Default = 'pose'.
+        landmarks: Select which landmarks (features) to use. Default = ['pose', 'hand_left', 'hand_right'].
             'pose' for pose skeleton (23 landmarks);
-            'hands' for hand skeleton (21 landmarks per hand);
-            'all' the all the landmarks.
+            'hands_left' for left hand skeleton (21 landmarks);
+            'hands_right' for right hand skeleton (21 landmarks);
+
         hands: Select targeted hands for the signer activity. Default = 'right'.
             'right' for the signs from the right hand of the signer;
             'left' for the signs from the left hand of the signer;
