@@ -78,6 +78,7 @@ class LSFBIsolLandmarks(LSFBIsolBase):
 
         if self.transform is not None:
             features = self.transform(features)
+            
         if self.target_transform is not None:
             target = self.target_transform(target)
 
