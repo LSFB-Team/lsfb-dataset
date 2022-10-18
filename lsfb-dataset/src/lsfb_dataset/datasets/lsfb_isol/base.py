@@ -103,9 +103,10 @@ class LSFBIsolBase:
 
         lemmes = pd.read_csv(lemme_list_path)
         self.lemmes = lemmes.iloc[:lemmes_nb]
+        self.split = split
 
         self.videos = pd.read_csv(videos_list_path)
-        self.videos = _select_videos(self.videos, lemmes, split)
+        self.videos = _select_videos(self.videos, self.lemmes, self.split)
 
 
     @abc.abstractmethod
