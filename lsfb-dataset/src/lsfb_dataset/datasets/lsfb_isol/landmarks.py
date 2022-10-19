@@ -3,25 +3,12 @@ import pandas as pd
 from tqdm import tqdm
 from datetime import datetime
 
-from .types import *
+from lsfb_dataset.datasets.types import *
 from typing import Optional, List
-from ..utils.landmarks import load_pose_landmarks, load_hands_landmarks, pad_landmarks
-from ..utils.datasets import split_isol, mini_sample, create_mask
+from lsfb_dataset.utils.landmarks import load_pose_landmarks, load_hands_landmarks, pad_landmarks
+from lsfb_dataset.utils.datasets import split_isol, mini_sample, create_mask
+from lsfb_dataset.datasets.lsfb_isol.base import LSFBIsolBase
 
-
-def _select_videos(videos, lemmes, split: str):
-    videos = videos[videos['class'].isin(lemmes.index)]
-
-    if split == 'mini_sample':
-        videos = mini_sample(videos)
-    elif split != 'all':
-        train_videos, test_videos = split_isol(videos)
-        if split == 'train':
-            videos = train_videos
-        elif split == 'test':
-            videos = test_videos
-
-    return videos
 
 
 def _load_landmarks(
@@ -57,59 +44,22 @@ def _load_landmarks(
     return features, targets
 
 
-class LSFBIsolLandmarks:
+class LSFBIsolLandmarks(LSFBIsolBase):
 
-    def __init__(
-            self,
-            root: str,
-            landmarks: Optional[List[str]] = None,
-            *,
-            transform=None,
-            target_transform=None,
-            mask_transform=None,
-            lemmes_nb: int = 10,
-            lemme_list_path: str = 'lemmes.csv',
-            videos_list_path: str = 'videos.csv',
-            split: DataSubset = 'all',
-            sequence_max_length: int = 50,
-            padding: bool = True,
-            return_mask: bool = True,
-            mask_value: int = 0,
-            show_progress=True,
-    ):
+    def __init__(self,*args, **kwargs):
         print('-'*10, 'LSFB ISOL DATASET')
         start_time = datetime.now()
 
-        if landmarks is None:
-            landmarks = ['pose', 'hand_left', 'hand_right']
-
-        self.landmarks = landmarks
-        self.transform = transform
-        self.target_transform = target_transform
-        self.mask_transform = mask_transform
-
-        self.sequence_max_length = sequence_max_length
-        self.padding = padding
-        self.return_mask = return_mask
-        self.mask_value = mask_value
-
-        lemme_list_path = os.path.join(root, lemme_list_path)
-        videos_list_path = os.path.join(root, videos_list_path)
-
-        lemmes = pd.read_csv(lemme_list_path)
-        lemmes = lemmes.iloc[:lemmes_nb]
-
-        self.videos = pd.read_csv(videos_list_path)
-        self.videos = _select_videos(self.videos, lemmes, split)
+        super(LSFBIsolLandmarks, self).__init__(*args, **kwargs)
 
         self.features, self.targets = _load_landmarks(
-            root,
+            self.root,
             self.videos,
-            landmarks,
-            sequence_max_length,
-            show_progress,
+            self.landmarks,
+            self.sequence_max_length,
+            self.show_progress,
         )
-        self.labels = lemmes['lemme']
+        self.labels = self.lemmes['lemme']
 
         print('-'*10)
         print('loading time:', datetime.now() - start_time)
@@ -128,6 +78,7 @@ class LSFBIsolLandmarks:
 
         if self.transform is not None:
             features = self.transform(features)
+            
         if self.target_transform is not None:
             target = self.target_transform(target)
 
