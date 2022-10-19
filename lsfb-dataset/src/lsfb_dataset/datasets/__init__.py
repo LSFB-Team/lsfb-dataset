@@ -1,3 +1,1 @@
-
-from .lsfb_cont_landmarks import LSFBContLandmarks
-from .lsfb_isol_landmarks import LSFBIsolLandmarks
+from .lsfb_cont import LSFBContLandmarks, LSFBContLandmarksGenerator
