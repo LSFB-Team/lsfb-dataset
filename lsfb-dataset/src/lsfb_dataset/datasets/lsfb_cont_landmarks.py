@@ -2,13 +2,12 @@ from typing import Optional, Tuple, List
 from os import path
 from datetime import datetime
 
-import numpy as np
 import pandas as pd
 import pickle
 from tqdm import tqdm
 from ..utils.datasets import split_cont, mini_sample, create_mask
 from ..utils.landmarks import load_pose_landmarks, load_hands_landmarks, pad_landmarks
-from ..utils.target import pad_target
+from ..utils.target import pad_target, combine_binary_vectors, combine_binary_vectors_with_coarticulation
 from .types import *
 
 
@@ -218,8 +217,11 @@ class LSFBContLandmarks:
                 vec = vec[0]
             elif self.hands == 'right':
                 vec = vec[1]
-            else:
-                vec = np.logical_or(vec[0], vec[1]).astype('uint8')
+            elif self.hands == 'both':
+                if target == 'signs_and_transitions':
+                    vec = combine_binary_vectors_with_coarticulation(vec[0], vec[1])
+                else:
+                    vec = combine_binary_vectors(vec[0], vec[1])
 
             assert vec is not None, f'Target not found for video {filename}.'
             self.targets.append(vec)
