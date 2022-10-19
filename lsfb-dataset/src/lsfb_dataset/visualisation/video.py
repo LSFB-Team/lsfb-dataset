@@ -5,7 +5,8 @@ import random
 from typing import Optional
 import pandas as pd
 from .cv import draw_holistic_landmarks, draw_holistic_boxes, get_holistic_features_img,\
-    get_annotations_img, draw_pose_landmarks, draw_hands_landmarks, draw_face_landmarks, draw_face_mesh
+    get_annotations_img, draw_pose_landmarks, draw_hands_landmarks, draw_face_landmarks, draw_face_mesh,\
+    get_segmentation_vector_img
 from ..utils.helpers import duration_to_str
 
 
@@ -27,6 +28,8 @@ class VideoPlayer:
         self.pose_features: Optional[pd.DataFrame] = None
         self.hands_features: Optional[pd.DataFrame] = None
         self.face_features: Optional[pd.DataFrame] = None
+
+        self.segmentations: list[tuple[str, np.ndarray]] = []
 
         self.face_meshing = False
 
@@ -173,6 +176,12 @@ class VideoPlayer:
             cv2.imshow(
                 "Left hand annotations",
                 get_annotations_img(self.left_hand_annotations, current_time),
+            )
+
+        for segmentation_name, segmentation in self.segmentations:
+            cv2.imshow(
+                f"Segmentation - {segmentation_name}",
+                get_segmentation_vector_img(segmentation, current_time),
             )
 
         if landmarks_frame is not None:
