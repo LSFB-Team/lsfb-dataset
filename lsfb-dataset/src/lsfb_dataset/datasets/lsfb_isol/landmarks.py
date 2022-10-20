@@ -1,12 +1,11 @@
-import os
 import pandas as pd
 from tqdm import tqdm
 from datetime import datetime
 
 from lsfb_dataset.datasets.types import *
-from typing import Optional, List
+from typing import List
 from lsfb_dataset.utils.landmarks import load_pose_landmarks, load_hands_landmarks, pad_landmarks
-from lsfb_dataset.utils.datasets import split_isol, mini_sample, create_mask
+from lsfb_dataset.utils.datasets import create_mask
 from lsfb_dataset.datasets.lsfb_isol.base import LSFBIsolBase
 
 
@@ -53,13 +52,13 @@ class LSFBIsolLandmarks(LSFBIsolBase):
         super(LSFBIsolLandmarks, self).__init__(*args, **kwargs)
 
         self.features, self.targets = _load_landmarks(
-            self.root,
-            self.videos,
-            self.landmarks,
-            self.sequence_max_length,
-            self.show_progress,
+            self.config.root,
+            self.config.videos,
+            self.config.landmarks,
+            self.config.sequence_max_length,
+            self.config.show_progress,
         )
-        self.labels = self.lemmes['lemme']
+        self.labels = self.config.lemmes['lemme']
 
         print('-'*10)
         print('loading time:', datetime.now() - start_time)
@@ -72,20 +71,20 @@ class LSFBIsolLandmarks(LSFBIsolBase):
         target = self.targets[index]
         pad_value = 0
 
-        if self.padding:
-            pad_value = self.sequence_max_length - len(features)
+        if self.config.padding:
+            pad_value = self.config.sequence_max_length - len(features)
             features = pad_landmarks(features, pad_value)
 
-        if self.transform is not None:
-            features = self.transform(features)
+        if self.config.transform is not None:
+            features = self.config.transform(features)
             
-        if self.target_transform is not None:
-            target = self.target_transform(target)
+        if self.config.target_transform is not None:
+            target = self.config.target_transform(target)
 
-        if self.return_mask:
-            mask = create_mask(self.sequence_max_length, pad_value, self.mask_value)
-            if self.mask_transform is not None:
-                mask = self.mask_transform(mask)
+        if self.config.return_mask:
+            mask = create_mask(self.config.sequence_max_length, pad_value, self.config.mask_value)
+            if self.config.mask_transform is not None:
+                mask = self.config.mask_transform(mask)
 
             return features, target, mask
 
