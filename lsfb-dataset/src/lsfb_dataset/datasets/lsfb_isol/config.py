@@ -71,7 +71,6 @@ class LSFBIsolConfig:
     show_progress=True
 
     def __post_init__(self):
-
         if self.landmarks == None:
             self.landmarks = ['pose', 'hand_left', 'hand_right']
 
