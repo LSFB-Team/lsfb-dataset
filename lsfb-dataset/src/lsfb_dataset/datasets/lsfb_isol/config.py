@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Callable, List, Optional
 from lsfb_dataset.datasets.types import *
 import os
 import pandas as pd
@@ -54,9 +54,9 @@ class LSFBIsolConfig:
     root: str
     landmarks: Optional[List[str]] = None
 
-    transform=None
-    target_transform=None
-    mask_transform=None
+    transform: Callable=None
+    target_transform: Callable=None
+    mask_transform: Callable=None
 
     lemmes_nb: int = 10
     lemme_list_path: str = 'lemmes.csv'
@@ -68,7 +68,7 @@ class LSFBIsolConfig:
     padding: bool = True
     return_mask: bool = True
     mask_value: int = 0
-    show_progress=True
+    show_progress: bool=True
 
     def __post_init__(self):
         if self.landmarks == None:

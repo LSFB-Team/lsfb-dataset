@@ -55,13 +55,10 @@ class LSFBIsolBase:
 
 
     def _select_videos(self):
-
-        print(self.config)
-
         split = self.config.split
         videos = self.config.videos
-
-        videos = videos[videos['lemme'].isin(self.config.lemmes.lemme)]
+  
+        videos.drop(index=videos.index[~videos['class'].isin(self.config.lemmes.index)], inplace=True)
 
         if split == 'mini_sample':
             videos = mini_sample(videos)
