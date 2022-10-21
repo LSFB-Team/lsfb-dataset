@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from os import path
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Callable
 from ..types import *
 
 
@@ -68,9 +68,9 @@ class LSFBContConfig:
     root: str
     landmarks: Optional[List[str]] = None
 
-    features_transform = None
-    target_transform = None
-    transform = None
+    features_transform: Callable = None
+    target_transform: Callable = None
+    transform: Callable = None
 
     split: DataSubset = 'all'
     hands: Hand = 'both'
@@ -80,7 +80,7 @@ class LSFBContConfig:
     return_mask: bool = False
     mask_transform = None
 
-    video_list_file: str = 'valid_videos.csv'
+    video_list_file: str = 'videos.csv'
     targets_dir: str = 'annotations/vectors'
     show_progress: bool = True
 
