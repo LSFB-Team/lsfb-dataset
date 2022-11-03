@@ -25,7 +25,7 @@ The library offers you a set of module designed to help you to **download**, **v
 - **datasets** : contains pre-written python [Iterators](https://docs.python.org/3/c-api/iterator.html) for both the isol and continuous datasets. They could be used to feed the data in your *machine learning* pipeline.
 - **visualisation** : contains helper function enabling you to visualise the data.
 - **utils**: contains function helping to load the various csv and video into dataframes
-- **[transforms](transforms.md)** : Functions
+- **transforms** : Functions
 
 ## Sponsors
 

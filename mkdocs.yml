@@ -4,8 +4,8 @@ nav:
     - Home: index.md
     - LSFB Isol: lsfb_isol.md
     - LSFB Cont: lsfb_cont.md
+    - Datasets: datasets.md
     - Visualisation: visualisation.md
-    - Transforms: transforms.md
     - Download Datasets: download.md
     - Reference : references.md
 
