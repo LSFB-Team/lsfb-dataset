@@ -7,3 +7,7 @@
 ::: lsfb_dataset.datasets.lsfb_cont.landmarks
 
 ::: lsfb_dataset.datasets.lsfb_cont.landmarks_generator
+
+::: lsfb_dataset.datasets.lsfb_isol
+
+::: lsfb_dataset.datasets.lsfb_isol.config

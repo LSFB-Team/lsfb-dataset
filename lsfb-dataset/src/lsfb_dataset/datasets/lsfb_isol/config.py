@@ -8,12 +8,10 @@ import pandas as pd
 @dataclass
 class LSFBIsolConfig:
     """
-    Simple configuration class for the LSFB_CONT Dataset.
+    Simple configuration class for the lsfb_isol Dataset.
 
-    LSFB: French Belgian Sign Language
-    CONT: Continuous videos in LSFB
-
-    See: LSFBContLandmarks
+    lsfb: French Belgian Sign Language
+    isol: isolated videos in LSFB
 
     Args:
         root: Root directory of the LSFB_ISOL dataset.
@@ -48,7 +46,7 @@ class LSFBIsolConfig:
         show_progress: If true, show a progress bar while the dataset is loading.
 
 
-    Author: ppoitier
+    Author: jfink
     """
 
     root: str
