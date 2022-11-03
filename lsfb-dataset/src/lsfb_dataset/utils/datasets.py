@@ -11,7 +11,7 @@ def split_cont(df_videos: pd.DataFrame, signers_frac=0.6, seed=42):
     return train_df, val_df
 
 
-def split_isol(dataframe: pd.DataFrame, test_frac=0.6, seed=42):
+def split_isol(dataframe: pd.DataFrame, test_frac=0.25, seed=42):
     test_df = dataframe.sample(frac=test_frac, random_state=seed)
     train_df = dataframe.drop(index=test_df.index)
     return train_df, test_df
