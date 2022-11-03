@@ -11,3 +11,4 @@ __pycache__
 build
 virtualenv
 data
+lsfb-dataset/build
