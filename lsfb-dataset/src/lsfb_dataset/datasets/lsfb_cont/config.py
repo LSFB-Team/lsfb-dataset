@@ -78,7 +78,7 @@ class LSFBContConfig:
 
     window: Optional[Tuple[int, int]] = None
     return_mask: bool = False
-    mask_transform = None
+    mask_transform: Callable = None
 
     video_list_file: str = 'videos.csv'
     targets_dir: str = 'annotations/vectors'
