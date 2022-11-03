@@ -11,3 +11,7 @@
 ::: lsfb_dataset.datasets.lsfb_isol
 
 ::: lsfb_dataset.datasets.lsfb_isol.config
+
+::: lsfb_dataset.datasets.lsfb_isol.landmarks
+
+::: lsfb_dataset.datasets.lsfb_isol.landmarks_generator
