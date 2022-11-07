@@ -2,6 +2,7 @@ site_name: LSFB Dataset
 
 nav:
     - Home: index.md
+    - How To : howto.md
     - LSFB Isol: lsfb_isol.md
     - LSFB Cont: lsfb_cont.md
     - Datasets: datasets.md
