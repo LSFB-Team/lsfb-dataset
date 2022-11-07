@@ -1,4 +1,5 @@
 dist
+lsfb-dataset/build
 .vscode
 **.egg-info
 .tox
@@ -11,4 +12,4 @@ __pycache__
 build
 virtualenv
 data
-lsfb-dataset/build
+
