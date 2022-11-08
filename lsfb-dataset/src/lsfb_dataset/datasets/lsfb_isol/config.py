@@ -30,8 +30,8 @@ class LSFBIsolConfig:
             You need to set return_mask to true to use this transform.
 
         lemmes_nb: Number of lemme to consider. Default=10
-        lemme_list_path: Path to the csv containing the lemmes lists. Default="lemmes.csv"
-        videos_list_path: Path to the csv containing the video information. Default="clips.csv"
+        lemme_list_file: Path to the csv containing the lemmes lists. Default="lemmes.csv"
+        videos_list_file: Path to the csv containing the video information. Default="clips.csv"
 
         split: Select a specific subset of the dataset. Default = 'all'.
             'train' for training set;
@@ -57,8 +57,8 @@ class LSFBIsolConfig:
     mask_transform: Callable=None
 
     lemmes_nb: int = 10
-    lemme_list_path: str = 'lemmes.csv'
-    videos_list_path: str = 'clips.csv'
+    lemme_list_file: str = 'lemmes.csv'
+    videos_list_file: str = 'clips.csv'
 
     split: DataSubset = 'all'
     sequence_max_length: int = 50
@@ -72,8 +72,8 @@ class LSFBIsolConfig:
         if self.landmarks == None:
             self.landmarks = ['pose', 'hand_left', 'hand_right']
 
-        self.lemme_list_path = os.path.join(self.root, self.lemme_list_path)
-        self.videos_list_path = os.path.join(self.root, self.videos_list_path)
+        self.lemme_list_path = os.path.join(self.root, self.lemme_list_file)
+        self.videos_list_path = os.path.join(self.root, self.videos_list_file)
 
         self.videos = pd.read_csv(self.videos_list_path)
 
