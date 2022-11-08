@@ -1,6 +1,6 @@
 # How To Guide
 
-This sections shows how the various components of the dataset could be used.
+This section provide quick reference for the various class and module available in `lsfb-dataset`. All these examples are available as jupyter noteboks [here](https://github.com/Jefidev/lsfb-dataset/tree/master/examples).
 
 ## How to Download Datasets
 
@@ -8,7 +8,7 @@ The LSFB dataset could be downloaded through *HTTP*. The  `lsfb-dataset` package
 
 ### Download lsfb Isol landmarks
 
-By default, the downloader will only fetch the landmarks of the lsfb_isol dataset (~5Go). The only mandatory parameter is the destination folder for the dataset.
+By default, the downloader will only fetch the landmarks of the lsfb_isol dataset (~5Go). The only mandatory parameter is the destination folder for the dataset. 
 
 ```python
 from lsfb_dataset.utils.download import DatasetDownloader
