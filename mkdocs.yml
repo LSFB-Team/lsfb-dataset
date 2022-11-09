@@ -8,6 +8,7 @@ nav:
     - Datasets: datasets.md
     - Visualisation: visualisation.md
     - Download Datasets: download.md
+    - Reference : references.md
 
 theme:
     name: readthedocs
