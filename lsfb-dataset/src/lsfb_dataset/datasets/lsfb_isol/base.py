@@ -1,29 +1,7 @@
-import os
-import pandas as pd
-from tqdm import tqdm
-from datetime import datetime
-
 from lsfb_dataset.datasets.types import *
-from typing import Optional, List
-from lsfb_dataset.utils.landmarks import load_pose_landmarks, load_hands_landmarks, pad_landmarks
-from lsfb_dataset.utils.datasets import split_isol, mini_sample, create_mask
+from lsfb_dataset.utils.datasets import split_isol, mini_sample
+from lsfb_dataset.datasets.lsfb_isol.config import LSFBIsolConfig
 import abc
-
-
-def _select_videos(videos, lemmes, split: str):
-    videos = videos[videos['lemme'].isin(lemmes.lemme)]
-
-    if split == 'mini_sample':
-        videos = mini_sample(videos)
-    elif split != 'all':
-        train_videos, test_videos = split_isol(videos)
-        if split == 'train':
-            videos = train_videos
-        elif split == 'test':
-            videos = test_videos
-
-    return videos
-
 
 class LSFBIsolBase:
 
@@ -40,6 +18,10 @@ class LSFBIsolBase:
     **Target** is a string representing the name of the gloss performed.
 
     Args:
+        config: The configuration object (see LSFBContConfig).
+            If config is not specified, every needed configuration argument must be manually provided.
+
+    Configuration args (see LSFBIsolConfig):
         root: Root directory of the LSFB_ISOL dataset.
             The dataset must already be downloaded.
         landmarks: Select which landmarks (features) to use. Default = ['pose', 'hand_left', 'hand_right'].
@@ -66,48 +48,28 @@ class LSFBIsolBase:
 
     """
 
-    def __init__(
-            self,
-            root: str,
-            landmarks: Optional[List[str]] = None,
-            transform=None,
-            target_transform=None,
-            mask_transform=None,
-            lemmes_nb: int = 10,
-            lemme_list_path: str = 'lemmes.csv',
-            videos_list_path: str = 'clips.csv',
-            split: DataSubset = 'all',
-            sequence_max_length: int = 50,
-            padding: bool = True,
-            return_mask: bool = True,
-            mask_value: int = 0,
-            show_progress=True,
-    ):
-        if landmarks is None:
-            landmarks = ['pose', 'hand_left', 'hand_right']
+    def __init__(self, config=None, **kwargs):
 
-        self.root = root
-        self.landmarks = landmarks
-        self.transform = transform
-        self.target_transform = target_transform
-        self.mask_transform = mask_transform
+        self.config = LSFBIsolConfig(**kwargs) if config is None else config
+        self.config.videos = self._select_videos()
 
-        self.sequence_max_length = sequence_max_length
-        self.padding = padding
-        self.return_mask = return_mask
-        self.mask_value = mask_value
-        self.show_progress = show_progress
 
-        lemme_list_path = os.path.join(root, lemme_list_path)
-        videos_list_path = os.path.join(root, videos_list_path)
+    def _select_videos(self):
+        split = self.config.split
+        videos = self.config.videos
+  
+        videos.drop(index=videos.index[~videos['class'].isin(self.config.lemmes.index)], inplace=True)
 
-        lemmes = pd.read_csv(lemme_list_path)
-        self.lemmes = lemmes.iloc[:lemmes_nb]
-        self.split = split
+        if split == 'mini_sample':
+            videos = mini_sample(videos)
+        elif split != 'all':
+            train_videos, test_videos = split_isol(videos)
+            if split == 'train':
+                videos = train_videos
+            elif split == 'test':
+                videos = test_videos
 
-        self.videos = pd.read_csv(videos_list_path)
-        self.videos = _select_videos(self.videos, self.lemmes, self.split)
-
+        return videos
 
     @abc.abstractmethod
     def __len__(self):

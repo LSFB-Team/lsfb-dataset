@@ -29,8 +29,6 @@ class DatasetDownloader:
         compute_hash : Verify the hash of the video. Include_video should be set to true to use
             this options. Default = False.
         src : URL of the source of the dataset. Default = URL of the UNamur servers
-        verbose : Display warning message informing you about the size of the data you are going to download.
-            Default = True
     """
 
     def __init__(
@@ -42,7 +40,6 @@ class DatasetDownloader:
         include_raw: bool = False,
         compute_hash: bool = False,
         src: str = None,
-        verbose: bool = True,
     ):
         self.destination = destination
         self.dataset = dataset
@@ -60,7 +57,6 @@ class DatasetDownloader:
 
         self.include_video = include_video
         self.compute_hash = compute_hash
-        self.verbose = verbose
 
         if src != None:
             self.src = src
@@ -76,9 +72,6 @@ class DatasetDownloader:
         """
         csv_path = self._download_csv()
         data = pd.read_csv(csv_path)
-
-        if not self._display_warning():
-            return
 
         # processing the CSV file
         for idx, row in tqdm(data.iterrows(), total=data.shape[0]):
@@ -194,40 +187,3 @@ class DatasetDownloader:
         if not os.path.exists(directories):
             os.makedirs(directories)
 
-    def _ask_permission(self, message):
-        """
-        Ask the user for permission to download the file.
-
-        Input:
-        message : The message to display to the user.
-        """
-
-        print(message)
-        answer = input("Do you want to continue ? [Y/n] ")
-
-        if answer.lower() == "n":
-            raise Exception("User cancelled the download")
-
-    def _display_warning(self) -> bool:
-        """
-        Display a warning message to the user.
-        """
-        if not self.verbose:
-            return True
-
-        if self.dataset == "isol":
-            size = "~100 GB"
-        else:
-            size = "~2 TB"
-
-        message = f"The dataset you are downloading is {size}."
-        message += (
-            f" Are you sure you want to download it here : {self.destination} (Y/N): "
-        )
-
-        response = input(message)
-
-        while response.lower() not in ["y", "n"]:
-            response = input("Answer should be Y or N :  ")
-
-        return response.lower() == "y"

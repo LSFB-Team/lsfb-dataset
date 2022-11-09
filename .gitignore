@@ -1,4 +1,5 @@
 dist
+lsfb-dataset/build
 .vscode
 **.egg-info
 .tox

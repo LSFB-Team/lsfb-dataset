@@ -78,13 +78,16 @@ class LSFBContConfig:
 
     window: Optional[Tuple[int, int]] = None
     return_mask: bool = False
-    mask_transform = None
+    mask_transform: Callable = None
 
     video_list_file: str = 'videos.csv'
     targets_dir: str = 'annotations/vectors'
     show_progress: bool = True
 
     def __post_init__(self):
+        if self.landmarks == None:
+            self.landmarks = ['pose', 'hand_left', 'hand_right']
+
         self.video_list_file = path.join(self.root, self.video_list_file)
         self.targets_dir = path.join(self.root, self.targets_dir)
 
