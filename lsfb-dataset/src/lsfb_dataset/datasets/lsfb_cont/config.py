@@ -85,7 +85,7 @@ class LSFBContConfig:
     show_progress: bool = True
 
     def __post_init__(self):
-        if self.landmarks == None:
+        if self.landmarks is None:
             self.landmarks = ['pose', 'hand_left', 'hand_right']
 
         self.video_list_file = path.join(self.root, self.video_list_file)
