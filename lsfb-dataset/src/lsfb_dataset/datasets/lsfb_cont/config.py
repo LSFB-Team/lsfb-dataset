@@ -45,7 +45,8 @@ class LSFBContConfig:
                 where intermediate movements are labelled as signing and not waiting anymore.
             Default = 'signs'.
 
-        window: Optional argument (window_size, window_stride) to use fixed-size windows instead of variable length sequences.
+        window: Optional argument (window_size, window_stride) to use fixed-size windows instead of
+            variable length sequences.
             If specified, the dataset is windowed with a window size and a window stride.
             Be careful, this argument changes the number of instances in the dataset !
             Default = None.

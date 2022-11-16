@@ -1,10 +1,9 @@
-from lsfb_dataset.datasets.types import *
 from lsfb_dataset.utils.datasets import split_isol, mini_sample
 from lsfb_dataset.datasets.lsfb_isol.config import LSFBIsolConfig
 import abc
 
-class LSFBIsolBase:
 
+class LSFBIsolBase:
     """
     LSFB_ISOL Base Dataset.
 
@@ -28,8 +27,9 @@ class LSFBIsolBase:
             'pose' for pose skeleton (23 landmarks);
             'hands_left' for left hand skeleton (21 landmarks);
             'hands_right' for right hand skeleton (21 landmarks);
-        transform: Callable object used to transform the features.
+        features_transform: Callable object used to transform the features.
         target_transform: Callable object used to transform the targets.
+        transform: Callable object used to transform both the features and the targets.
         mask_transform: Callable object used to transform the masks.
             You need to set return_mask to true to use this transform.
         lemmes_nb: Number of lemme to consider. Default=10
@@ -40,7 +40,7 @@ class LSFBIsolBase:
             'test' for the test set;
             'all' for all the instances of the dataset;
             'mini_sample' for a tiny set of instances.
-        sequence_max_length: Max lenght of the clip sequence. Default=50.
+        sequence_max_length: Max length of the clip sequence. Default=50.
         padding: Pad all sequence to the same length.
         return_mask: Returning padding mask for the sequence.
         mask_value: Value of the masked part of the clips.
@@ -53,11 +53,10 @@ class LSFBIsolBase:
         self.config = LSFBIsolConfig(**kwargs) if config is None else config
         self.config.videos = self._select_videos()
 
-
     def _select_videos(self):
         split = self.config.split
         videos = self.config.videos
-  
+
         videos.drop(index=videos.index[~videos['class'].isin(self.config.lemmes.index)], inplace=True)
 
         if split == 'mini_sample':
@@ -74,8 +73,7 @@ class LSFBIsolBase:
     @abc.abstractmethod
     def __len__(self):
         pass
-        
+
     @abc.abstractmethod
     def __getitem__(self, index):
         pass
-        

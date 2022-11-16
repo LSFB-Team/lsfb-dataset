@@ -22,9 +22,9 @@ class LSFBIsolConfig:
             'hands_left' for left hand skeleton (21 landmarks);
             'hands_right' for right hand skeleton (21 landmarks);
 
-        transform: Callable object used to transform the features.
-
+        features_transform: Callable object used to transform the features.
         target_transform: Callable object used to transform the targets.
+        transform: Callable object used to transform both the features and the targets.
 
         mask_transform: Callable object used to transform the masks.
             You need to set return_mask to true to use this transform.
@@ -39,7 +39,7 @@ class LSFBIsolConfig:
             'all' for all the instances of the dataset;
             'mini_sample' for a tiny set of instances.
 
-        sequence_max_length: Max lenght of the clip sequence. Default=50.
+        sequence_max_length: Max length of the clip sequence. Default=50.
         padding: Pad all sequence to the same length.
         return_mask: Returning padding mask for the sequence.
         mask_value: Value of the masked part of the clips.
@@ -52,9 +52,10 @@ class LSFBIsolConfig:
     root: str
     landmarks: Optional[List[str]] = None
 
-    transform: Callable=None
-    target_transform: Callable=None
-    mask_transform: Callable=None
+    features_transform: Callable = None
+    target_transform: Callable = None
+    transform: Callable = None
+    mask_transform: Callable = None
 
     lemmes_nb: int = 10
     lemme_list_file: str = 'lemmes.csv'
@@ -66,10 +67,10 @@ class LSFBIsolConfig:
     padding: bool = True
     return_mask: bool = True
     mask_value: int = 0
-    show_progress: bool=True
+    show_progress: bool = True
 
     def __post_init__(self):
-        if self.landmarks == None:
+        if self.landmarks is None:
             self.landmarks = ['pose', 'hand_left', 'hand_right']
 
         self.lemme_list_path = os.path.join(self.root, self.lemme_list_file)
@@ -79,7 +80,3 @@ class LSFBIsolConfig:
 
         self.lemmes = pd.read_csv(self.lemme_list_path)
         self.lemmes = self.lemmes.iloc[:self.lemmes_nb]
-
-
-
-

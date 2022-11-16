@@ -2,12 +2,10 @@ import pandas as pd
 from tqdm import tqdm
 from datetime import datetime
 
-from lsfb_dataset.datasets.types import *
 from typing import List
 from lsfb_dataset.utils.landmarks import load_pose_landmarks, load_hands_landmarks, pad_landmarks
 from lsfb_dataset.utils.datasets import create_mask
 from lsfb_dataset.datasets.lsfb_isol.base import LSFBIsolBase
-
 
 
 def _load_landmarks(
@@ -45,8 +43,8 @@ def _load_landmarks(
 
 class LSFBIsolLandmarks(LSFBIsolBase):
 
-    def __init__(self,*args, **kwargs):
-        print('-'*10, 'LSFB ISOL DATASET')
+    def __init__(self, *args, **kwargs):
+        print('-' * 10, 'LSFB ISOL DATASET')
         start_time = datetime.now()
 
         super(LSFBIsolLandmarks, self).__init__(*args, **kwargs)
@@ -60,7 +58,7 @@ class LSFBIsolLandmarks(LSFBIsolBase):
         )
         self.labels = self.config.lemmes['lemme']
 
-        print('-'*10)
+        print('-' * 10)
         print('loading time:', datetime.now() - start_time)
 
     def __len__(self):
@@ -75,11 +73,14 @@ class LSFBIsolLandmarks(LSFBIsolBase):
             pad_value = self.config.sequence_max_length - len(features)
             features = pad_landmarks(features, pad_value)
 
-        if self.config.transform is not None:
-            features = self.config.transform(features)
-            
+        if self.config.features_transform is not None:
+            features = self.config.features_transform(features)
+
         if self.config.target_transform is not None:
             target = self.config.target_transform(target)
+
+        if self.config.transform is not None:
+            features, target = self.config.transform(features, target)
 
         if self.config.return_mask:
             mask = create_mask(self.config.sequence_max_length, pad_value, self.config.mask_value)

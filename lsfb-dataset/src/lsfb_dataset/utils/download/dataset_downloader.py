@@ -2,20 +2,19 @@ import urllib
 import urllib.request
 import hashlib
 import pandas as pd
-import numpy as np
 from tqdm import tqdm
 import os
-from typing import Optional, Callable, List
+from typing import List
 
 
 class DatasetDownloader:
     """
     DatasetDownloader 
 
-    This class provides an esay interface for downloading the LSFB dataset over http.
+    This class provides an easy interface for downloading the LSFB dataset over http.
 
     Args:
-        destination : Path to the destination folder for the dataset
+        destination : Path to the destination folder where the dataset is saved.
         dataset : The dataset to download. Default = 'isol'.
             'isol' for the LSFB isol dataset;
             'cont' for the LSFB cont dataset;
@@ -32,19 +31,19 @@ class DatasetDownloader:
     """
 
     def __init__(
-        self,
-        destination: str,
-        dataset: str = "isol",
-        landmarks: List[str] = None,
-        include_video: bool = False,
-        include_raw: bool = False,
-        compute_hash: bool = False,
-        src: str = None,
+            self,
+            destination: str,
+            dataset: str = "isol",
+            landmarks: List[str] = None,
+            include_video: bool = False,
+            include_raw: bool = False,
+            compute_hash: bool = False,
+            src: str = None,
     ):
         self.destination = destination
         self.dataset = dataset
 
-        if landmarks == None:
+        if landmarks is None:
             self.landmarks = ["pose", "hands"]
         else:
             self.landmarks = landmarks
@@ -58,13 +57,12 @@ class DatasetDownloader:
         self.include_video = include_video
         self.compute_hash = compute_hash
 
-        if src != None:
+        if src is not None:
             self.src = src
         elif dataset == "isol":
             self.src = "https://lsfb.info.unamur.be/static/datasets/LSFB/LSFB_ISOL"
         elif dataset == "cont":
             self.src = "https://lsfb.info.unamur.be/static/datasets/LSFB/LSFB_CONT"
-
 
     def download(self):
         """
@@ -100,6 +98,9 @@ class DatasetDownloader:
         elif self.dataset == "cont":
             csv_files.append("valid_videos.csv")
             detailed_csv_destination = os.path.join(self.destination, "valid_videos.csv")
+
+        else:
+            raise ValueError(f'Unknown dataset: {self.dataset}')
 
         for elem in csv_files:
             url = os.path.join(self.src, elem)
@@ -186,4 +187,3 @@ class DatasetDownloader:
         # Creating missing directories in destination
         if not os.path.exists(directories):
             os.makedirs(directories)
-

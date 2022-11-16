@@ -3,7 +3,6 @@ import glob
 from tqdm import tqdm
 from os.path import sep
 from concurrent.futures.process import ProcessPoolExecutor
-from concurrent.futures import as_completed
 
 
 def load_lsfb_dataset(path: str, verbose: bool = False):

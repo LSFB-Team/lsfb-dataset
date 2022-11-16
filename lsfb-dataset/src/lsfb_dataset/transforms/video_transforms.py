@@ -2,7 +2,6 @@ import numbers
 import random
 import numpy as np
 import PIL
-import math
 
 import lsfb_dataset.utils.video_utils as F
 
@@ -163,7 +162,7 @@ class TrimVideo(object):
         self.end = size
         self.begin = 0
 
-        if offset != None:
+        if offset is not None:
             self.begin = offset
             self.end += offset
 
@@ -171,7 +170,7 @@ class TrimVideo(object):
         resized = clip
 
         if len(clip) > self.end:
-            resized = clip[self.begin : self.end]
+            resized = clip[self.begin:self.end]
         return np.array(resized)
 
 
