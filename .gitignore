@@ -1,4 +1,5 @@
 dist
+lsfb-dataset/build
 .vscode
 **.egg-info
 .tox
@@ -9,3 +10,5 @@ site
 lsfb-dataset/src/notebooks/
 __pycache__
 build
+virtualenv
+data

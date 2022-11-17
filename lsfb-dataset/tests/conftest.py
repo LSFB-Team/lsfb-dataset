@@ -1,2 +1,2 @@
 import pytest
-from fixtures.lsfb_isol import lsfb_isol_path
+from fixtures.lsfb_isol.mock_lsfb_isol import mock_lsfb_isol_path

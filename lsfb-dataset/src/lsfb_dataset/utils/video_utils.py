@@ -11,7 +11,7 @@ Code copied from : https://github.com/hassony2/torch_videovision/blob/master/tor
 
 def crop_clip(clip, min_h, min_w, h, w):
     if isinstance(clip[0], np.ndarray):
-        cropped = [img[min_h : min_h + h, min_w : min_w + w, :] for img in clip]
+        cropped = [img[min_h:min_h + h, min_w:min_w + w, :] for img in clip]
 
     elif isinstance(clip[0], PIL.Image.Image):
         cropped = [img.crop((min_w, min_h, min_w + w, min_h + h)) for img in clip]

@@ -20,6 +20,11 @@ To run the test suite, you just have to run the command `tox` in the lsfb-datase
 
 Writting good test is trickier, please refer to the [pytest documentation](https://docs.pytest.org) for more information.
 
+## Build the Doc
+
+The project use [mkdocs](https://www.mkdocs.org/) for its documentation. You need to install the package `mkdocs "mkdocstrings[python]" mkdocs-material` to build the doc.
+
+
 ## Local Install
 
 You can always install the library locally by running the command `python -m pip install ./lsfb-dataset` in the root directory.
