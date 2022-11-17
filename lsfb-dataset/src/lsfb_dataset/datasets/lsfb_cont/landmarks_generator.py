@@ -56,16 +56,17 @@ class LSFBContLandmarksGenerator(LSFBContBase):
         return_mask = self.config.return_mask
         mask_transform = self.config.mask_transform
 
-        features = load_landmarks(
-            self.videos.iloc[index],
-            self.config.root,
-            self.config.landmarks
-        )
-        target = self.targets[index]
         padding = 0
 
         if window is not None:
-            features, target, padding = self._get_windowed_item(index, features, target)
+            features, target, padding = self._get_windowed_item(index)
+        else:
+            features = load_landmarks(
+                self.videos.iloc[index],
+                self.config.root,
+                self.config.landmarks
+            )
+            target = self.targets[index]
 
         if features_transform is not None:
             features = features_transform(features)
@@ -84,8 +85,15 @@ class LSFBContLandmarksGenerator(LSFBContBase):
 
         return features, target
 
-    def _get_windowed_item(self, index, features, target):
+    def _get_windowed_item(self, index):
         video_index, start, end, padding = self.windows[index]
+        features = load_landmarks(
+            self.videos.iloc[video_index],
+            self.config.root,
+            self.config.landmarks
+        )
+        target = self.targets[video_index]
+
         landmarks = pad_landmarks(features[start:end], padding)
         target = pad_target(target[start:end], padding)
         return landmarks, target, padding

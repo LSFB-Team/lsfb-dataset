@@ -9,6 +9,7 @@ class LSFBIsolLandmarksGenerator(LSFBIsolBase):
 
     def __init__(self, *args, **kwargs):
         super(LSFBIsolLandmarksGenerator, self).__init__(*args, **kwargs)
+        self.labels = self.config.lemmes['lemme']
 
     def __len__(self):
         return len(self.config.videos)

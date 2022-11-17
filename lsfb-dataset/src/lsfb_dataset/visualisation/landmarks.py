@@ -96,8 +96,8 @@ def __plot_landmarks(
         size: int = 4,
         aspect_ratio=16/9,
         show_axis: bool = False,
-        x_lim: Optional[float] = None,
-        y_lim: Optional[float] = None,
+        x_lim: Optional[tuple[float, float]] = None,
+        y_lim: Optional[tuple[float, float]] = None,
         refocus: bool = False,
         focus_pad: float = 0.02,
 ):
@@ -142,8 +142,8 @@ def plot_landmarks(
         aspect_ratio: float = 16/9,
         refocus: bool = False,
         focus_pad: float = 0.02,
-        x_lim: Optional[float] = None,
-        y_lim: Optional[float] = None,
+        x_lim: Optional[tuple[float, float]] = None,
+        y_lim: Optional[tuple[float, float]] = None,
         ax=None,
         **kwargs
 ):
@@ -214,6 +214,8 @@ def plot_grid(
     if indices is None:
         indices = np.random.randint(landmarks.shape[0], size=(n_rows, n_cols))
         indices = np.sort(indices, axis=None).reshape(n_rows, n_cols)
+    elif isinstance(indices, list):
+        indices = np.array(indices)
 
     for row in range(n_rows):
         for col in range(n_cols):

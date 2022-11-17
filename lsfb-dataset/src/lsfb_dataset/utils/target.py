@@ -1,6 +1,8 @@
 import numpy as np
 from itertools import groupby
 from typing import Optional
+from os import path
+import pickle
 
 
 def pad_target(target, padding: int):
@@ -29,3 +31,33 @@ def get_segments(segmentation: np.ndarray, filter_value: Optional[int] = None):
         segments = segments[segments[:, 0] == filter_value][:, 1:]
 
     return segments
+
+
+def load_segmentation_target(
+        root: str,
+        video_filename: str,
+        target_vectors_dir: str = 'annotations/vectors',
+        target_type: str = 'signs',
+):
+    if target_type == 'signs':
+        vectors_filename = 'binary.pck'
+    elif target_type == 'signs_and_transitions':
+        vectors_filename = 'binary_with_coarticulation.pck'
+    elif target_type == 'activity':
+        vectors_filename = 'activity.pck'
+    else:
+        raise ValueError(f'Unknown target: {target_type}')
+
+    targets_filepath = path.join(root, target_vectors_dir, vectors_filename)
+    if not path.isfile(targets_filepath):
+        raise FileNotFoundError(f'Target vectors ({target_type}) file not found')
+
+    with open(targets_filepath, 'rb') as file:
+        vectors = pickle.load(file)
+
+    target = vectors.get(video_filename)
+    if target is None:
+        raise ValueError(f'Target ({target_type}) not found for video [{video_filename}].')
+
+    return target
+

@@ -19,8 +19,8 @@ class LSFBContConfig:
             The dataset must already be downloaded !
         landmarks: Select which landmarks (features) to use.
             'pose' for pose skeleton (23 landmarks);
-            'hands_left' for left hand skeleton (21 landmarks);
-            'hands_right' for right hand skeleton (21 landmarks);
+            'hand_left' for left hand skeleton (21 landmarks);
+            'hand_right' for right hand skeleton (21 landmarks);
             Default = ['pose', 'hand_left', 'hand_right'].
 
         features_transform: Callable object used to transform the features.

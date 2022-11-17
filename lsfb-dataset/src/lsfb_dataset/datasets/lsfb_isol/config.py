@@ -64,8 +64,8 @@ class LSFBIsolConfig:
     split: DataSubset = 'all'
     sequence_max_length: int = 50
 
-    padding: bool = True
-    return_mask: bool = True
+    padding: bool = False
+    return_mask: bool = False
     mask_value: int = 0
     show_progress: bool = True
 
