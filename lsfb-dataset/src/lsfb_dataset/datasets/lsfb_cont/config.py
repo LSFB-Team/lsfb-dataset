@@ -33,6 +33,7 @@ class LSFBContConfig:
             'all' for all the instances of the dataset;
             'mini_sample' for a tiny set of instances.
             Default = 'all'.
+        seed: Seed used to determine the split. Default = 42.
         hands: Specify which hands are targeted in the segmentation.
             'right' for the signs from the right hand of the signer;
             'left' for the signs from the left hand of the signer;
@@ -61,7 +62,8 @@ class LSFBContConfig:
         targets_dir: The path of the directory that contains the target vectors.
             This filepath is relative to the root of the dataset.
 
-        show_progress: If true, shows a progress bar while the dataset is loading.
+        show_progress: If true, shows a progress bar while the dataset is loading. Default = True.
+        verbose: If true, print more information about the loading process. Default = True.
 
     Author: ppoitier
     """
@@ -74,6 +76,7 @@ class LSFBContConfig:
     transform: Callable = None
 
     split: DataSubset = 'all'
+    seed: int = 42
     hands: Hand = 'both'
     target: Target = 'signs'
 
@@ -83,7 +86,9 @@ class LSFBContConfig:
 
     video_list_file: str = 'videos.csv'
     targets_dir: str = 'annotations/vectors'
+
     show_progress: bool = True
+    verbose: bool = True
 
     def __post_init__(self):
         if self.landmarks is None:

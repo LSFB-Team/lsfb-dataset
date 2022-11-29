@@ -97,7 +97,9 @@ class LSFBContLandmarks(LSFBContBase):
 
         landmarks_nb = self.videos.shape[0]
         landmarks_list = ', '.join(landmarks)
-        print(f'Loading landmarks {landmarks_list} for {landmarks_nb} videos...')
+
+        if self.config.verbose:
+            print(f'Loading landmarks {landmarks_list} for {landmarks_nb} videos...')
 
         progress_bar = tqdm(
             self.videos.iterrows(),
@@ -107,7 +109,9 @@ class LSFBContLandmarks(LSFBContBase):
 
         for _, video in progress_bar:
             self.features.append(load_landmarks(video, root, landmarks))
-        print('Landmarks loaded.')
+
+        if self.config.verbose:
+            print('Landmarks loaded.')
 
     def _build_windows(self):
         window = self.config.window
@@ -118,7 +122,9 @@ class LSFBContLandmarks(LSFBContBase):
                 end = min(landmarks_nb, start + window_size)
                 padding = window_size - (end - start)
                 self.windows.append((index, start, end, padding))
-        print('Windows successfully created.')
+
+        if self.config.verbose:
+            print('Windows successfully created.')
 
     def _get_windowed_item(self, index: int):
         video_index, start, end, padding = self.windows[index]
