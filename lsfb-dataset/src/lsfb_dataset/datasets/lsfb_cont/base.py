@@ -14,9 +14,10 @@ from ...utils.target import (
 class LSFBContBase:
 
     def __init__(self, config=None, **kwargs):
-        print('-' * 10, 'LSFB CONT DATASET')
-
         self.config = LSFBContConfig(**kwargs) if config is None else config
+        if self.config.verbose:
+            print('-' * 10, 'LSFB CONT DATASET')
+
         self.videos = self._load_video_list()
 
         self.targets: list[np.ndarray] = []
@@ -27,7 +28,7 @@ class LSFBContBase:
     def _load_video_list(self) -> pd.DataFrame:
         split = self.config.split
         videos: pd.DataFrame = pd.read_csv(self.config.video_list_file)
-        train_videos, test_videos = split_cont(videos, signers_frac=0.6, seed=42)
+        train_videos, test_videos = split_cont(videos, signers_frac=0.8, seed=self.config.seed)
 
         if split == 'mini_sample':
             videos = mini_sample(videos, num_samples=10, seed=42)
@@ -35,7 +36,7 @@ class LSFBContBase:
             videos = train_videos
         elif split == 'test':
             videos = test_videos
-        else:
+        elif split != 'all':
             raise ValueError(f'Unknown split: {split}.')
         return videos
 
@@ -80,7 +81,8 @@ class LSFBContBase:
             assert vec is not None, f'Target not found for video {filename}.'
             self.targets.append(vec)
 
-        print('Target vectors loaded.')
+        if self.config.verbose:
+            print('Target vectors loaded.')
 
     @abc.abstractmethod
     def __len__(self):

@@ -33,9 +33,8 @@ def get_segments(segmentation: np.ndarray, filter_value: Optional[int] = None):
     return segments
 
 
-def load_segmentation_target(
+def load_segmentation_targets(
         root: str,
-        video_filename: str,
         target_vectors_dir: str = 'annotations/vectors',
         target_type: str = 'signs',
 ):
@@ -54,6 +53,21 @@ def load_segmentation_target(
 
     with open(targets_filepath, 'rb') as file:
         vectors = pickle.load(file)
+
+    return vectors
+
+
+def load_segmentation_target(
+        root: str,
+        video_filename: str,
+        target_vectors_dir: str = 'annotations/vectors',
+        target_type: str = 'signs',
+):
+    vectors = load_segmentation_targets(
+        root=root,
+        target_vectors_dir=target_vectors_dir,
+        target_type=target_type,
+    )
 
     target = vectors.get(video_filename)
     if target is None:
