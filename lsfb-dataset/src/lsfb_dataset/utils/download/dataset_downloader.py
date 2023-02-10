@@ -12,7 +12,7 @@ from ..datasets import split_cont, split_isol, mini_sample
 
 class DatasetDownloader:
     """
-    DatasetDownloader 
+    DatasetDownloader
 
     This class provides an easy interface for downloading the LSFB dataset over http.
 
@@ -39,19 +39,21 @@ class DatasetDownloader:
     """
 
     def __init__(
-            self,
-            destination: str,
-            dataset: str = "isol",
-            landmarks: List[str] = None,
-            split: str = 'all',
-            include_video: bool = False,
-            include_raw: bool = False,
-            compute_hash: bool = False,
-            src: str = None,
+        self,
+        destination: str,
+        dataset: str = "isol",
+        landmarks: List[str] = None,
+        split: str = "all",
+        include_video: bool = False,
+        include_raw: bool = False,
+        compute_hash: bool = False,
+        src: str = None,
+        check_ssl=True,
     ):
         self.destination = destination
         self.dataset = dataset
         self.split = split
+        self.check_ssl = check_ssl
 
         if landmarks is None:
             self.landmarks = ["pose", "hands"]
@@ -83,7 +85,7 @@ class DatasetDownloader:
 
         progress_bar = tqdm(data.iterrows(), total=data.shape[0])
         for idx, row in progress_bar:
-            progress_bar.set_postfix_str(row['filename'])
+            progress_bar.set_postfix_str(row["filename"])
 
             if self.include_video:
                 self.download_video(row)
@@ -111,7 +113,7 @@ class DatasetDownloader:
             metadata_dest = path.join(self.destination, "videos.csv")
 
         else:
-            raise ValueError(f'Unknown dataset: {self.dataset}')
+            raise ValueError(f"Unknown dataset: {self.dataset}")
 
         for origin_path in csv_files:
             destination = os.path.join(self.destination, origin_path)
@@ -130,7 +132,7 @@ class DatasetDownloader:
         row : The dataframe row containing the information for that video.
         """
 
-        if self.dataset == 'isol':
+        if self.dataset == "isol":
             video_path = row["video"]
         else:
             video_path = row["filepath"]
@@ -168,8 +170,11 @@ class DatasetDownloader:
 
     def _download_segmentation_vectors(self):
         destinations = [
-            (f'annotations/vectors/{x}.pck', path.join(self.destination, 'annotations/vectors', f'{x}.pck'))
-            for x in ['activity', 'binary', 'binary_with_coarticulation']
+            (
+                f"annotations/vectors/{x}.pck",
+                path.join(self.destination, "annotations/vectors", f"{x}.pck"),
+            )
+            for x in ["activity", "binary", "binary_with_coarticulation"]
         ]
         for origin, dest in destinations:
             self._download_file(origin, dest)
@@ -180,34 +185,38 @@ class DatasetDownloader:
             self._download_file(landmark_path, landmarks_destination)
 
     def _download_file(self, origin: str, destination: str):
-        url = urljoin(f'{self.src}/', quote(origin))
+        url = urljoin(f"{self.src}/", quote(origin))
 
-        req = requests.get(url, allow_redirects=False, timeout=60)
+        req = requests.get(
+            url, allow_redirects=False, timeout=60, verify=self.check_ssl
+        )
         if req.status_code != 200:
-            raise FileNotFoundError(f"""
+            raise FileNotFoundError(
+                f"""
             Could not download the desired file: {origin}.
             Wrong  HTTP status ({req.status_code}) for request ({url}).
-            """)
+            """
+            )
 
         os.makedirs(str(PurePath(destination).parent), exist_ok=True)
-        with open(destination, 'wb') as file:
+        with open(destination, "wb") as file:
             file.write(req.content)
 
     def _select_split(self, data):
-        if self.split == 'all':
+        if self.split == "all":
             return data
 
-        if self.split == 'mini_sample':
+        if self.split == "mini_sample":
             return mini_sample(data)
 
-        if self.dataset == 'isol':
+        if self.dataset == "isol":
             train, test = split_isol(data)
         else:
             train, test = split_cont(data)
 
-        if self.split == 'train':
+        if self.split == "train":
             return train
-        elif self.split == 'test':
+        elif self.split == "test":
             return test
         else:
-            raise ValueError(f'Unknown split: {self.split}')
+            raise ValueError(f"Unknown split: {self.split}")
