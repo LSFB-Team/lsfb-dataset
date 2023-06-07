@@ -19,9 +19,11 @@ class LSFBContConfig:
             The dataset must already be downloaded !
         landmarks: Select which landmarks (features) to use.
             'pose' for pose skeleton (23 landmarks);
-            'hand_left' for left hand skeleton (21 landmarks);
-            'hand_right' for right hand skeleton (21 landmarks);
-            Default = ['pose', 'hand_left', 'hand_right'].
+            'left_hand' for left hand skeleton (21 landmarks);
+            'right_hand' for right hand skeleton (21 landmarks);
+            Default = ['pose', 'left_hand', 'right_hand'].
+        use_3d: If true, use 3D landmarks. Otherwise, use 2D landmarks.
+            Default=False.
 
         features_transform: Callable object used to transform the features.
         target_transform: Callable object used to transform the targets.
@@ -34,17 +36,29 @@ class LSFBContConfig:
             'mini_sample' for a tiny set of instances.
             Default = 'all'.
         seed: Seed used to determine the split. Default = 42.
+
         hands: Specify which hands are targeted in the segmentation.
             'right' for the signs from the right hand of the signer;
             'left' for the signs from the left hand of the signer;
             'both' for the signs from both hands of the signer.
-            Default = 'both'.
-        target: Specify the kind of segmentation used as a target.
-            'signs' for the labels waiting and signing only.
-            'signs_and_transitions' for the labels waiting, signing and coarticulation.
-            'activity' for the labels waiting and signing,
-                where intermediate movements are labelled as signing and not waiting anymore.
-            Default = 'signs'.
+            Default = 'right'.
+        target: Specify the format of the target.
+            'gloss_segments'
+            'subtitle_segments'
+            'frame-wise_segmentation'
+            Default = 'gloss_segments'
+        labels: Specify which label to use for each segment/frame.
+            If the argument is an integer `x`, then `x+1` labels are used for the `x` most frequent signs and
+            the placeholder label.
+            Otherwise, the valid arguments are:
+            'binary' for binary frame-wise segmentation with labels `0` for no-sign and `1` for sign;
+            'binary_with_coarticulation' for binary frame-wise segmentation where
+                short periods between signs have the coarticulation label `2`.
+            Default=750
+        duration_unit: Specify which unit is used for the boundaries (start, end) of the segments.
+            'frames': frame indices in segments boundaries.
+            'ms': milliseconds in segments boundaries.
+            default='milliseconds'
 
         window: Optional argument (window_size, window_stride) to use fixed-size windows instead of
             variable length sequences.
@@ -57,11 +71,6 @@ class LSFBContConfig:
         mask_transform: Callable object used to transform the masks.
             You need to set return_mask to `True` to use this transform !
 
-        video_list_file: The filepath of the video list CSV file.
-            This filepath is relative to the root of the dataset.
-        targets_dir: The path of the directory that contains the target vectors.
-            This filepath is relative to the root of the dataset.
-
         show_progress: If true, shows a progress bar while the dataset is loading. Default = True.
         verbose: If true, print more information about the loading process. Default = True.
 
@@ -70,6 +79,7 @@ class LSFBContConfig:
 
     root: str
     landmarks: Optional[List[str]] = None
+    use_3d: bool = False
 
     features_transform: Callable = None
     target_transform: Callable = None
@@ -77,26 +87,24 @@ class LSFBContConfig:
 
     split: DataSubset = 'all'
     seed: int = 42
-    hands: Hand = 'both'
-    target: Target = 'signs'
+
+    hands: Hand = 'right'
+    target: Target = 'gloss_segments'
+    labels: int | str = 750
+    duration_unit: str = 'ms'
 
     window: Optional[Tuple[int, int]] = None
     return_mask: bool = False
     mask_transform: Callable = None
-
-    video_list_file: str = 'videos.csv'
-    targets_dir: str = 'annotations/vectors'
 
     show_progress: bool = True
     verbose: bool = True
 
     def __post_init__(self):
         if self.landmarks is None:
-            self.landmarks = ['pose', 'hand_left', 'hand_right']
+            self.landmarks = ['pose', 'left_hand', 'right_hand']
 
-        self.video_list_file = path.join(self.root, self.video_list_file)
-        self.targets_dir = path.join(self.root, self.targets_dir)
-
+        self.video_list_file = path.join(self.root, 'videos.csv')
         self.validate()
 
     def validate(self):
