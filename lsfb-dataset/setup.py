@@ -30,5 +30,6 @@ setuptools.setup(
         "pandas",
         "opencv-python",
         "tqdm",
+        "scikit-learn",
     ],
 )
