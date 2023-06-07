@@ -22,7 +22,7 @@ Writting good test is trickier, please refer to the [pytest documentation](https
 
 ## Build the Doc
 
-The project use [mkdocs](https://www.mkdocs.org/) for its documentation. You need to install the package `mkdocs "mkdocstrings[python]" mkdocs-material` to build the doc.
+The project use [mkdocs](https://www.mkdocs.org/) for its documentation. You need to install the package `mkdocs "mkdocstrings[python]" mkdocs-material` to build the doc. The docstring format used in the project is the [Google Docstring](https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings)
 
 
 ## Local Install
