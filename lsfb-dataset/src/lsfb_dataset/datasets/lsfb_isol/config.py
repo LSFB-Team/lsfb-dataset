@@ -51,6 +51,7 @@ class LSFBIsolConfig:
 
     root: str
     landmarks: Optional[List[str]] = None
+    use_3d: bool = False
 
     features_transform: Callable = None
     target_transform: Callable = None
@@ -58,10 +59,10 @@ class LSFBIsolConfig:
     mask_transform: Callable = None
 
     lemmes_nb: int = 10
-    lemme_list_file: str = 'lemmes.csv'
-    videos_list_file: str = 'clips.csv'
+    lemme_list_file: str = "lemmes.csv"
+    videos_list_file: str = "clips.csv"
 
-    split: DataSubset = 'all'
+    split: DataSubset = "all"
     sequence_max_length: int = 50
 
     padding: bool = False
@@ -71,7 +72,7 @@ class LSFBIsolConfig:
 
     def __post_init__(self):
         if self.landmarks is None:
-            self.landmarks = ['pose', 'hand_left', 'hand_right']
+            self.landmarks = ["pose", "hand_left", "hand_right"]
 
         self.lemme_list_path = os.path.join(self.root, self.lemme_list_file)
         self.videos_list_path = os.path.join(self.root, self.videos_list_file)
@@ -79,4 +80,4 @@ class LSFBIsolConfig:
         self.videos = pd.read_csv(self.videos_list_path)
 
         self.lemmes = pd.read_csv(self.lemme_list_path)
-        self.lemmes = self.lemmes.iloc[:self.lemmes_nb]
+        self.lemmes = self.lemmes.iloc[: self.lemmes_nb]
