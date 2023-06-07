@@ -7,7 +7,7 @@ from tqdm import tqdm
 import os
 from os import path
 from typing import List
-from ..datasets import split_cont, split_isol, mini_sample
+from lsfb_dataset.utils.datasets import split_cont, split_isol, mini_sample
 
 
 class DatasetDownloader:

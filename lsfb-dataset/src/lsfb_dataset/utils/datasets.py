@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
 
+from sklearn.model_selection import GroupKFold
+
 
 def split_cont(df_videos: pd.DataFrame, signers_frac=0.6, seed=42):
     signers = pd.Series(df_videos['signer'].unique())
@@ -9,6 +11,17 @@ def split_cont(df_videos: pd.DataFrame, signers_frac=0.6, seed=42):
     train_df = df_videos[df_videos['signer'].isin(train_signers)]
     val_df = df_videos[df_videos['signer'].isin(val_signers)]
     return train_df, val_df
+
+
+def new_split_cont(videos: pd.DataFrame, n_splits: int):
+    group_k_fold = GroupKFold(n_splits=n_splits)
+    groups = videos['signer'].values
+    splits = []
+    for index, (X_train_idx, X_test_idx) in enumerate(group_k_fold.split(videos, groups=groups)):
+        X_train = videos.loc[X_train_idx]
+        X_test = videos.loc[X_test_idx]
+        splits.append((X_train, X_test))
+    return splits
 
 
 def split_isol(dataframe: pd.DataFrame, test_frac=0.25, seed=42):
