@@ -29,9 +29,8 @@ class LSFBIsolConfig:
         mask_transform: Callable object used to transform the masks.
             You need to set return_mask to true to use this transform.
 
-        lemmes_nb: Number of lemme to consider. Default=10
-        lemme_list_file: Path to the csv containing the lemmes lists. Default="lemmes.csv"
-        videos_list_file: Path to the csv containing the video information. Default="clips.csv"
+        instance_nb: Minimum number of instances per label. Default=10
+        instances_list_file: Path to the csv containing the lemmes lists. Default="instances.csv"
 
         split: Select a specific subset of the dataset. Default = 'all'.
             'train' for training set;
@@ -58,9 +57,8 @@ class LSFBIsolConfig:
     transform: Callable = None
     mask_transform: Callable = None
 
-    lemmes_nb: int = 10
-    lemme_list_file: str = "lemmes.csv"
-    videos_list_file: str = "clips.csv"
+    instance_nb: int = 10
+    instances_list_file: str = "instances.csv"
 
     split: DataSubset = "all"
     sequence_max_length: int = 50
@@ -74,10 +72,6 @@ class LSFBIsolConfig:
         if self.landmarks is None:
             self.landmarks = ["pose", "hand_left", "hand_right"]
 
-        self.lemme_list_path = os.path.join(self.root, self.lemme_list_file)
-        self.videos_list_path = os.path.join(self.root, self.videos_list_file)
+        self.instances_list_path = os.path.join(self.root, self.instances_list_file)
+        self.instances = pd.read_csv(self.instances_list_path)
 
-        self.videos = pd.read_csv(self.videos_list_path)
-
-        self.lemmes = pd.read_csv(self.lemme_list_path)
-        self.lemmes = self.lemmes.iloc[: self.lemmes_nb]

@@ -44,6 +44,7 @@ class IsolLandmarksBuilder:
             root: Path to the root directory of the dataset.
         """
         self.dataset.config.root = root
+        self.dataset.config.__post_init__()
 
     def set_landmarks(self, landmarks: list[str]):
         """
@@ -53,6 +54,7 @@ class IsolLandmarksBuilder:
             landmarks: List of landmarks to use. Default = ['pose', 'hand_left', 'hand_right'].
         """
         self.dataset.config.landmarks = landmarks
+        self.dataset.config.__post_init__()
 
     def set_features_transforms(self, transform: callable):
         """
@@ -96,7 +98,7 @@ class IsolLandmarksBuilder:
         """
         self.dataset.config.mask_transform = transform
 
-    def set_lemmes_nb(self, number: int) -> None:
+    def set_instance_nb(self, number: int) -> None:
         """
         Set the number of lemmes that will be used by the dataset. The lemmes selected are the n first lemmes appearing
         in the lemmes.csv file.
@@ -104,25 +106,17 @@ class IsolLandmarksBuilder:
         Args:
             number: Number of lemmes to use.
         """
-        self.dataset.config.lemmes_nb = number
+        self.dataset.config.instance_nb = number
 
-    def set_lemme_list_file(self, filename: str) -> None:
+    def set_instances_list_file(self, filename: str) -> None:
         """
         Set the path to the lemmes list csv file.
 
         Args:
             filename: Path to the lemmes list file.
         """
-        self.dataset.config.lemme_list_file = filename
-
-    def set_videos_list_file(self, filename: str) -> None:
-        """
-        Set the path to the videos list csv file.
-
-        Args:
-            lemmes: List of lemmes to use.
-        """
-        self.dataset.config.videos_list_file = filename
+        self.dataset.config.instances_list_file = filename
+        self.dataset.config.__post_init__()
 
     def set_split(self, splitname: DataSubset) -> None:
         """
@@ -133,6 +127,7 @@ class IsolLandmarksBuilder:
             splitname: Name of the split to use.
         """
         self.dataset.config.split = splitname
+        self.dataset._select_instances()
 
     def set_sequence_max_length(self, length: int) -> None:
         """
