@@ -4,9 +4,6 @@ import os
 import tempfile
 import numpy as np
 import pandas as pd
-from pathlib import Path
-from fixtures.landmarks import hands_landmarks_list, pose_landmarks_list
-import random
 
 
 @pytest.fixture(scope="session")
@@ -15,7 +12,7 @@ def mock_lsfb_isol_path_v2() -> str:
     Mock a lsfb isol dataset containing 10 signs label with 30 examples each.
     """
     with tempfile.TemporaryDirectory() as tmp_dirname:
-        clips_df = create_dummy_instances_csv(tmp_dirname)
+        create_dummy_instances_csv(tmp_dirname)
         yield tmp_dirname
 
 
@@ -34,8 +31,8 @@ def create_dummy_instances_csv(
 
     for label_nbr in range(nbr_labels):
         for example in range(nbr_examples):
-            start = random.randint(0, 1000)
-            end = start + random.randint(0, 100)
+            start = 2500
+            end = 2600
 
             sign = f"label{label_nbr}"
             clip_id = f"CLSFBI{label_nbr}{example}_S0{example}_B_{start}_{end}"
@@ -47,7 +44,7 @@ def create_dummy_instances_csv(
             data["start"].append(start)
             data["end"].append(end)
 
-            for pose_file in ["pose", "pose_raw"]:
+            for pose_file in ["poses", "poses_raw"]:
                 create_pose_files(root_dir, clip_id, pose_file)
 
     df = pd.DataFrame.from_dict(data)
