@@ -2,8 +2,7 @@ import pytest
 from lsfb_dataset.datasets.lsfb_isol import LSFBIsolConfig, LSFBIsolLandmarks
 
 
-def test_lsfb_isol_loader(mock_lsfb_isol_path):
-
+def test_lsfb_isol_loader(mock_lsfb_isol_path_v2):
     config = LSFBIsolConfig(mock_lsfb_isol_path)
     isolLoader = LSFBIsolLandmarks(config=config)
 
