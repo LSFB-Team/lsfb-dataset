@@ -2,6 +2,8 @@ from lsfb_dataset.utils.datasets import split_isol, mini_sample
 from lsfb_dataset.datasets.lsfb_isol.config import LSFBIsolConfig
 import abc
 
+import pandas as pd
+
 
 class LSFBIsolBase:
     """
@@ -32,14 +34,14 @@ class LSFBIsolBase:
         transform: Callable object used to transform both the features and the targets.
         mask_transform: Callable object used to transform the masks.
             You need to set return_mask to true to use this transform.
-        lemmes_nb: Number of lemme to consider. Default=10
-        lemme_list_path: Path to the csv containing the lemmes lists. Default="lemmes.csv"
-        videos_list_path: Path to the csv containing the video information. Default="clips.csv"
+        instance_nb: Minimum number of instances per label. Default=10
+        instances_list_file: Path to the csv containing the lemmes lists. Default="instances.csv"
+
         split: Select a specific subset of the dataset. Default = 'all'.
             'train' for training set;
             'test' for the test set;
             'all' for all the instances of the dataset;
-            'mini_sample' for a tiny set of instances.
+            'mini_sample' for a tiny set of instances;
         sequence_max_length: Max length of the clip sequence. Default=50.
         padding: Pad all sequence to the same length.
         return_mask: Returning padding mask for the sequence.
@@ -49,26 +51,45 @@ class LSFBIsolBase:
     """
 
     def __init__(self, config=None, **kwargs):
-
         self.config = LSFBIsolConfig(**kwargs) if config is None else config
-        self.config.videos = self._select_videos()
+        self.config.instances = self._select_instances()
 
-    def _select_videos(self):
+    def _select_instances(self):
         split = self.config.split
-        videos = self.config.videos
+        self._filter_instances_list()
 
-        videos.drop(index=videos.index[~videos['class'].isin(self.config.lemmes.index)], inplace=True)
+        instances = self.config.instances
 
-        if split == 'mini_sample':
-            videos = mini_sample(videos)
-        elif split != 'all':
-            train_videos, test_videos = split_isol(videos)
-            if split == 'train':
-                videos = train_videos
-            elif split == 'test':
-                videos = test_videos
+        if split == "mini_sample":
+            instances = mini_sample(instances)
+        elif split != "all":
+            train_instances, test_instances = split_isol(instances)
+            if split == "train":
+                instances = train_instances
+            elif split == "test":
+                instances = test_instances
 
-        return videos
+        return instances
+
+    def _filter_instances_list(self):
+        # unique values pandas dataframe
+        unique_signs = self.config.instances["sign"].unique()
+        retained_sign = []
+
+        for sign in unique_signs:
+            if (
+                len(self.config.instances[self.config.instances["sign"] == sign])
+                >= self.config.instance_nb
+            ):
+                retained_sign.append(sign)
+
+        # filter instances list
+        self.config.instances.drop(
+            index=self.config.instances.index[
+                ~self.config.instances["sign"].isin(retained_sign)
+            ],
+            inplace=True,
+        )
 
     @abc.abstractmethod
     def __len__(self):
