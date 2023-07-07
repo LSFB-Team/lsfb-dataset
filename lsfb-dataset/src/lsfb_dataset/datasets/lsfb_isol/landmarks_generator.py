@@ -1,24 +1,26 @@
 import pandas as pd
 
-from lsfb_dataset.utils.landmarks import load_pose_landmarks, load_hands_landmarks, pad_landmarks
+from lsfb_dataset.utils.landmarks import (
+    load_pose_landmarks,
+    load_hands_landmarks,
+    pad_landmarks,
+)
 from lsfb_dataset.utils.datasets import create_mask
 from lsfb_dataset.datasets.lsfb_isol.base import LSFBIsolBase
+import numpy as np
 
 
 class LSFBIsolLandmarksGenerator(LSFBIsolBase):
-
     def __init__(self, *args, **kwargs):
         super(LSFBIsolLandmarksGenerator, self).__init__(*args, **kwargs)
-        self.labels = self.config.lemmes['lemme']
 
     def __len__(self):
-        return len(self.config.videos)
+        return len(self.config.instances)
 
     def __getitem__(self, index):
+        instance = self.config.instances.iloc[index]
 
-        video = self.config.videos.iloc[index]
-
-        features, target = self._load_landmark(video)
+        features, target = self._load_landmark(instance)
         pad_value = 0
 
         if self.config.padding:
@@ -35,7 +37,9 @@ class LSFBIsolLandmarksGenerator(LSFBIsolBase):
             features, target = self.config.transform(features, target)
 
         if self.config.return_mask:
-            mask = create_mask(self.config.sequence_max_length, pad_value, self.config.mask_value)
+            mask = create_mask(
+                self.config.sequence_max_length, pad_value, self.config.mask_value
+            )
             if self.config.mask_transform is not None:
                 mask = self.config.mask_transform(mask)
 
@@ -43,23 +47,15 @@ class LSFBIsolLandmarksGenerator(LSFBIsolBase):
 
         return features, target
 
-    def _load_landmark(self, video):
-        data = []
+    def _load_landmark(self, instance):
+        features = {}
 
         landmarks = self.config.landmarks
         root = self.config.root
 
         for lm_type in landmarks:
-            if lm_type == 'pose':
-                data.append(load_pose_landmarks(root, video['pose']))
-            elif lm_type == 'hand_left':
-                data.append(load_hands_landmarks(root, video['hands'], 'left'))
-            elif lm_type == 'hand_right':
-                data.append(load_hands_landmarks(root, video['hands'], 'right'))
-            else:
-                raise ValueError(f'Unknown landmarks: {lm_type}.')
+            features[lm_type] = np.load(f"{root}/poses/{lm_type}/{instance['id']}.npy")
 
-        features = pd.concat(data, axis=1).values[:self.config.sequence_max_length]
-        targets = video['class']
+        target = instance["sign"]
 
-        return features, targets
+        return features, target
