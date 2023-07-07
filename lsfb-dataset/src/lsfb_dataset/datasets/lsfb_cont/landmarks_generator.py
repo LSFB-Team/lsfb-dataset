@@ -1,7 +1,7 @@
-from .base import LSFBContBase
-from ...utils.datasets import create_mask
-from ...utils.landmarks import load_landmarks, pad_landmarks
-from ...utils.target import pad_target
+import numpy as np
+
+from lsfb_dataset.datasets.lsfb_cont.config import LSFBContConfig
+from lsfb_dataset.datasets.lsfb_cont.base import LSFBContBase
 
 
 class LSFBContLandmarksGenerator(LSFBContBase):
@@ -29,81 +29,36 @@ class LSFBContLandmarksGenerator(LSFBContBase):
 
     Args:
         config: The configuration object (see LSFBContConfig).
-            If config is not specified, every needed configuration argument must be manually provided.
 
-    Author: ppoitier
+    Author:
+        ppoitier (v 2.0)
     """
 
-    def __init__(self, **kwargs):
-        super(LSFBContLandmarksGenerator, self).__init__(**kwargs)
+    def __init__(self, config: LSFBContConfig):
+        super(LSFBContLandmarksGenerator, self).__init__(config)
 
-        # (video_index, window_start, window_end, padding)
-        self.windows: list[tuple[int, int, int, int]] = []
-        if self.config.window is not None:
-            self._build_windows()
+    def __get_instance__(self, index):
+        instance_id = self.instances[index]
+        features = self._load_instance_features(instance_id)
+        annotations = self.annotations[instance_id]
+        features, annotations = self._apply_transforms(features, annotations)
+        return features, annotations
 
-    def __len__(self):
-        if self.config.window is None:
-            return self.videos.shape[0]
-        return len(self.windows)
+    def __get_window__(self, index):
+        instance_id, start, end = self.windows[index]
+        features = self._load_instance_features(instance_id)
+        features = {lm: lm_feat[start:end] for lm, lm_feat in features[instance_id].items()}
 
-    def __getitem__(self, index):
-        features_transform = self.config.features_transform
-        target_transform = self.config.target_transform
-        transform = self.config.transform
+        # TODO: fix annotation and check with windows
+        annotations = self.annotations[instance_id]
+        features, annotations = self._apply_transforms(features, annotations)
+        return features, annotations
 
-        window = self.config.window
-        return_mask = self.config.return_mask
-        mask_transform = self.config.mask_transform
-
-        padding = 0
-
-        if window is not None:
-            features, target, padding = self._get_windowed_item(index)
-        else:
-            features = load_landmarks(
-                self.videos.iloc[index],
-                self.config.root,
-                self.config.landmarks
-            )
-            target = self.targets[index]
-
-        if features_transform is not None:
-            features = features_transform(features)
-
-        if target_transform is not None:
-            target = target_transform(target)
-
-        if transform is not None:
-            features, target = transform(features, transform)
-
-        if return_mask:
-            mask = create_mask(len(target), padding)
-            if mask_transform is not None:
-                mask = mask_transform(mask)
-            return features, target, mask
-
-        return features, target
-
-    def _get_windowed_item(self, index):
-        video_index, start, end, padding = self.windows[index]
-        features = load_landmarks(
-            self.videos.iloc[video_index],
-            self.config.root,
-            self.config.landmarks
-        )
-        target = self.targets[video_index]
-
-        landmarks = pad_landmarks(features[start:end], padding)
-        target = pad_target(target[start:end], padding)
-        return landmarks, target, padding
-
-    def _build_windows(self):
-        window = self.config.window
-        window_size, window_stride = window
-        for index, seq_len in enumerate(self.videos['frames']):
-            for start in range(0, seq_len, window_stride):
-                end = min(seq_len, start + window_size)
-                padding = window_size - (end - start)
-                self.windows.append((index, start, end, padding))
-        print('Windows successfully created.')
+    def _load_instance_features(self, instance_id: str):
+        pose_folder = 'poses_raw' if self.config.use_raw else 'poses'
+        coordinate_indices = [0, 1, 2] if self.config.use_3d else [1, 2]
+        features = {}
+        for landmark_set in self.config.landmarks:
+            filepath = f"{self.config.root}/{pose_folder}/{landmark_set}/{instance_id}.npy"
+            features[landmark_set] = np.load(filepath)[:, :, coordinate_indices]
+        return features

@@ -1,37 +1,19 @@
+import os
+import json
+
 import pandas as pd
 import numpy as np
 
-from sklearn.model_selection import GroupKFold
 
-
-def split_cont(df_videos: pd.DataFrame, signers_frac=0.6, seed=42):
-    signers = pd.Series(df_videos['signer'].unique())
-    train_signers = signers.sample(frac=signers_frac, random_state=seed)
-    val_signers = signers.drop(index=train_signers.index)
-    train_df = df_videos[df_videos['signer'].isin(train_signers)]
-    val_df = df_videos[df_videos['signer'].isin(val_signers)]
-    return train_df, val_df
-
-
-def new_split_cont(videos: pd.DataFrame, n_splits: int):
-    group_k_fold = GroupKFold(n_splits=n_splits)
-    groups = videos['signer'].values
-    splits = []
-    for index, (X_train_idx, X_test_idx) in enumerate(group_k_fold.split(videos, groups=groups)):
-        X_train = videos.loc[X_train_idx]
-        X_test = videos.loc[X_test_idx]
-        splits.append((X_train, X_test))
-    return splits
+def load_split(root: str, split_name: str) -> list[str]:
+    with open(os.path.join(root, 'metadata', 'splits', f'{split_name}.json'), 'r') as file:
+        return json.load(file)
 
 
 def split_isol(dataframe: pd.DataFrame, test_frac=0.25, seed=42):
     test_df = dataframe.sample(frac=test_frac, random_state=seed)
     train_df = dataframe.drop(index=test_df.index)
     return train_df, test_df
-
-
-def mini_sample(dataframe: pd.DataFrame, num_samples: int = 10, seed=42):
-    return dataframe.sample(n=num_samples, random_state=seed)
 
 
 def create_mask(seq_len: int, padding: int, mask_value: int = 0):

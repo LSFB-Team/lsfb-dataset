@@ -1,51 +1,59 @@
 import gc
-import os
 
 from tqdm import tqdm
 import numpy as np
 
 from lsfb_dataset.datasets.lsfb_cont.base import LSFBContBase
+from lsfb_dataset.datasets.lsfb_cont.config import LSFBContConfig
 
 
 class LSFBContLandmarks(LSFBContBase):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    """
+        Utility class to load the LSFB CONT Landmarks dataset.
+        The dataset must be already downloaded!
+
+        All the landmarks and targets are loaded in memory.
+        Therefore, iterating over all the instances is fast but consumes a lot of RAM.
+
+        If you don't have enough RAM, use the LSFBContLandmarksGenerator class instead.
+
+        Properties:
+            ...
+
+        Args:
+            config: The configuration object (see LSFBContConfig).
+
+        Author:
+            ppoitier (v 2.0)
+        """
+
+    def __init__(self, config: LSFBContConfig):
+        super().__init__(config)
         self.features: dict[str, dict[str, np.ndarray]] = {}
         self._load_features()
 
-    def __len__(self):
-        if self.config.window is None:
-            return len(self.features)
-        return len(self.windows)
-
     def __get_instance__(self, index):
-        video_id = self.videos[index]
-        target = self.targets[video_id]
-        return self.features[video_id], target
+        instance_id = self.instances[index]
+        features = self.features[instance_id]
+        annotations = self.annotations[instance_id]
+        features, annotations = self._apply_transforms(features, annotations)
+        return features, annotations
 
     def __get_window__(self, index):
-        video_idx, start, end = self.windows[index]
-        video_id = self.videos[video_idx]
-
-        features = {lm: lm_feat[start:end] for lm, lm_feat in self.features[video_id].items()}
-        target = self.targets[video_id]
-
-        if self.target_format == 'segments':
-            if self.config.duration_unit == 'ms':
-                start, end = start * 20, end * 20
-            target = target[(target[:, 0] < end) & (target[:, 1] > start)]
-            target[:, 0] = np.maximum(target[:, 0], start)
-            target[:, 1] = np.minimum(target[:, 1], end)
-        else:
-            raise NotImplementedError('yet to do...')  # TODO
-
-        return features, target
+        instance_id, start, end = self.windows[index]
+        features = {lm: lm_feat[start:end] for lm, lm_feat in self.features[instance_id].items()}
+        # TODO: fix annotation and check with windows
+        annotations = self.annotations[instance_id]
+        features, annotations = self._apply_transforms(features, annotations)
+        return features, annotations
 
     def _load_features(self):
-        for video_id in tqdm(self.videos, disable=(not self.config.verbose)):
-            video_feat = {}
+        pose_folder = 'poses_raw' if self.config.use_raw else 'poses'
+        coordinate_indices = [0, 1, 2] if self.config.use_3d else [1, 2]
+        for instance_id in tqdm(self.instances, disable=(not self.config.show_progress)):
+            instance_feat = {}
             for landmark_set in self.config.landmarks:
-                pose_filepath = os.path.join(self.config.root, 'pose_raw', landmark_set, f'{video_id}.npy')
-                video_feat[landmark_set] = np.load(pose_filepath)
-            self.features[video_id] = video_feat
+                filepath = f"{self.config.root}/{pose_folder}/{landmark_set}/{instance_id}.npy"
+                instance_feat[landmark_set] = np.load(filepath)[:, :, coordinate_indices]
+            self.features[instance_id] = instance_feat
         gc.collect()
