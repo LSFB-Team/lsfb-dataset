@@ -11,6 +11,7 @@ def mock_lsfb_isol_path_v2() -> str:
     """
     Mock a lsfb isol dataset containing 10 signs label with 30 examples each.
     """
+
     with tempfile.TemporaryDirectory() as tmp_dirname:
         create_dummy_instances_csv(tmp_dirname)
         yield tmp_dirname
@@ -35,7 +36,9 @@ def create_dummy_instances_csv(
             end = 2600
 
             sign = f"label{label_nbr}"
-            clip_id = f"CLSFBI{label_nbr}{example}_S0{example}_B_{start}_{end}"
+            clip_id = (
+                f"CLSFBI{label_nbr:02d}{example:02d}_S0{example:02d}_B_{start}_{end}"
+            )
             signer = f"S0{example}"
 
             data["id"].append(clip_id)
@@ -74,7 +77,7 @@ def create_pose_files(
         if os.path.exists(sub_folder_path) == False:
             os.mkdir(sub_folder_path)
 
-            mocked_landmarks = np.random.rand(*sub_folder["shape"])
-            landmark_file = f"{sub_folder_path}/{clip_id}.npy"
+        mocked_landmarks = np.random.rand(*sub_folder["shape"])
+        landmark_file = f"{sub_folder_path}/{clip_id}.npy"
 
-            np.save(landmark_file, mocked_landmarks)
+        np.save(landmark_file, mocked_landmarks)
