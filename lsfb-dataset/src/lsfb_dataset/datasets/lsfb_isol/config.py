@@ -17,7 +17,7 @@ class LSFBIsolConfig:
         root: Root directory of the LSFB_ISOL dataset.
             The dataset must already be downloaded.
 
-        landmarks: Select which landmarks (features) to use. Default = ['pose', 'hand_left', 'hand_right'].
+        landmarks: Select which landmarks (features) to use. Default = ['pose', 'left_hand', 'right_hand'].
             'pose' for pose skeleton (23 landmarks);
             'hands_left' for left hand skeleton (21 landmarks);
             'hands_right' for right hand skeleton (21 landmarks);
@@ -70,8 +70,7 @@ class LSFBIsolConfig:
 
     def __post_init__(self):
         if self.landmarks is None:
-            self.landmarks = ["pose", "hand_left", "hand_right"]
+            self.landmarks = ["pose", "left_hand", "right_hand"]
 
         self.instances_list_path = os.path.join(self.root, self.instances_list_file)
         self.instances = pd.read_csv(self.instances_list_path)
-

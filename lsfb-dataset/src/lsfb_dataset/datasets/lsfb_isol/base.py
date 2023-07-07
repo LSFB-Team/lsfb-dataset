@@ -41,7 +41,7 @@ class LSFBIsolBase:
             'train' for training set;
             'test' for the test set;
             'all' for all the instances of the dataset;
-            'mini_sample' for a tiny set of instances.
+            'mini_sample' for a tiny set of instances;
         sequence_max_length: Max length of the clip sequence. Default=50.
         padding: Pad all sequence to the same length.
         return_mask: Returning padding mask for the sequence.
@@ -51,7 +51,6 @@ class LSFBIsolBase:
     """
 
     def __init__(self, config=None, **kwargs):
-
         self.config = LSFBIsolConfig(**kwargs) if config is None else config
         self.config.instances = self._select_instances()
 
@@ -61,31 +60,36 @@ class LSFBIsolBase:
 
         instances = self.config.instances
 
-        if split == 'mini_sample':
+        if split == "mini_sample":
             instances = mini_sample(instances)
-        elif split != 'all':
+        elif split != "all":
             train_instances, test_instances = split_isol(instances)
-            if split == 'train':
+            if split == "train":
                 instances = train_instances
-            elif split == 'test':
+            elif split == "test":
                 instances = test_instances
 
         return instances
-    
 
     def _filter_instances_list(self):
-
         # unique values pandas dataframe
-        unique_signs = self.config.instances['sign'].unique()
+        unique_signs = self.config.instances["sign"].unique()
         retained_sign = []
 
         for sign in unique_signs:
-            if len(self.config.instances[self.config.instances['sign'] == sign]) >= self.config.instance_nb:
+            if (
+                len(self.config.instances[self.config.instances["sign"] == sign])
+                >= self.config.instance_nb
+            ):
                 retained_sign.append(sign)
 
         # filter instances list
-        self.config.instances.drop(index=self.config.instances.index[~self.self.config.instances['sign'].isin(retained_sign)], inplace=True)
-
+        self.config.instances.drop(
+            index=self.config.instances.index[
+                ~self.config.instances["sign"].isin(retained_sign)
+            ],
+            inplace=True,
+        )
 
     @abc.abstractmethod
     def __len__(self):

@@ -3,71 +3,80 @@ from tqdm import tqdm
 from datetime import datetime
 
 from typing import List
-from lsfb_dataset.utils.landmarks import load_pose_landmarks, load_hands_landmarks, pad_landmarks
+from lsfb_dataset.utils.landmarks import (
+    load_pose_landmarks,
+    load_hands_landmarks,
+    pad_landmarks,
+)
 from lsfb_dataset.utils.datasets import create_mask
 from lsfb_dataset.datasets.lsfb_isol.base import LSFBIsolBase
+import numpy as np
+import os
 
 
 def _load_landmarks(
-        root: str,
-        videos: pd.DataFrame,
-        landmarks: List[str],
-        sequence_max_length: int,
-        show_progress: bool,
+    root: str,
+    instances: pd.DataFrame,
+    landmarks: List[str],
+    sequence_max_length: int,
+    show_progress: bool,
 ):
-    landmark_list = ', '.join(landmarks)
-    print(f'Loading features ({landmark_list}) and labels for each isolated sign...')
+    landmark_list = ", ".join(landmarks)
+    print(f"Loading features ({landmark_list}) and labels for each isolated sign...")
 
     features = []
     targets = []
 
-    progress_bar = tqdm(videos.iterrows(), total=videos.shape[0], disable=(not show_progress))
-    for index, video in progress_bar:
-        data = []
+    progress_bar = tqdm(
+        instances.iterrows(), total=instances.shape[0], disable=(not show_progress)
+    )
 
+    features = {}
+
+    for _, instance in progress_bar:
         for lm_type in landmarks:
-            if lm_type == 'pose':
-                data.append(load_pose_landmarks(root, video['pose']))
-            elif lm_type == 'hand_left':
-                data.append(load_hands_landmarks(root, video['hands'], 'left'))
-            elif lm_type == 'hand_right':
-                data.append(load_hands_landmarks(root, video['hands'], 'right'))
-            else:
-                raise ValueError(f'Unknown landmarks: {lm_type}.')
+            if lm_type not in features:
+                features[lm_type] = []
 
-        features.append(pd.concat(data, axis=1).values[:sequence_max_length])
-        targets.append(video['class'])
+            data = np.load(f"{root}/poses/{lm_type}/{instance['id']}.npy")
+            features[lm_type].append(data)
+
+        targets.append(instance["sign"])
 
     return features, targets
 
 
 class LSFBIsolLandmarks(LSFBIsolBase):
-
     def __init__(self, *args, **kwargs):
-        print('-' * 10, 'LSFB ISOL DATASET')
+        print("-" * 10, "LSFB ISOL DATASET")
         start_time = datetime.now()
 
         super(LSFBIsolLandmarks, self).__init__(*args, **kwargs)
 
         self.features, self.targets = _load_landmarks(
             self.config.root,
-            self.config.videos,
+            self.config.instances,
             self.config.landmarks,
             self.config.sequence_max_length,
             self.config.show_progress,
         )
-        self.labels = self.config.lemmes['lemme']
 
-        print('-' * 10)
-        print('loading time:', datetime.now() - start_time)
+        print("-" * 10)
+        print("loading time:", datetime.now() - start_time)
 
     def __len__(self):
-        return len(self.features)
+        return len(self.config.instances)
 
     def __getitem__(self, index):
-        features = self.features[index]
+        features = {}
+
+        for key in features:
+            features[key] = self.features[key][index]
+
         target = self.targets[index]
         pad_value = 0
+
+        # TODO refactor the transforms
 
         if self.config.padding:
             pad_value = self.config.sequence_max_length - len(features)
@@ -83,7 +92,9 @@ class LSFBIsolLandmarks(LSFBIsolBase):
             features, target = self.config.transform(features, target)
 
         if self.config.return_mask:
-            mask = create_mask(self.config.sequence_max_length, pad_value, self.config.mask_value)
+            mask = create_mask(
+                self.config.sequence_max_length, pad_value, self.config.mask_value
+            )
             if self.config.mask_transform is not None:
                 mask = self.config.mask_transform(mask)
 
