@@ -2,6 +2,7 @@ import numpy as np
 
 from lsfb_dataset.datasets.lsfb_isol.config import LSFBIsolConfig
 from lsfb_dataset.datasets.lsfb_isol.base import LSFBIsolBase
+import numpy as np
 
 
 class LSFBIsolLandmarksGenerator(LSFBIsolBase):
