@@ -7,7 +7,7 @@ from math import floor, ceil
 import pandas as pd
 
 from lsfb_dataset.datasets.lsfb_cont.config import LSFBContConfig
-from lsfb_dataset.utils.datasets import load_split
+from lsfb_dataset.utils.datasets import load_split, load_labels
 
 
 class LSFBContBase:
@@ -22,10 +22,7 @@ class LSFBContBase:
         self.instance_metadata = pd.read_csv(path.join(config.root, 'instances.csv'))
         self.instance_metadata = self.instance_metadata[self.instance_metadata['id'].isin(self.instances)]
 
-        self.labels = []
-        self.label_to_index = {}
-        self.index_to_label = {}
-        self._load_labels()
+        self.labels, self.label_to_index, self.index_to_label = load_labels(self.config.root, self.config.n_labels)
 
         self.annotations: dict[str] = {}
         self._load_annotations()
@@ -62,22 +59,25 @@ class LSFBContBase:
         for instance_id in self.instances:
             annotations = all_annotations[instance_id]
             if self.config.segment_level == 'signs':
-                self.annotations[instance_id] = [self._transform_sign_annotation(a) for a in annotations]
+                self.annotations[instance_id] = pd.DataFrame.from_records(
+                    [self._transform_sign_annotation(a) for a in annotations],
+                    columns=['start', 'end', 'label'],
+                )
             elif self.config.segment_level == 'subtitles':
                 raise NotImplementedError("Subtitles are not yet implemented.")  # TODO
 
-    def _load_labels(self):
-        root = self.config.root
-        n_labels = self.config.n_labels
-        signs = pd.read_csv(f'{root}/metadata/sign_to_index.csv').to_records(index=False)
-        for sign, sign_index in signs:
-            if sign_index >= n_labels:
-                sign_index = -1
-                self.index_to_label[-1] = 'OTHER_SIGN'
-            else:
-                self.labels.append(sign)
-                self.index_to_label[sign_index] = sign
-            self.label_to_index[sign] = sign_index
+    # def _load_labels(self):
+    #     root = self.config.root
+    #     n_labels = self.config.n_labels
+    #     signs = pd.read_csv(f'{root}/metadata/sign_to_index.csv').to_records(index=False)
+    #     for sign, sign_index in signs:
+    #         if sign_index >= n_labels:
+    #             sign_index = -1
+    #             self.index_to_label[-1] = 'OTHER_SIGN'
+    #         else:
+    #             self.labels.append(sign)
+    #             self.index_to_label[sign_index] = sign
+    #         self.label_to_index[sign] = sign_index
 
     def _make_windows(self):
         window_size, window_stride = self.config.window

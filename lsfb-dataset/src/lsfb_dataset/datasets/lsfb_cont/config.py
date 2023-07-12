@@ -35,10 +35,10 @@ class LSFBContConfig:
         transform: Callable object used to transform both the features and the targets.
 
         split: Specify which subset of the dataset is used.
-            'split_x' where x is in {0, 1, 2, 3, 4} for a specific split;
-            'train' for training set (splits 2, 3, 4);
-            'test' for the test set (splits 0 and 1);
-            'all' for all the instances of the dataset (all splits);
+            'fold_x' where x is in {0, 1, 2, 3, 4} for a specific fold;
+            'train' for training set (folds 2, 3, 4);
+            'test' for the test set (folds 0 and 1);
+            'all' for all the instances of the dataset (all folds);
             'mini_sample' for a tiny set of instances (10 instances).
             Default = 'all'.
 
@@ -47,20 +47,20 @@ class LSFBContConfig:
             'left' for the signs from the left hand of the signer;
             'both' for the signs from both hands of the signer.
             Default = 'both'.
-        segment_level: Specifies the level at which segments are extracted.
+        segment_level: Specifies the level at which annotations are extracted.
             'signs'
             'subtitles'
             Default = 'signs'
         segment_label: Specify which label to use for each segment.
             'sign_gloss': the gloss of the signs is used. Example: HAND
             'sign_index': the index (class) of the signs is used. Example: 45
-            'text': the text of the sign, or subtitle, is used. This can be useful when segments are subtitles.
-            If the segments are subtitles, multiple labels are assigned to a segment.
+            'text': the text of the sign, or subtitle, is used. This can be useful when annotations are subtitles.
+            If the annotations are subtitles, multiple labels are assigned to a segment.
             For example, a sequence of glosses, indices or event the full text of the subtitles.
             Default='sign_index'
-        segment_unit: Specify which unit is used for the boundaries (start, end) of the segments.
-            'frame': frame indices in segments boundaries.
-            'ms': milliseconds in segments boundaries.
+        segment_unit: Specify which unit is used for the boundaries (start, end) of the annotations.
+            'frame': frame indices in annotations boundaries.
+            'ms': milliseconds in annotations boundaries.
             default='ms'
 
         n_labels: If this parameter is an integer `x`, then `x+1` labels are used for the `x` most

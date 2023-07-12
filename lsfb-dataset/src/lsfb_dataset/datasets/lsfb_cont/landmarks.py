@@ -1,4 +1,5 @@
 import gc
+from math import ceil, floor
 
 from tqdm import tqdm
 import numpy as np
@@ -35,15 +36,26 @@ class LSFBContLandmarks(LSFBContBase):
     def __get_instance__(self, index):
         instance_id = self.instances[index]
         features = self.features[instance_id]
-        annotations = self.annotations[instance_id]
+        annotations = self.annotations[instance_id].values
         features, annotations = self._apply_transforms(features, annotations)
         return features, annotations
 
     def __get_window__(self, index):
         instance_id, start, end = self.windows[index]
         features = {lm: lm_feat[start:end] for lm, lm_feat in self.features[instance_id].items()}
-        # TODO: fix annotation and check with windows
+
         annotations = self.annotations[instance_id]
+        if self.config.segment_unit == 'ms':
+            annotations = annotations[
+                ((annotations['end'] / 20) >= start) &
+                ((annotations['start'] / 20) <= end)
+            ]
+        else:
+            annotations = annotations[
+                (annotations['end'] >= start) &
+                (annotations['start'] <= end)
+            ]
+        annotations = annotations.values
         features, annotations = self._apply_transforms(features, annotations)
         return features, annotations
 

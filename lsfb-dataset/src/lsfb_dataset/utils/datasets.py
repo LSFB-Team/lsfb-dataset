@@ -1,8 +1,8 @@
 import os
 import json
+from typing import Optional
 
 import pandas as pd
-import numpy as np
 
 
 def load_split(root: str, split_name: str) -> list[str]:
@@ -10,13 +10,19 @@ def load_split(root: str, split_name: str) -> list[str]:
         return json.load(file)
 
 
-def split_isol(dataframe: pd.DataFrame, test_frac=0.25, seed=42):
-    test_df = dataframe.sample(frac=test_frac, random_state=seed)
-    train_df = dataframe.drop(index=test_df.index)
-    return train_df, test_df
+def load_labels(root: str, n_labels: Optional[int] = None):
+    signs = pd.read_csv(f'{root}/metadata/sign_to_index.csv').to_records(index=False)
+    labels = []
+    label_to_index = {}
+    index_to_label = {}
 
+    for sign, sign_index in signs:
+        if n_labels is not None and sign_index >= n_labels:
+            sign_index = -1
+            index_to_label[-1] = 'OTHER_SIGN'
+        else:
+            labels.append(sign)
+            index_to_label[sign_index] = sign
+        label_to_index[sign] = sign_index
 
-def create_mask(seq_len: int, padding: int, mask_value: int = 0):
-    mask = np.ones(seq_len, dtype='uint8')
-    mask[-padding:] = mask_value
-    return mask
+    return labels, label_to_index, index_to_label
