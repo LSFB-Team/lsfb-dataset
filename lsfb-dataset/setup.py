@@ -11,10 +11,10 @@ setuptools.setup(
     description="A companion library for the LSFB-dataset",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/Jefidev/lsfb-dataset",
+    url="https://github.com/LSFB-Team/lsfb-dataset",
     project_urls={
-        "Bug Tracker": "https://github.com/Jefidev/lsfb-dataset/issues",
-        "Documentation": "https://jefidev.github.io/lsfb-dataset/",
+        "Bug Tracker": "https://github.com/LSFB-Team/lsfb-dataset/issues",
+        "Documentation": "https://lsfb-team.github.io/lsfb-dataset/",
     },
     classifiers=[
         "Programming Language :: Python :: 3",
