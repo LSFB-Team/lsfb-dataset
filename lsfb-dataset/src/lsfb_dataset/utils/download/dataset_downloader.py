@@ -71,9 +71,9 @@ class DatasetDownloader:
         if src is not None:
             self.src = src
         elif dataset == "isol":
-            self.src = "https://lsfb.info.unamur.be/static/datasets/LSFB/LSFB_ISOL"
+            self.src = "https://lsfb.info.unamur.be/static/datasets/lsfb_v1/LSFB_ISOL"
         elif dataset == "cont":
-            self.src = "https://lsfb.info.unamur.be/static/datasets/LSFB/LSFB_CONT"
+            self.src = "https://lsfb.info.unamur.be/static/datasets/lsfb_v1/LSFB_CONT"
 
     def download(self):
         """
