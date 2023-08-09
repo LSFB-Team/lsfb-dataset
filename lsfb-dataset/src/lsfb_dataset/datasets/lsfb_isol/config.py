@@ -59,16 +59,16 @@ class LSFBIsolConfig:
     """
 
     root: str
-    landmarks: Optional[list[str]] = ('pose', 'left_hand', 'right_hand')
+    landmarks: Optional[list[str]] = ("pose", "left_hand", "right_hand")
     use_3d: bool = False
     use_raw: bool = False
 
-    target: str = 'sign_gloss'
+    target: str = "sign_gloss"
 
-    transform: Callable = None
+    transform: callable = None
 
-    split: str = 'all'
-    n_labels: int = 10
+    split: str = "all"
+    n_labels: int = 750
     sequence_max_length: int = 50
 
     show_progress: bool = True
