@@ -4,6 +4,7 @@ import os
 import tempfile
 import numpy as np
 import pandas as pd
+import json
 
 
 @pytest.fixture(scope="session")
@@ -12,8 +13,11 @@ def mock_lsfb_isol_path_v2() -> str:
     Mock a lsfb isol dataset containing 10 signs label with 30 examples each.
     """
 
+    print("yo")
+
     with tempfile.TemporaryDirectory() as tmp_dirname:
-        create_dummy_instances_csv(tmp_dirname)
+        df = create_dummy_instances_csv(tmp_dirname)
+        create_dummy_metadata(tmp_dirname, df)
         yield tmp_dirname
 
 
@@ -81,3 +85,53 @@ def create_pose_files(
         landmark_file = f"{sub_folder_path}/{clip_id}.npy"
 
         np.save(landmark_file, mocked_landmarks)
+
+
+def create_dummy_metadata(root_dir: str, sign_df: pd.DataFrame) -> None:
+    metadata_dir = f"{root_dir}/metadata"
+
+    if not os.path.exists(metadata_dir):
+        os.mkdir(metadata_dir)
+
+    # Sign occurence csv
+    sign_occurence = sign_df.groupby("sign").count()["id"]
+    sign_occurence.to_csv(
+        f"{metadata_dir}/sign_occurences.csv",
+        header=["count"],
+    )
+
+    # sign to index csv
+    unique_signs = sign_df["sign"].unique()
+    idx_tuples = [(sign, idx) for idx, sign in enumerate(unique_signs)]
+    index_df = pd.DataFrame(idx_tuples, columns=["sign", "class"])
+    index_df.to_csv(f"{metadata_dir}/sign_to_index.csv", index=False)
+
+    # Get
+    sign_id = sign_df["id"].unique()
+    sign_amount = len(sign_id)
+
+    # splits directory
+    splits_dir = f"{metadata_dir}/splits"
+    if not os.path.exists(splits_dir):
+        os.mkdir(splits_dir)
+
+    # All json
+    with open(f"{splits_dir}/all.json", "w") as f:
+        json.dump(sign_id.tolist(), f)
+
+    # Train json
+    with open(f"{splits_dir}/train.json", "w") as f:
+        json.dump(sign_id[: int(sign_amount * 0.8)].tolist(), f)
+
+    # test json
+    with open(f"{splits_dir}/test.json", "w") as f:
+        json.dump(sign_id[int(sign_amount * 0.8) :].tolist(), f)
+
+    # mini sample json
+    with open(f"{splits_dir}/mini_sample.json", "w") as f:
+        json.dump(sign_id[:10].tolist(), f)
+
+    # splits  5 folds
+    for fold in range(5):
+        with open(f"{splits_dir}/fold_{fold}.json", "w") as f:
+            json.dump(sign_id[fold::5].tolist(), f)
