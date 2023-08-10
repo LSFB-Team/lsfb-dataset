@@ -7,7 +7,7 @@ To ease the download of the datasets, we provide a python script that will downl
 Here is a simple snippet of code to download the isolated version of the dataset : 
 
 ```python
-from lsfb_dataset.utils.download.dataset_downloader import DatasetDownloader
+from lsfb_dataset.download import DatasetDownloader
 
 destination_folder = './path/to/your/datasets/folder'
 

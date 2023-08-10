@@ -7,7 +7,6 @@ from tqdm import tqdm
 import os
 from os import path
 from typing import List
-from lsfb_dataset.utils.datasets import split_cont, split_isol, mini_sample
 
 
 class DatasetDownloader:
@@ -21,7 +20,7 @@ class DatasetDownloader:
         dataset : The dataset to download. Default = 'isol'.
             'isol' for the LSFB isol dataset;
             'cont' for the LSFB cont dataset;
-        landmarks : Select which landmarks (features) to download. Default = ['pose', 'hands'].
+        landmarks : Select which landmarks (features) to download. Default = ['face', pose', 'hands'].
             'pose' for pose skeleton (23 landmarks);
             'hands' for hand skeleton (21 landmarks per hand);
             'face' for face skeleton (468 landmarks).
@@ -56,7 +55,7 @@ class DatasetDownloader:
         self.check_ssl = check_ssl
 
         if landmarks is None:
-            self.landmarks = ["pose", "hands"]
+            self.landmarks = ["face", "pose", "hands"]
         else:
             self.landmarks = landmarks
 

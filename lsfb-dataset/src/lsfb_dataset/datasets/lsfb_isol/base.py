@@ -7,26 +7,31 @@ from lsfb_dataset.utils.datasets import load_split, load_labels
 
 
 class LSFBIsolBase:
-
     def __init__(self, config: LSFBIsolConfig):
         self.config = config
 
         self.instances: list[str] = load_split(self.config.root, self.config.split)
         self.instance_metadata = pd.read_csv(f"{self.config.root}/instances.csv")
-        self.labels, self.label_to_index, self.index_to_label = load_labels(self.config.root, self.config.n_labels)
+        self.labels, self.label_to_index, self.index_to_label = load_labels(
+            self.config.root, self.config.n_labels
+        )
         self._filter_instances()
 
         self.targets = {}
         self._load_targets()
 
     def _filter_instances(self):
-        self.instance_metadata = self.instance_metadata[self.instance_metadata['id'].isin(self.instances)]
-        self.instance_metadata = self.instance_metadata[self.instance_metadata['sign'].isin(self.labels)]
-        self.instances = self.instance_metadata['id'].tolist()
+        self.instance_metadata = self.instance_metadata[
+            self.instance_metadata["id"].isin(self.instances)
+        ]
+        self.instance_metadata = self.instance_metadata[
+            self.instance_metadata["sign"].isin(self.labels)
+        ]
+        self.instances = self.instance_metadata["id"].tolist()
 
     def _load_targets(self):
-        targets = self.instance_metadata.loc[:, ['id', 'sign']].to_records(index=False)
-        if self.config.target == 'sign_index':
+        targets = self.instance_metadata.loc[:, ["id", "sign"]].to_records(index=False)
+        if self.config.target == "sign_index":
             self.targets = {key: self.label_to_index[gloss] for key, gloss in targets}
         else:
             self.targets = {key: gloss for key, gloss in targets}
