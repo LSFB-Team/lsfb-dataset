@@ -46,16 +46,17 @@ class LSFBContLandmarks(LSFBContBase):
 
         annotations = self.annotations[instance_id]
         if self.config.segment_unit == 'ms':
-            annotations = annotations[
+            annotations = annotations.loc[
                 ((annotations['end'] / 20) >= start) &
                 ((annotations['start'] / 20) <= end)
             ]
         else:
-            annotations = annotations[
+            annotations = annotations.loc[
                 (annotations['end'] >= start) &
                 (annotations['start'] <= end)
             ]
-        annotations = annotations.values
+        annotations.loc[:, 'start'] = annotations['start'] - start
+        annotations.loc[:, 'end'] = annotations['end'] - start
         features, annotations = self._apply_transforms(features, annotations)
         return features, annotations
 

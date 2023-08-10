@@ -42,7 +42,7 @@ class LSFBContBase:
         self.logger.addHandler(handler)
 
     def _transform_sign_annotation(self, annotation: dict[str]):
-        start, end, label = int(annotation['start']), int(annotation['end']), annotation['gloss']
+        start, end, label = int(annotation['start']), int(annotation['end']), annotation['value']
         if self.config.segment_unit == 'frame':
             start, end = floor(start/20), ceil(end/20)
         if self.config.segment_label == 'sign_index':
@@ -52,32 +52,19 @@ class LSFBContBase:
         return start, end, label
 
     def _load_annotations(self):
+        if self.config.segment_level == 'subtitles':
+            raise NotImplementedError("Subtitles are not yet implemented.")  # TODO
+
         prefix = self.config.segment_level
-        suffix = "merged_hands" if self.config.hands == 'both' else self.config.hands
-        with open(f"{self.config.root}/targets/{prefix}_{suffix}.json", 'r') as file:
+        suffix = "both_hands" if self.config.hands == 'both' else self.config.hands
+        with open(f"{self.config.root}/annotations/{prefix}_{suffix}.json", 'r') as file:
             all_annotations = json.load(file)
         for instance_id in self.instances:
             annotations = all_annotations[instance_id]
-            if self.config.segment_level == 'signs':
-                self.annotations[instance_id] = pd.DataFrame.from_records(
-                    [self._transform_sign_annotation(a) for a in annotations],
-                    columns=['start', 'end', 'label'],
-                )
-            elif self.config.segment_level == 'subtitles':
-                raise NotImplementedError("Subtitles are not yet implemented.")  # TODO
-
-    # def _load_labels(self):
-    #     root = self.config.root
-    #     n_labels = self.config.n_labels
-    #     signs = pd.read_csv(f'{root}/metadata/sign_to_index.csv').to_records(index=False)
-    #     for sign, sign_index in signs:
-    #         if sign_index >= n_labels:
-    #             sign_index = -1
-    #             self.index_to_label[-1] = 'OTHER_SIGN'
-    #         else:
-    #             self.labels.append(sign)
-    #             self.index_to_label[sign_index] = sign
-    #         self.label_to_index[sign] = sign_index
+            self.annotations[instance_id] = pd.DataFrame.from_records(
+                [self._transform_sign_annotation(a) for a in annotations],
+                columns=['start', 'end', 'label'],
+            )
 
     def _make_windows(self):
         window_size, window_stride = self.config.window
