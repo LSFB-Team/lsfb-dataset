@@ -8,9 +8,42 @@ from lsfb_dataset.datasets.lsfb_isol.base import LSFBIsolBase
 
 
 class LSFBIsolLandmarks(LSFBIsolBase):
+    """
+    Utility class to load the LSFB ISOL Landmarks dataset.
+    The dataset must be already downloaded!
+
+    All the landmarks and targets are loaded in memory.
+    Therefore, iterating over all the instances is fast but consumes a lot of RAM.
+    If you don't have enough RAM, use the `LSFBIsolLandmarksGenerator` class instead.
+
+    Example:
+        ```python
+        my_dataset_config = LSFBIsolConfig(
+            root="./my_dataset",
+            split="fold_1",
+            n_labels=750,
+            target='sign_gloss',
+            sequence_max_length=10,
+            use_3d=True,
+        )
+
+        my_dataset = LSFBIsolLandmarks(my_dataset_config)
+        features, target = dataset[30]
+        ```
+
+    If you did not download the dataset, see `lsfb_dataset.Downloader`.
+
+    Args:
+        config: The configuration object (see `LSFBContConfig`).
+
+    Author:
+        ppoitier (v 2.0)
+    """
+    # TODO: add class properties to docstring
+
     def __init__(self, config: LSFBIsolConfig):
         super().__init__(config)
-        self.features = self._load_features()
+        self.features: dict[str, dict[str, np.ndarray]] = self._load_features()
 
     def __getitem__(self, index):
         instance_id = self.instances[index]

@@ -6,32 +6,38 @@ from lsfb_dataset.datasets.lsfb_cont.base import LSFBContBase
 
 class LSFBContLandmarksGenerator(LSFBContBase):
     """
-    Utility class to load the LSFB CONT Landmarks dataset.
-    The dataset must be already downloaded!
+        Utility class to load the LSFB CONT Landmarks dataset.
+        The dataset must be already downloaded!
 
-    All the landmarks and targets are lazy loaded. In consequence, iterate over all the instances is slower
-    but consumes less memory (RAM).
+        All the landmarks and targets are lazily loaded.
+        Therefore, iterating over all the instances can be a bit slow.
+        If you have enough RAM and want faster iterations, use the `LSFBContLandmarks` class instead.
 
-    If you have enough RAM (more than 16GB) and want more efficient iterations,
-    use the LSFBContLandmarks class instead.
+        Example:
+            ```python
+            my_dataset_config = LSFBContConfig(
+                root="./my_dataset",
+                landmarks=['pose', 'left_hand', 'right_hand'],
+                split="fold_1",
+                n_labels=750,
+                segment_level='signs',
+                segment_unit='frame',
+                segment_label='sign_gloss',
+                use_3d=True,
+                window=(1500, 1200),
+            )
 
-    Properties:
-        targets: The list of target segmentations for each instance of the dataset
+            my_dataset = LSFBContLandmarksGenerator(my_dataset_config)
+            features, target_annotations = dataset[10]
+            ```
 
-        labels: The targeted labels in the dataset. Example: waiting, signing and coarticulation.
-            The labels depend on the targeted segmentation.
-        label_frequencies: The frequency of each label used in the dataset.
-            The labels depend on the targeted segmentation.
+        If you did not download the dataset, see `lsfb_dataset.Downloader`.
 
-        windows: List of every window in the dataset
-            (instance_index, window_start, window_end, padding)
-            This list only contains windows if the `window` configuration is set!
+        Args:
+            config: The configuration object (see `LSFBContConfig`).
 
-    Args:
-        config: The configuration object (see LSFBContConfig).
-
-    Author:
-        ppoitier (v 2.0)
+        Author:
+            ppoitier (v 2.0)
     """
 
     def __init__(self, config: LSFBContConfig):
@@ -49,8 +55,19 @@ class LSFBContLandmarksGenerator(LSFBContBase):
         features = self._load_instance_features(instance_id)
         features = {lm: lm_feat[start:end] for lm, lm_feat in features[instance_id].items()}
 
-        # TODO: fix annotation and check with windows
         annotations = self.annotations[instance_id]
+        if self.config.segment_unit == 'ms':
+            annotations = annotations.loc[
+                ((annotations['end'] / 20) >= start) &
+                ((annotations['start'] / 20) <= end)
+            ]
+        else:
+            annotations = annotations.loc[
+                (annotations['end'] >= start) &
+                (annotations['start'] <= end)
+            ]
+        annotations.loc[:, 'start'] = annotations['start'] - start
+        annotations.loc[:, 'end'] = annotations['end'] - start
         features, annotations = self._apply_transforms(features, annotations)
         return features, annotations
 

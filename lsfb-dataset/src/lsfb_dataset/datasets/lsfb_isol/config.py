@@ -8,28 +8,29 @@ class LSFBIsolConfig:
     Simple configuration class for the LSFB ISOL Dataset.
 
     LSFB: French Belgian Sign Language
-    ISOL: isolated videos in LSFB
+    ISOL: Isolated signs (videos and poses) in LSFB
+
+    If you did not download the dataset, see `lsfb_dataset.Downloader`.
 
     Args:
         root: Root directory of the LSFB_ISOL dataset.
             The dataset must already be downloaded!
-        landmarks: Select which landmarks (features) to use.
+        landmarks: Select which landmarks (features) to use:
             'face' for face mesh (468 landmarks);
             'pose' for pose skeleton (23 landmarks);
             'left_hand' for left hand skeleton (21 landmarks);
             'right_hand' for right hand skeleton (21 landmarks);
-            Default=['pose', 'left_hand', 'right_hand'].
-        use_3d: If true, use 3D landmarks. Otherwise, use 2D landmarks.
-            Default=False.
+            Default = ['pose', 'left_hand', 'right_hand'].
+        use_3d: If true, use 3D landmarks. Otherwise, use 2D landmarks. Default = False.
         use_raw: If true, use raw landmarks. Otherwise, use preprocessed landmarks where:
-            - missing landmarks are interpolated;
+            - missing landmarks are interpolated (linear interpolation);
             - vibrations have been reduced by using smoothing (Savitchy Golay filter).
-            Default=False.
+            Default = False.
 
-        target: TODO COMPLETE
-            'sign_gloss': ...;
-            'sign_index': ...;
-            Default='sign_index'.
+        target: Specify which target is returned with the features for each instance:
+            'sign_index': the index of the sign is used;
+            'sign_gloss': the gloss of the sign is used;
+            Default = 'sign_index'.
 
         transform: Callable object used to transform the features.
 
@@ -39,7 +40,7 @@ class LSFBIsolConfig:
             'test' for the test set (folds 0 and 1);
             'all' for all the instances of the dataset (all folds);
             'mini_sample' for a tiny set of instances (10 instances).
-            Default='all'.
+            Default = 'all'.
 
         sequence_max_length: (Optional) Max length of the clip sequence. Default=50.
 
@@ -51,8 +52,7 @@ class LSFBIsolConfig:
 
         show_progress: If true, shows a progress bar while the dataset is loading. Default = True.
 
-
-    Author:
+    Authors:
         jfink (v 1.0)
         ppoitier (v 2.0)
     """

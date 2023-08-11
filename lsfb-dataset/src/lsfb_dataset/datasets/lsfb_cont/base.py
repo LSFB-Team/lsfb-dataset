@@ -1,6 +1,5 @@
 import abc
 import json
-import logging
 from os import path
 from math import floor, ceil
 
@@ -14,9 +13,6 @@ class LSFBContBase:
 
     def __init__(self, config: LSFBContConfig):
         self.config = config
-        self.logger = logging.getLogger(__name__)
-
-        self.logger.info('-' * 10 + "LSFB CONT DATASET")
 
         self.instances: list[str] = load_split(self.config.root, self.config.split)
         self.instance_metadata = pd.read_csv(path.join(config.root, 'instances.csv'))
@@ -31,16 +27,6 @@ class LSFBContBase:
         if self.config.window:
             self._make_windows()
 
-    def _init_logger(self):
-        handler = logging.StreamHandler()
-        if self.config.verbose:
-            handler.setLevel(logging.CRITICAL)
-        else:
-            handler.setLevel(logging.INFO)
-        formatter = logging.Formatter('%(asctime)s - %(message)s')
-        handler.setFormatter(formatter)
-        self.logger.addHandler(handler)
-
     def _transform_sign_annotation(self, annotation: dict[str]):
         start, end, label = int(annotation['start']), int(annotation['end']), annotation['value']
         if self.config.segment_unit == 'frame':
@@ -53,7 +39,8 @@ class LSFBContBase:
 
     def _load_annotations(self):
         if self.config.segment_level == 'subtitles':
-            raise NotImplementedError("Subtitles are not yet implemented.")  # TODO
+            raise NotImplementedError("Subtitles are not yet available nor implemented.")
+            # TODO: add subtitles
 
         prefix = self.config.segment_level
         suffix = "both_hands" if self.config.hands == 'both' else self.config.hands

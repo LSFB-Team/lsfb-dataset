@@ -15,18 +15,35 @@ class LSFBContLandmarks(LSFBContBase):
 
         All the landmarks and targets are loaded in memory.
         Therefore, iterating over all the instances is fast but consumes a lot of RAM.
+        If you don't have enough RAM, use the `LSFBContLandmarksGenerator` class instead.
 
-        If you don't have enough RAM, use the LSFBContLandmarksGenerator class instead.
+        Example:
+            ```python
+            my_dataset_config = LSFBContConfig(
+                root="./my_dataset",
+                landmarks=['pose', 'left_hand', 'right_hand'],
+                split="fold_1",
+                n_labels=750,
+                segment_level='signs',
+                segment_unit='frame',
+                segment_label='sign_gloss',
+                use_3d=True,
+                window=(1500, 1200),
+            )
 
-        Properties:
-            ...
+            my_dataset = LSFBContLandmarks(my_dataset_config)
+            features, target_annotations = dataset[10]
+            ```
+
+        If you did not download the dataset, see `lsfb_dataset.Downloader`.
 
         Args:
-            config: The configuration object (see LSFBContConfig).
+            config: The configuration object (see `LSFBContConfig`).
 
         Author:
             ppoitier (v 2.0)
-        """
+    """
+    # TODO: add class properties to docstring
 
     def __init__(self, config: LSFBContConfig):
         super().__init__(config)
