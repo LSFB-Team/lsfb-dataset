@@ -154,7 +154,7 @@ class Downloader:
     def _get_video_origins(self):
         videos = []
         for instance_id in self.instances:
-            videos.append(f'videos/{instance_id}.npy')
+            videos.append(f'videos/{instance_id}.mp4')
         return videos
 
     def _get_instances(self):
