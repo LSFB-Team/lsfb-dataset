@@ -41,7 +41,7 @@ class LSFBIsolConfig:
             'mini_sample' for a tiny set of instances (10 instances).
             Default='all'.
 
-        sequence_max_length: Max length of the clip sequence. Default=50.
+        sequence_max_length: (Optional) Max length of the clip sequence. Default=50.
 
         n_labels: If this parameter is an integer `x`, then `x+1` labels are used for the `x` most
             frequent signs and the background label. If none, the number of labels is the number of different signs
@@ -50,7 +50,6 @@ class LSFBIsolConfig:
             Default=750.
 
         show_progress: If true, shows a progress bar while the dataset is loading. Default = True.
-        verbose: If true, print more information about the loading process. Default = True.
 
 
     Author:
@@ -63,7 +62,7 @@ class LSFBIsolConfig:
     use_3d: bool = False
     use_raw: bool = False
 
-    target: str = "sign_gloss"
+    target: str = "sign_index"
 
     transform: callable = None
 
@@ -72,4 +71,3 @@ class LSFBIsolConfig:
     sequence_max_length: int = 50
 
     show_progress: bool = True
-    verbose: bool = True
