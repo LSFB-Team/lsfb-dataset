@@ -1,1 +1,1 @@
-from .dataset_downloader import DatasetDownloader
+from lsfb_dataset.download.downloader import Downloader
