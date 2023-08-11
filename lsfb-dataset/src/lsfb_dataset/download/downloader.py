@@ -33,14 +33,14 @@ class Downloader:
     Args:
         destination: Path to the destination folder where the dataset is saved.
         dataset: The dataset to download. Default = 'isol'.
-            'isol' for the LSFB isol dataset,
-            'cont' for the LSFB cont dataset;
+            'isol' for the LSFB isol dataset;
+            'cont' for the LSFB cont dataset.
 
         splits: Select which subsets of the dataset should be downloaded. Default = ['all'].
-            'all' for the entire dataset,
-            'fold_0' to 'fold_4' for specific folds of the dataset,
-            'train' for the training data only,
-            'test' for the test data only,
+            'all' for the entire dataset;
+            'fold_0' to 'fold_4' for specific folds of the dataset;
+            'train' for the training data only (folds 2, 3 and4);
+            'test' for the test data only (folds 0 and 1);
             'mini_sample' for a tiny sample of the dataset.
         signers: (Optional) Specify the ids of the only signers for which videos are downloaded. Default = None.
             For example: [1, 43, 17]
