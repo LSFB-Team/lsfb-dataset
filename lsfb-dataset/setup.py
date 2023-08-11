@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="lsfb-dataset",
-    version="0.1.2",
+    version="2.0.0",
     author="Jérôme Fink, Poitier Pierre",
     author_email="jerome.fink@unamur.be, pierre.poitier@unamur.be",
     description="A companion library for the LSFB-dataset",
@@ -25,11 +25,8 @@ setuptools.setup(
     packages=setuptools.find_packages(where="src"),
     python_requires=">=3.9",
     install_requires=[
-        "matplotlib",
         "numpy",
         "pandas",
-        "opencv-python",
         "tqdm",
-        "scikit-learn",
     ],
 )
