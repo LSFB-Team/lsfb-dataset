@@ -6,9 +6,9 @@ A complete documentation for this library is available [here](https://jefidev.gi
 
 # Project Testing and Deploy
 
-This library is officialy deploied on [PyPI](https://pypi.org/project/lsfb-dataset/). This means that, for once (don't lie), the code must be tested and validated before deployment.
+This library is officially deployed on [PyPI](https://pypi.org/project/lsfb-dataset/). This means that, for once (don't lie), the code must be tested and validated before deployment.
 
-This section will explain how to run the test suite, how to setup a local environment enabling you to use the library as if it was installed from PyPi and how to finally deploy when all is good.
+This section will explain how to run the test suite, how to set up a local environment enabling you to use the library as if it was installed from PyPi and how to finally deploy when all is good.
 
 In a near future, all the process should be automatised when a pull request is accepted on master.
 
@@ -18,7 +18,7 @@ This project use the [tox](https://tox.readthedocs.io/en/latest/) and [pytest](h
 
 To run the test suite, you just have to run the command `tox` in the lsfb-dataset directory. If some dependencies were added to the `setup.py` file, you need to run `tox --recreate` in order to force recreating the test environment including that dependency.
 
-Writting good test is trickier, please refer to the [pytest documentation](https://docs.pytest.org) for more information.
+Writing good test is trickier, please refer to the [pytest documentation](https://docs.pytest.org) for more information.
 
 ## Build the Doc
 

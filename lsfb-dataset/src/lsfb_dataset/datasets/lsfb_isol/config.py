@@ -58,7 +58,7 @@ class LSFBIsolConfig:
     """
 
     root: str
-    landmarks: Optional[list[str]] = ("pose", "left_hand", "right_hand")
+    landmarks: Optional[tuple[str, ...]] = ("pose", "left_hand", "right_hand")
     use_3d: bool = False
     use_raw: bool = False
 
