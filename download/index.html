@@ -57,16 +57,18 @@
                 <li class="toctree-l1"><a class="reference internal" href="../datasets/">Datasets</a>
                 </li>
               </ul>
-              <ul>
-                <li class="toctree-l1"><a class="reference internal" href="../visualisation/">Visualisation</a>
-                </li>
-              </ul>
               <ul class="current">
                 <li class="toctree-l1 current"><a class="reference internal current" href="./">Download Datasets</a>
     <ul class="current">
     <li class="toctree-l2"><a class="reference internal" href="#basic-usage">Basic Usage</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#download-lsfb-isol-landmarks-and-videos">Download LSFB ISOL Landmarks and Videos</a>
     </li>
-    <li class="toctree-l2"><a class="reference internal" href="#advanced-usage">Advanced Usage</a>
+    <li class="toctree-l3"><a class="reference internal" href="#download-lsfb-cont-landmarks-and-videos">Download LSFB CONT Landmarks and Videos</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#a-more-complex-example">A more complex example</a>
     </li>
     </ul>
                 </li>
@@ -84,7 +86,7 @@
       <div class="wy-nav-content">
         <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-    <li><a href=".." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a> &raquo;</li>
       <li>Download Datasets</li>
     <li class="wy-breadcrumbs-aside">
     </li>
@@ -95,32 +97,76 @@
             <div class="section" itemprop="articleBody">
               
                 <h1 id="download-datasets">Download Datasets</h1>
-<p>To ease the download of the datasets, we provide a python script that will download the datasets for you. The script is desined to download the dataset in an incremental way. Thus, no worries if you stop the download midway. The script will resume the download where it left off. It is also able to update the dataset if new videos or feature are added. </p>
+<p>Both LSFB datasets, i.e. <code>cont</code> and <code>isol</code>, can be downloaded through <em>HTTP/HTTPS</em>.
+The  <code>lsfb-dataset</code> package provide a <code>Downloader</code> class taking care of the download according to your needs.
+For example, the downloader can filter out the files that you don't need and can also resume the downloading where it stops.</p>
+<table>
+<thead>
+<tr>
+<th>Name of the dataset</th>
+<th>ID</th>
+<th>Poses</th>
+<th>Videos (GB)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LSFB ISOL</td>
+<td>isol</td>
+<td>10GB</td>
+<td>25GB</td>
+</tr>
+<tr>
+<td>LSFB CONT</td>
+<td>cont</td>
+<td>31GB</td>
+<td><strong>~400GB</strong></td>
+</tr>
+</tbody>
+</table>
+<p>As you can see in this table, the datasets can be heavy, especially the videos of the LSFB CONT dataset.</p>
 <h2 id="basic-usage">Basic Usage</h2>
-<p>Here is a simple snippet of code to download the isolated version of the dataset : </p>
-<pre><code class="language-python">from lsfb_dataset.utils.download.dataset_downloader import DatasetDownloader
+<h3 id="download-lsfb-isol-landmarks-and-videos">Download LSFB ISOL Landmarks and Videos</h3>
+<p>By default, the downloader will fetch the landmarks of the entirety of the specified dataset. The only mandatory parameters are the dataset name and the destination folder where the files are going to be downloaded.</p>
+<pre><code class="language-python">from lsfb_dataset import Downloader
 
-destination_folder = './path/to/your/datasets/folder'
-
-ds = DatasetDownloader(destination_folder, dataset=&quot;isol&quot;)
-ds.download()
-
+downloader = Downloader(dataset='isol', destination=&quot;./destination/folder&quot;, include_videos=True)
+downloader.download()
 </code></pre>
-<p>To download the continuous version, just replace <code>dataset="isol"</code> with <code>dataset="cont"</code></p>
-<h2 id="advanced-usage">Advanced Usage</h2>
-<p>To give you more control about what is downloaded, the <code>DatasetDownloader</code> class propose several parameters : </p>
-<ul>
-<li><strong>destination</strong> : Path to the folder where the dataset will be downloaded. (str)</li>
-<li><strong>dataset</strong> : Type of dataset to download. Must be either <code>isol</code> or <code>cont</code> (str)</li>
-<li><strong>exclude</strong> : A list of the data to exclude from the download. The possible values are <code>video</code> (to skip the download of the videos), <code>landmarks</code> (to skip the download of the mediapipe skeleton information) and <code>annotations</code> (to skip the download of gloss annotation for the continuous dataset).  (list)</li>
-<li><strong>src</strong> : The source url of the dataset. By default, the dataset is downloaded from our server. (str)</li>
-<li><strong>warning_message</strong> : By default, the script display a warning message to the user. If you want to disable this message, set this parameter to <code>False</code>. (bool)</li>
-</ul>
+<h3 id="download-lsfb-cont-landmarks-and-videos">Download LSFB CONT Landmarks and Videos</h3>
+<p>By default, the downloader will fetch the landmarks of the entirety of the specified dataset. The only mandatory parameters are the dataset name and the destination folder where the files are going to be downloaded.</p>
+<pre><code class="language-python">from lsfb_dataset import Downloader
+
+downloader = Downloader(dataset='cont', destination=&quot;./destination/folder&quot;, include_videos=True)
+downloader.download()
+</code></pre>
+<h2 id="a-more-complex-example">A more complex example</h2>
+<p>Here's a more complex example where we only download the instances:
+* Of the subsets <code>train</code>, <code>fold_0</code> and <code>fold_2</code>;
+* Only the instances of the signers <code>20 to 39</code>;
+* Only download the raw poses (without any interpolation of the missing landmarks nor smoothing);
+* Only includes the landmarks of the <code>pose</code> (body) and the hands;
+* Without skipping the existing files.</p>
+<pre><code class="language-python">from lsfb_dataset import Downloader
+
+downloader = Downloader(
+    dataset='isol',
+    destination=&quot;./destination/folder&quot;,
+    splits=['train', 'fold_0', 'fold_2'],
+    signers=list(range(20, 40)),
+    include_cleaned_poses=False,
+    include_raw_poses=True,
+    include_videos=False,
+    landmarks=['pose', 'left_hand', 'right_hand'],
+    skip_existing_files=False,
+)
+downloader.download()
+</code></pre>
               
             </div>
           </div><footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
-        <a href="../visualisation/" class="btn btn-neutral float-left" title="Visualisation"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../datasets/" class="btn btn-neutral float-left" title="Datasets"><span class="icon icon-circle-arrow-left"></span> Previous</a>
     </div>
 
   <hr/>
@@ -143,7 +189,7 @@ ds.download()
   <span class="rst-current-version" data-toggle="rst-current-version">
     
     
-      <span><a href="../visualisation/" style="color: #fcfcfc">&laquo; Previous</a></span>
+      <span><a href="../datasets/" style="color: #fcfcfc">&laquo; Previous</a></span>
     
     
   </span>

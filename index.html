@@ -66,10 +66,6 @@
                 </li>
               </ul>
               <ul>
-                <li class="toctree-l1"><a class="reference internal" href="visualisation/">Visualisation</a>
-                </li>
-              </ul>
-              <ul>
                 <li class="toctree-l1"><a class="reference internal" href="download/">Download Datasets</a>
                 </li>
               </ul>
@@ -86,7 +82,7 @@
       <div class="wy-nav-content">
         <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-    <li><a href="." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+    <li><a href="." class="icon icon-home" aria-label="Docs"></a> &raquo;</li>
       <li>Home</li>
     <li class="wy-breadcrumbs-aside">
     </li>
@@ -97,24 +93,26 @@
             <div class="section" itemprop="articleBody">
               
                 <h1 id="lsfb-dataset-companion-library">LSFB Dataset Companion Library</h1>
-<p>LSFB Dataset is a companion library for the <a href="https://lsfb.info.unamur.be/">French Belgian Sign Language (LSFB) dataset</a> released by the University of Namur. The library provides a set of tools helping to download, manipulate and visualize the data. </p>
+<p>LSFB Dataset is a companion library for the <a href="https://lsfb.info.unamur.be/">French Belgian Sign Language (LSFB) dataset</a> released by the University of Namur.
+The library provides a set of tools helping to download, manipulate and visualize the data. </p>
 <p>This library aims to reduce drastically the time you will spend on data loading and preprocessing allowing you to focus on your research.</p>
 <h2 id="datasets">Datasets</h2>
-<p>Both datasets are based on the <a href="https://www.corpus-lsfb.be/">LSFB Corpus</a>. The corpus is the result of the tremendous work achieved by the members of the <a href="https://www.unamur.be/lettres/romanes/lsfb-lab">LSFB lab</a> from the university of Namur.</p>
-<p>The corpus data were sanatized in order to make them easier to use. Additional metadata were added to enhance the datasets. Two versions of the dataset are available:</p>
+<p>Both datasets are based on the <a href="https://www.corpus-lsfb.be/">LSFB Corpus</a>.
+The corpus is the result of the tremendous work achieved by the members of the <a href="https://www.unamur.be/lettres/romanes/lsfb-lab">LSFB lab</a> from the university of Namur.</p>
+<p>The corpus data were sanitized in order to make them easier to use. Additional metadata were added to enhance the datasets. Two versions of the dataset are available:</p>
 <ul>
 <li><strong><a href="lsfb_isol/">lsfb_isol</a></strong> : Suitable for the isolated sign language recognition task.</li>
 <li><strong><a href="lsfb_cont/">lsfb_cont</a></strong> : Suitable for the continuous sign language recognition task.</li>
 </ul>
-<p>Both datasets are based on the <a href="https://www.corpus-lsfb.be/">LSFB Corpus</a> containing 40 hours of annotated and translated video. <a href="https://mediapipe.dev/">Mediapipe</a> landmarks are also available for each datasets.</p>
+<p>Both datasets are based on the <a href="https://www.corpus-lsfb.be/">LSFB Corpus</a> containing 40 hours of annotated and translated video.
+<a href="https://mediapipe.dev/">Mediapipe</a> landmarks are also available for each dataset.</p>
 <p><img alt="Fond Baillet Latour" src="ressources/img/dataset-example.jpg" /></p>
 <h2 id="modules">Modules</h2>
-<p>The library offers you a set of module designed to help you to <strong>download</strong>, <strong>visualize</strong> and <strong>load</strong> the dataset. The available modules are : </p>
+<p>The library offers you a set of tools designed to help you to <strong>download</strong> and <strong>load</strong> the dataset.
+The available modules are : </p>
 <ul>
+<li><a href="download/"><strong>download</strong></a> : contains utilities to download the entirety (or some parts) of the datasets.</li>
 <li><a href="datasets/"><strong>datasets</strong></a> : contains pre-written python <a href="https://docs.python.org/3/c-api/iterator.html">Iterators</a> for both the isol and continuous datasets. They could be used to feed the data in your <em>machine learning</em> pipeline.</li>
-<li><strong>visualisation</strong> : contains helper function enabling you to visualise the data.</li>
-<li><strong>utils</strong>: contains function helping to load the various csv and video into dataframes</li>
-<li><strong>transforms</strong> : Functions</li>
 </ul>
 <h2 id="sponsors">Sponsors</h2>
 <p>Without our sponsors, this library would not be possible.</p>
@@ -165,6 +163,6 @@
 </html>
 
 <!--
-MkDocs version : 1.4.2
-Build Date UTC : 2022-11-17 16:07:11.644384+00:00
+MkDocs version : 1.4.3
+Build Date UTC : 2023-08-14 12:10:44.467795+00:00
 -->

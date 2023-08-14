@@ -46,11 +46,11 @@
     <ul class="current">
     <li class="toctree-l2"><a class="reference internal" href="#how-to-download-datasets">How to Download Datasets</a>
         <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#download-lsfb-isol-landmarks">Download lsfb Isol landmarks</a>
+    <li class="toctree-l3"><a class="reference internal" href="#download-lsfb-isol-landmarks">Download LSFB ISOL Landmarks</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#download-lsfb-cont-landmarks">Download LSFB CONT Landmarks</a>
     </li>
     <li class="toctree-l3"><a class="reference internal" href="#include-videos">Include Videos</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#downloading-lsfb-cont-dataset">Downloading lsfb cont dataset</a>
     </li>
         </ul>
     </li>
@@ -70,10 +70,6 @@
                 </li>
               </ul>
               <ul>
-                <li class="toctree-l1"><a class="reference internal" href="../visualisation/">Visualisation</a>
-                </li>
-              </ul>
-              <ul>
                 <li class="toctree-l1"><a class="reference internal" href="../download/">Download Datasets</a>
                 </li>
               </ul>
@@ -90,7 +86,7 @@
       <div class="wy-nav-content">
         <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-    <li><a href=".." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a> &raquo;</li>
       <li>How To</li>
     <li class="wy-breadcrumbs-aside">
     </li>
@@ -101,28 +97,60 @@
             <div class="section" itemprop="articleBody">
               
                 <h1 id="how-to-guide">How To Guide</h1>
-<p>This section provide quick reference for the various class and module available in <code>lsfb-dataset</code>. All these examples are available as jupyter noteboks <a href="https://github.com/Jefidev/lsfb-dataset/tree/master/examples">here</a>.</p>
+<p>This section provide quick reference for the various class and module available in <code>lsfb-dataset</code>. All these examples are available as jupyter notebooks <a href="https://github.com/Jefidev/lsfb-dataset/tree/master/examples">here</a>.</p>
 <h2 id="how-to-download-datasets">How to Download Datasets</h2>
-<p>The LSFB dataset could be downloaded through <em>HTTP</em>. The  <code>lsfb-dataset</code> package provide a <code>DatasetDownloader</code> taking care of the download. If the download is interrupted, the downloader contains mechanism allowing to resume it where it stops.</p>
-<h3 id="download-lsfb-isol-landmarks">Download lsfb Isol landmarks</h3>
-<p>By default, the downloader will only fetch the landmarks of the lsfb_isol dataset (~5Go). The only mandatory parameter is the destination folder for the dataset. </p>
-<pre><code class="language-python">from lsfb_dataset.utils.download import DatasetDownloader
+<p>Both LSFB datasets, i.e. <code>cont</code> and <code>isol</code>, can be downloaded through <em>HTTP/HTTPS</em>.
+The  <code>lsfb-dataset</code> package provide a <code>Downloader</code> class taking care of the download according to your needs.
+For example, the downloader can filter out the files that you don't need and can also resume the downloading where it stops.</p>
+<table>
+<thead>
+<tr>
+<th>Name of the dataset</th>
+<th>ID</th>
+<th>Poses</th>
+<th>Videos (GB)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LSFB ISOL</td>
+<td>isol</td>
+<td>10GB</td>
+<td>25GB</td>
+</tr>
+<tr>
+<td>LSFB CONT</td>
+<td>cont</td>
+<td>31GB</td>
+<td><strong>~400GB</strong></td>
+</tr>
+</tbody>
+</table>
+<p>As you can see in this table, the datasets can be heavy, especially the videos of the LSFB CONT dataset.</p>
+<h3 id="download-lsfb-isol-landmarks">Download LSFB ISOL Landmarks</h3>
+<p>By default, the downloader will fetch the landmarks of the entirety of the specified dataset. The only mandatory parameters are the dataset name and the destination folder where the files are going to be downloaded.</p>
+<pre><code class="language-python">from lsfb_dataset import Downloader
 
-downloader = DatasetDownloader(&quot;./destination/folder&quot;)
+downloader = Downloader(dataset='isol', destination=&quot;./destination/folder&quot;)
+downloader.download()
+</code></pre>
+<h3 id="download-lsfb-cont-landmarks">Download LSFB CONT Landmarks</h3>
+<p>By default, the downloader will fetch the landmarks of the entirety of the specified dataset. The only mandatory parameters are the dataset name and the destination folder where the files are going to be downloaded.</p>
+<pre><code class="language-python">from lsfb_dataset import Downloader
+
+downloader = Downloader(dataset='cont', destination=&quot;./destination/folder&quot;)
 downloader.download()
 </code></pre>
 <h3 id="include-videos">Include Videos</h3>
-<p>You can easily download the raw video by using the <code>include video</code> flag. Be aware that videos are heavy. The size of the lsfb_isol dataset with videos is around 100Go</p>
-<pre><code class="language-python">from lsfb_dataset.utils.download.dataset_downloader import DatasetDownloader
+<p>You can easily download the raw video by using the <code>include videos</code> parameter. Be aware that videos are heavy.</p>
+<pre><code class="language-python">from lsfb_dataset import Downloader
 
-downloader = DatasetDownloader(&quot;./destination/folder&quot;, include_video=True)
+downloader = Downloader(dataset='isol', destination=&quot;./destination/folder&quot;, include_videos=True)
 downloader.download()
 </code></pre>
-<h3 id="downloading-lsfb-cont-dataset">Downloading lsfb cont dataset</h3>
-<p>By default, the lsfb_isol dataset is downloaded. To download the continuous dataset, you need to set the mandatory parameter <code>dataset</code>.</p>
-<pre><code class="language-python">from lsfb_dataset.utils.download.dataset_downloader import DatasetDownloader
+<pre><code class="language-python">from lsfb_dataset import Downloader
 
-downloader = DatasetDownloader(&quot;./destination/folder&quot;, dataset=&quot;cont&quot;, include_video=True)
+downloader = Downloader(dataset='cont', destination=&quot;./destination/folder&quot;, include_videos=True)
 downloader.download()
 </code></pre>
               
