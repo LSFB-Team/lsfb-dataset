@@ -67,13 +67,15 @@ class LSFBContLandmarks(LSFBContBase):
                 ((annotations['end'] / 20) >= start) &
                 ((annotations['start'] / 20) <= end)
             ]
+            annotations.loc[:, 'start'] = annotations['start'] - start * 20
+            annotations.loc[:, 'end'] = annotations['end'] - start * 20
         else:
             annotations = annotations.loc[
                 (annotations['end'] >= start) &
                 (annotations['start'] <= end)
             ]
-        annotations.loc[:, 'start'] = annotations['start'] - start
-        annotations.loc[:, 'end'] = annotations['end'] - start
+            annotations.loc[:, 'start'] = annotations['start'] - start
+            annotations.loc[:, 'end'] = annotations['end'] - start
         features, annotations = self._apply_transforms(features, annotations)
         return features, annotations
 

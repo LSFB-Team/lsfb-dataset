@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional, Union
+from typing import Optional, Union, Sequence
 
 
 @dataclass
@@ -82,7 +82,7 @@ class LSFBContConfig:
     """
 
     root: str
-    landmarks: Optional[tuple[str]] = ('pose', 'left_hand', 'right_hand')
+    landmarks: Optional[tuple[str, ...]] = ('pose', 'left_hand', 'right_hand')
     use_3d: bool = False
     use_raw: bool = False
 
