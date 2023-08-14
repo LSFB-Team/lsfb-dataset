@@ -1,104 +1,104 @@
 from dataclasses import dataclass
-from os import path
-from typing import List, Optional, Tuple, Callable
-from ..types import *
+from typing import Optional, Union, Sequence
 
 
 @dataclass
 class LSFBContConfig:
     """
-    Simple configuration class for the LSFB_CONT Dataset.
+        Simple configuration class for the LSFB_CONT dataset.
+        Each instance of the LSFB_CONT dataset is a video with corresponding annotations.
+        Each annotation is made up of a segment (start, end) and a label.
 
-    LSFB: French Belgian Sign Language
-    CONT: Continuous videos in LSFB
+        LSFB: French Belgian Sign Language
+        CONT: Continuous videos in LSFB
 
-    See: LSFBContLandmarks
+        See `LSFBContLandmarks` to load the dataset.
 
-    Args:
-        root: Root directory of the LSFB_CONT dataset.
-            The dataset must already be downloaded !
-        landmarks: Select which landmarks (features) to use.
-            'pose' for pose skeleton (23 landmarks);
-            'hand_left' for left hand skeleton (21 landmarks);
-            'hand_right' for right hand skeleton (21 landmarks);
-            Default = ['pose', 'hand_left', 'hand_right'].
+        Args:
+            root: Root directory of the LSFB_CONT dataset.
+                The dataset must already be downloaded !
+            landmarks: Select which landmarks (features) to use.
+                'face' for face mesh (468 landmarks);
+                'pose' for pose skeleton (23 landmarks);
+                'left_hand' for left hand skeleton (21 landmarks);
+                'right_hand' for right hand skeleton (21 landmarks);
+                Default = ('pose', 'left_hand', 'right_hand').
+            use_3d: If true, use 3D landmarks. Otherwise, use 2D landmarks.
+                Default=False.
+            use_raw: If true, use raw landmarks. Otherwise, use preprocessed landmarks where:
+                - missing landmarks are interpolated;
+                - vibrations have been reduced by using smoothing (Savitchy Golay filter).
+                Default=False.
 
-        features_transform: Callable object used to transform the features.
-        target_transform: Callable object used to transform the targets.
-        transform: Callable object used to transform both the features and the targets.
+            features_transform: Callable object used to transform the features.
+            target_transform: Callable object used to transform the targets.
+            transform: Callable object used to transform both the features and the targets.
 
-        split: Specify which subset of the dataset is used.
-            'train' for training set;
-            'test' for the test set;
-            'all' for all the instances of the dataset;
-            'mini_sample' for a tiny set of instances.
-            Default = 'all'.
-        seed: Seed used to determine the split. Default = 42.
-        hands: Specify which hands are targeted in the segmentation.
-            'right' for the signs from the right hand of the signer;
-            'left' for the signs from the left hand of the signer;
-            'both' for the signs from both hands of the signer.
-            Default = 'both'.
-        target: Specify the kind of segmentation used as a target.
-            'signs' for the labels waiting and signing only.
-            'signs_and_transitions' for the labels waiting, signing and coarticulation.
-            'activity' for the labels waiting and signing,
-                where intermediate movements are labelled as signing and not waiting anymore.
-            Default = 'signs'.
+            split: Specify which subset of the dataset is used.
+                'fold_x' where x is in {0, 1, 2, 3, 4} for a specific fold;
+                'train' for training set (folds 2, 3, 4);
+                'test' for the test set (folds 0 and 1);
+                'all' for all the instances of the dataset (all folds);
+                'mini_sample' for a tiny set of instances (10 instances).
+                Default = 'all'.
 
-        window: Optional argument (window_size, window_stride) to use fixed-size windows instead of
-            variable length sequences.
-            If specified, the dataset is windowed with a window size and a window stride.
-            Be careful, this argument changes the number of instances in the dataset !
-            Default = None.
-        return_mask: If true, return a mask in addition to the features and the target for each instance.
-            The mask is filled with 1's and 0's where the padding has been applied.
-            Default = False.
-        mask_transform: Callable object used to transform the masks.
-            You need to set return_mask to `True` to use this transform !
+            hands: Only load the sign of a specific hand, or both of them.
+                'right' for the signs from the right hand of the signer;
+                'left' for the signs from the left hand of the signer;
+                'both' for the signs from both hands of the signer.
+                Default = 'both'.
+            segment_level: Specifies the level at which annotations are extracted.
+                'signs'
+                'subtitles'
+                Default = 'signs'
+            segment_label: Specify which label to use for each segment.
+                'sign_gloss': the gloss of the signs is used. Example: HAND
+                'sign_index': the index (class) of the signs is used. Example: 45
+                'text': the text of the sign, or subtitle, is used. This can be useful when annotations are subtitles.
+                If the annotations are subtitles, multiple labels are assigned to a segment.
+                For example, a sequence of glosses, indices or event the full text of the subtitles.
+                Default='sign_index'
+            segment_unit: Specify which unit is used for the boundaries (start, end) of the annotations.
+                'frame': frame indices in annotations boundaries.
+                'ms': milliseconds in annotations boundaries.
+                default='ms'
 
-        video_list_file: The filepath of the video list CSV file.
-            This filepath is relative to the root of the dataset.
-        targets_dir: The path of the directory that contains the target vectors.
-            This filepath is relative to the root of the dataset.
+            n_labels: If this parameter is an integer `x`, then `x+1` labels are used for the `x` most
+                frequent signs and the background label. If none, the number of labels is the number of different signs
+                in the dataset no matter their occurrences.
+                This parameter is used to filter out signs with very few examples.
+                Default=750
 
-        show_progress: If true, shows a progress bar while the dataset is loading. Default = True.
-        verbose: If true, print more information about the loading process. Default = True.
+            window: Optional argument (window_size, window_stride) to use fixed-size windows instead of
+                variable length sequences.
+                If specified, the dataset is windowed with a window size and a window stride.
+                Be careful, this argument changes the number of instances in the dataset !
+                Default = None.
 
-    Author: ppoitier
+            show_progress: If true, shows a progress bar while the dataset is loading. Default = True.
+
+        Author:
+            ppoitier (v 2.0)
     """
 
     root: str
-    landmarks: Optional[List[str]] = None
+    landmarks: Optional[tuple[str, ...]] = ('pose', 'left_hand', 'right_hand')
+    use_3d: bool = False
+    use_raw: bool = False
 
-    features_transform: Callable = None
-    target_transform: Callable = None
-    transform: Callable = None
+    features_transform: callable = None
+    target_transform: callable = None
+    transform: callable = None
 
-    split: DataSubset = 'all'
-    seed: int = 42
-    hands: Hand = 'both'
-    target: Target = 'signs'
+    split: str = 'all'
 
-    window: Optional[Tuple[int, int]] = None
-    return_mask: bool = False
-    mask_transform: Callable = None
+    hands: str = 'both'
+    segment_level: str = 'signs'
+    segment_label: str = 'sign_index'
+    segment_unit: str = 'ms'
 
-    video_list_file: str = 'videos.csv'
-    targets_dir: str = 'annotations/vectors'
+    n_labels: Union[int, None] = 750
+
+    window: Optional[tuple[int, int]] = None
 
     show_progress: bool = True
-    verbose: bool = True
-
-    def __post_init__(self):
-        if self.landmarks is None:
-            self.landmarks = ['pose', 'hand_left', 'hand_right']
-
-        self.video_list_file = path.join(self.root, self.video_list_file)
-        self.targets_dir = path.join(self.root, self.targets_dir)
-
-        self.validate()
-
-    def validate(self):
-        if self.mask_transform is not None and self.return_mask is False:
-            raise ValueError('Mask transform is defined, but the mask is not returned.')

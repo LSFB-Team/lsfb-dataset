@@ -11,6 +11,6 @@ provided.
 
 """
 
-from .landmarks import LSFBIsolLandmarks
-from .landmarks_generator import LSFBIsolLandmarksGenerator
-from .config import LSFBIsolConfig
+from lsfb_dataset.datasets.lsfb_isol.landmarks import LSFBIsolLandmarks
+from lsfb_dataset.datasets.lsfb_isol.landmarks_generator import LSFBIsolLandmarksGenerator
+from lsfb_dataset.datasets.lsfb_isol.config import LSFBIsolConfig

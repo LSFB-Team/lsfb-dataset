@@ -6,43 +6,56 @@ LSFB CONT is a dataset for continuous sign language recognition. It is made of v
 In order to download the LSFB CONT dataset, pleas contact me at the address jerome.fink[at]unamur.be
 
 
+## Instances
+
+The signers were asked to accomplish several tasks such as summarizing a video, describing a picture or tell a childhood story.
+All those sign language discussion resulted in two instances corresponding o the videos of the two signers.
+The *instances.csv* file of the dataset contains the list of all the available instances in the dataset: 
+
+- **id**: the ID of the instance (e.g. `CLSFBI0103_S001_B`)
+- **signer_id**: the category of the video (e.g. `001`)
+- **session_id** : the session of the video (e.g. `01`)
+- **task_id** : the category of the video (e.g. `03`)
+- **n_frames** : the number of frames in the video (e.g. `25264`)
+- **n_signs** : the number of signs in the video (e.g. `398`)
+
 ## Videos
 
-The videos of the LSFB CONT dataset are all recorded in 720x576px resolution with 50 FPS. The duration of the video is variable (between 30 seconds and 30 minutes). The signers were asked to accomplish several tasks such as summurizing a video, describing a picture or tell a childhood story.
+The videos of the LSFB CONT dataset are all recorded in 720x576px resolution with 50 FPS.
+The duration of the video is variable (between 30 seconds and 30 minutes).
 
-The *videos.csv* file of the dataset contains the list of all the available video along with several metadata : 
+Each video can be retrieved from the ID of the corresponding instance.
+For example: `./videos/CLSFBI0103_S001_B.mp4` for the instance `CLSFBI0103_S001_B`.
 
-- **filename**: the name of the video file (e.g. `CLSFBI0103_S001_B.mp4`)
-- **category**: the category of the video (e.g. `CLSFB - 01 ok`)
-- **filepath** : the relative path of the video (eg `videos\CLSFB - 01 ok\CLSFBI0103A_S001_B.mp4`)
-- **frames** : the number of frames in the video (ex: `25274`)
-- **right_hand_annotations** : the relative path of the right hand annotations
-- **left_hand_annotations** : the relative path of the left hand annotations
-- **face_positions** : the relative path of the face landmarks
-- **hands_positions** : the relative path of the hand landmarks
-- **pose_positions** : the relative path of the skeleton landmarks
-- **holistic_features** : the relative path of the holistic landmarks
-- **holistic_features_cleaned** : the relative path of the cleaned holistic landmarks
+## Annotations
 
-The actual content of all these files are presented in the following section.
+The LSFB video are annotated using gloss. Glosses are unique labels associated to each sign.
+All the annotations are contained in a single file where each instance ID is associated to a list of annotations `(start, end, label)` where:
+* `start`: starting time of the sign (milliseconds)
+* `end`: ending time of the sign (milliseconds)
+* `label`: the label of the sign (gloss)
 
-## Left and Right hands Annotations
+There are multiple annotations files:
+* `./annotations/signs_left_hand.json`: all the signs performed with the left hand;
+* `./annotations/signs_right_hand.json`: all the signs performed with the right hand;
+* `./annotations/signs_both_hands.json`: all the signs performed with any hand;
 
-The LSFB video are annotated using gloss. Glosses are unique labels associated to each sign. The annotations CSV contains the following columns : 
+The annotations files were created based on the original annotations created by the [LSFB-LAB](https://www.unamur.be/lettres/romanes/lsfb-lab). Those annotation are available on demande and use the [ELAN](https://archive.mpi.nl/tla/elan) file format. Along with the gloss annotation, the ELAN file also contains an alligned french translation. However, frenche translation is still a work in progress and will be available in its own CSV file when ready.
 
-- **start** : Starting time of the gloss (in milliseconds)
-- **end** : Ending time of the gloss (in milliseconds)
-- **word** :  The label of the gloss
+## Poses
 
-The annotations CSV files were created based on the original annotations created by the [LSFB-LAB](https://www.unamur.be/lettres/romanes/lsfb-lab). Those annotation are available on demande and use the [ELAN](https://archive.mpi.nl/tla/elan) file format. Along with the gloss annotation, the ELAN file also contains an alligned french translation. However, frenche translation is still a work in progress and will be available in its own CSV file when ready.
+From each frame of each video a set of landmarks is extracted using [MediaPipe](https://developers.google.com/mediapipe).
+These landmarks relate to the main speaker in the video.
+The different sets of landmarks extracted:
 
-## Extracted landmarks
+* The face: 468 landmarks;
+* The pose (body): 30 landmarks;
+* The left hand: 21 landmarks;
+* The right hand: 21 landmarks.
 
-From each frame of each video a set of landmarks is extracted. These landmarks relate to the main speaker in the video. The different sets of landmarks extracted:
+Each video can be retrieved from the ID of the corresponding instance.
+For example, the landmarks of the left hand of the signer of the instance `CLSFBI0103_S001_B`
+are located in the file `./poses/left_hand/CLSFBI0103_S001_B.npy`.
+You can then load this file using [Numpy](https://numpy.org/).
 
-- The face
-- The pose (skeleton)
-- The hands
-
-These very precise data are then aggregated into another set of landmarks, the holistic landmarks. Holistics landmarks are also available in a cleaned version where an interpolation and a smoothing phase have been applied. For more information about those landmarks, you can read the [mediapipe documentation](https://google.github.io/mediapipe/solutions/solutions.html)
-
+You can also load the raw landmarks in the `poses_raw` folder.

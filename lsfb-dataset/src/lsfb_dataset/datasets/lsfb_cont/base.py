@@ -1,93 +1,89 @@
 import abc
-import numpy as np
-import pandas as pd
-import pickle
+import json
 from os import path
-from .config import LSFBContConfig
-from ...utils.datasets import mini_sample, split_cont
-from ...utils.target import (
-    combine_binary_vectors,
-    combine_binary_vectors_with_coarticulation,
-)
+from math import floor, ceil
+
+import pandas as pd
+
+from lsfb_dataset.datasets.lsfb_cont.config import LSFBContConfig
+from lsfb_dataset.utils.datasets import load_split, load_labels
 
 
 class LSFBContBase:
 
-    def __init__(self, config=None, **kwargs):
-        self.config = LSFBContConfig(**kwargs) if config is None else config
-        if self.config.verbose:
-            print('-' * 10, 'LSFB CONT DATASET')
+    def __init__(self, config: LSFBContConfig):
+        self.config = config
 
-        self.videos = self._load_video_list()
+        self.instances: list[str] = load_split(self.config.root, self.config.split)
+        self.instance_metadata = pd.read_csv(path.join(config.root, 'instances.csv'))
+        self.instance_metadata = self.instance_metadata[self.instance_metadata['id'].isin(self.instances)]
 
-        self.targets: list[np.ndarray] = []
-        self.labels: list[int] = []
-        self.label_frequencies: list[int] = []
-        self._load_targets()
+        self.labels, self.label_to_index, self.index_to_label = load_labels(self.config.root, self.config.n_labels)
 
-    def _load_video_list(self) -> pd.DataFrame:
-        split = self.config.split
-        videos: pd.DataFrame = pd.read_csv(self.config.video_list_file)
-        train_videos, test_videos = split_cont(videos, signers_frac=0.8, seed=self.config.seed)
+        self.annotations: dict[str] = {}
+        self._load_annotations()
 
-        if split == 'mini_sample':
-            videos = mini_sample(videos, num_samples=10, seed=42)
-        elif split == 'train':
-            videos = train_videos
-        elif split == 'test':
-            videos = test_videos
-        elif split != 'all':
-            raise ValueError(f'Unknown split: {split}.')
-        return videos
+        self.windows = None
+        if self.config.window:
+            self._make_windows()
 
-    def _load_targets(self):
-        target = self.config.target
-        targets_dir = self.config.targets_dir
-        hands = self.config.hands
+    def _transform_sign_annotation(self, annotation: dict[str]):
+        start, end, label = int(annotation['start']), int(annotation['end']), annotation['value']
+        if self.config.segment_unit == 'frame':
+            start, end = floor(start/20), ceil(end/20)
+        if self.config.segment_label == 'sign_index':
+            label = self.label_to_index[label]
+        elif self.config.segment_label == 'text':
+            label = label.lower()
+        return start, end, label
 
-        if target == 'signs':
-            filename = 'binary.pck'
-            self.labels = ['waiting', 'signing']
-            self.label_frequencies = [0.632736, 0.367264]
-        elif target == 'signs_and_transitions':
-            filename = 'binary_with_coarticulation.pck'
-            self.labels = ['waiting', 'signing', 'coarticulation']
-            self.label_frequencies = [0.519183, 0.367264, 0.113553]
-        elif target == 'activity':
-            filename = 'activity.pck'
-            self.labels = ['waiting', 'signing']
-            self.label_frequencies = [0.519183, 0.480817]
-        else:
-            raise ValueError(f'Unknown target: {target}.')
+    def _load_annotations(self):
+        if self.config.segment_level == 'subtitles':
+            raise NotImplementedError("Subtitles are not yet available nor implemented.")
+            # TODO: add subtitles
 
-        target_filepath = path.join(targets_dir, filename)
-        with open(target_filepath, 'rb') as file:
-            target_vectors: dict = pickle.load(file)
+        prefix = self.config.segment_level
+        suffix = "both_hands" if self.config.hands == 'both' else self.config.hands
+        with open(f"{self.config.root}/annotations/{prefix}_{suffix}.json", 'r') as file:
+            all_annotations = json.load(file)
+        for instance_id in self.instances:
+            annotations = all_annotations[instance_id]
+            self.annotations[instance_id] = pd.DataFrame.from_records(
+                [self._transform_sign_annotation(a) for a in annotations],
+                columns=['start', 'end', 'label'],
+            )
 
-        for _, video in self.videos.iterrows():
-            filename = video['filename']
-            vec = target_vectors.get(filename)
+    def _make_windows(self):
+        window_size, window_stride = self.config.window
+        self.windows = []
+        for instance_id, n_frames in self.instance_metadata[['id', 'n_frames']].to_records(index=False):
+            for start in range(0, n_frames, window_stride):
+                end = min(start + window_size, n_frames - 1)
+                self.windows.append((instance_id, start, end))
 
-            if hands == 'left':
-                vec = vec[0]
-            elif hands == 'right':
-                vec = vec[1]
-            elif hands == 'both':
-                if target == 'signs_and_transitions':
-                    vec = combine_binary_vectors_with_coarticulation(vec[0], vec[1])
-                else:
-                    vec = combine_binary_vectors(vec[0], vec[1])
+    def _apply_transforms(self, features, annotations):
+        if self.config.features_transform:
+            features = self.config.features_transform(features)
+        if self.config.target_transform:
+            annotations = self.config.target_transform(annotations)
+        if self.config.transform:
+            features, annotations = self.config.transform(features, annotations)
+        return features, annotations
 
-            assert vec is not None, f'Target not found for video {filename}.'
-            self.targets.append(vec)
+    def __len__(self):
+        if self.config.window is None:
+            return len(self.instances)
+        return len(self.windows)
 
-        if self.config.verbose:
-            print('Target vectors loaded.')
+    def __getitem__(self, index):
+        if self.windows is None:
+            return self.__get_instance__(index)
+        return self.__get_window__(index)
 
     @abc.abstractmethod
-    def __len__(self):
+    def __get_instance__(self, index):
         pass
 
     @abc.abstractmethod
-    def __getitem__(self, index):
+    def __get_window__(self, index):
         pass

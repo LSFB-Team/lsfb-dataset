@@ -1,92 +1,74 @@
-import pandas as pd
-from tqdm import tqdm
-from datetime import datetime
+import gc
 
-from typing import List
-from lsfb_dataset.utils.landmarks import load_pose_landmarks, load_hands_landmarks, pad_landmarks
-from lsfb_dataset.utils.datasets import create_mask
+import numpy as np
+from tqdm import tqdm
+
+from lsfb_dataset.datasets.lsfb_isol.config import LSFBIsolConfig
 from lsfb_dataset.datasets.lsfb_isol.base import LSFBIsolBase
 
 
-def _load_landmarks(
-        root: str,
-        videos: pd.DataFrame,
-        landmarks: List[str],
-        sequence_max_length: int,
-        show_progress: bool,
-):
-    landmark_list = ', '.join(landmarks)
-    print(f'Loading features ({landmark_list}) and labels for each isolated sign...')
-
-    features = []
-    targets = []
-
-    progress_bar = tqdm(videos.iterrows(), total=videos.shape[0], disable=(not show_progress))
-    for index, video in progress_bar:
-        data = []
-
-        for lm_type in landmarks:
-            if lm_type == 'pose':
-                data.append(load_pose_landmarks(root, video['pose']))
-            elif lm_type == 'hand_left':
-                data.append(load_hands_landmarks(root, video['hands'], 'left'))
-            elif lm_type == 'hand_right':
-                data.append(load_hands_landmarks(root, video['hands'], 'right'))
-            else:
-                raise ValueError(f'Unknown landmarks: {lm_type}.')
-
-        features.append(pd.concat(data, axis=1).values[:sequence_max_length])
-        targets.append(video['class'])
-
-    return features, targets
-
-
 class LSFBIsolLandmarks(LSFBIsolBase):
+    """
+    Utility class to load the LSFB ISOL Landmarks dataset.
+    The dataset must be already downloaded!
 
-    def __init__(self, *args, **kwargs):
-        print('-' * 10, 'LSFB ISOL DATASET')
-        start_time = datetime.now()
+    All the landmarks and targets are loaded in memory.
+    Therefore, iterating over all the instances is fast but consumes a lot of RAM.
+    If you don't have enough RAM, use the `LSFBIsolLandmarksGenerator` class instead.
 
-        super(LSFBIsolLandmarks, self).__init__(*args, **kwargs)
-
-        self.features, self.targets = _load_landmarks(
-            self.config.root,
-            self.config.videos,
-            self.config.landmarks,
-            self.config.sequence_max_length,
-            self.config.show_progress,
+    Example:
+        ```python
+        my_dataset_config = LSFBIsolConfig(
+            root="./my_dataset",
+            split="fold_1",
+            n_labels=750,
+            target='sign_gloss',
+            sequence_max_length=10,
+            use_3d=True,
         )
-        self.labels = self.config.lemmes['lemme']
 
-        print('-' * 10)
-        print('loading time:', datetime.now() - start_time)
+        my_dataset = LSFBIsolLandmarks(my_dataset_config)
+        features, target = dataset[30]
+        ```
 
-    def __len__(self):
-        return len(self.features)
+    If you did not download the dataset, see `lsfb_dataset.Downloader`.
+
+    Args:
+        config: The configuration object (see `LSFBContConfig`).
+
+    Author:
+        ppoitier (v 2.0)
+    """
+    # TODO: add class properties to docstring
+
+    def __init__(self, config: LSFBIsolConfig):
+        super().__init__(config)
+        self.features: dict[str, dict[str, np.ndarray]] = self._load_features()
 
     def __getitem__(self, index):
-        features = self.features[index]
-        target = self.targets[index]
-        pad_value = 0
-
-        if self.config.padding:
-            pad_value = self.config.sequence_max_length - len(features)
-            features = pad_landmarks(features, pad_value)
-
-        if self.config.features_transform is not None:
-            features = self.config.features_transform(features)
-
-        if self.config.target_transform is not None:
-            target = self.config.target_transform(target)
+        instance_id = self.instances[index]
+        features = self.features[instance_id]
+        target = self.targets[instance_id]
 
         if self.config.transform is not None:
-            features, target = self.config.transform(features, target)
-
-        if self.config.return_mask:
-            mask = create_mask(self.config.sequence_max_length, pad_value, self.config.mask_value)
-            if self.config.mask_transform is not None:
-                mask = self.config.mask_transform(mask)
-
-            return features, target, mask
+            features = self.config.transform(features)
 
         return features, target
+
+    def _load_features(self):
+        pose_folder = "poses_raw" if self.config.use_raw else "poses"
+        coordinate_indices = [0, 1, 2] if self.config.use_3d else [0, 1]
+        all_features = {}
+        max_len = self.config.sequence_max_length
+
+        for instance_id in tqdm(self.instances, disable=(not self.config.show_progress)):
+            instance_features = {}
+            for landmark_set in self.config.landmarks:
+                filepath = f"{self.config.root}/{pose_folder}/{landmark_set}/{instance_id}.npy"
+                lm_set_features = np.load(filepath)[:, :, coordinate_indices]
+                if max_len is not None:
+                    lm_set_features = lm_set_features[:max_len]
+                instance_features[landmark_set] = lm_set_features
+            all_features[instance_id] = instance_features
+        gc.collect()
+        return all_features

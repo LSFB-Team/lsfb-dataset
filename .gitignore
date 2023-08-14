@@ -7,7 +7,7 @@ lsfb-dataset/build
 .pytest_cache
 site
 .idea/
-lsfb-dataset/src/notebooks/
+lsfb-dataset/notebook/
 __pycache__
 build
 virtualenv

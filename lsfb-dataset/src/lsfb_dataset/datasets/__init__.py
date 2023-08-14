@@ -6,5 +6,5 @@ The module is organised in two submodules : One for the continuous dataset and o
 
 """
 
-from .lsfb_cont import LSFBContConfig, LSFBContLandmarks, LSFBContLandmarksGenerator
-from .lsfb_isol import LSFBIsolConfig, LSFBIsolLandmarks, LSFBIsolLandmarksGenerator
+from lsfb_dataset.datasets.lsfb_cont import LSFBContConfig, LSFBContLandmarks, LSFBContLandmarksGenerator
+from lsfb_dataset.datasets.lsfb_isol import LSFBIsolConfig, LSFBIsolLandmarks, LSFBIsolLandmarksGenerator

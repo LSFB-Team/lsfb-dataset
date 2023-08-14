@@ -6,7 +6,6 @@ nav:
     - LSFB Isol: lsfb_isol.md
     - LSFB Cont: lsfb_cont.md
     - Datasets: datasets.md
-    - Visualisation: visualisation.md
     - Download Datasets: download.md
 
 theme:

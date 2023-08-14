@@ -1,82 +1,73 @@
 from dataclasses import dataclass
-from typing import Callable, List, Optional
-from lsfb_dataset.datasets.types import *
-import os
-import pandas as pd
+from typing import Callable, Optional
 
 
 @dataclass
 class LSFBIsolConfig:
     """
-    Simple configuration class for the lsfb_isol Dataset.
+    Simple configuration class for the LSFB ISOL Dataset.
 
-    lsfb: French Belgian Sign Language
-    isol: isolated videos in LSFB
+    LSFB: French Belgian Sign Language
+    ISOL: Isolated signs (videos and poses) in LSFB
+
+    If you did not download the dataset, see `lsfb_dataset.Downloader`.
 
     Args:
         root: Root directory of the LSFB_ISOL dataset.
-            The dataset must already be downloaded.
-
-        landmarks: Select which landmarks (features) to use. Default = ['pose', 'hand_left', 'hand_right'].
+            The dataset must already be downloaded!
+        landmarks: Select which landmarks (features) to use:
+            'face' for face mesh (468 landmarks);
             'pose' for pose skeleton (23 landmarks);
-            'hands_left' for left hand skeleton (21 landmarks);
-            'hands_right' for right hand skeleton (21 landmarks);
+            'left_hand' for left hand skeleton (21 landmarks);
+            'right_hand' for right hand skeleton (21 landmarks);
+            Default = ['pose', 'left_hand', 'right_hand'].
+        use_3d: If true, use 3D landmarks. Otherwise, use 2D landmarks. Default = False.
+        use_raw: If true, use raw landmarks. Otherwise, use preprocessed landmarks where:
+            - missing landmarks are interpolated (linear interpolation);
+            - vibrations have been reduced by using smoothing (Savitchy Golay filter).
+            Default = False.
 
-        features_transform: Callable object used to transform the features.
-        target_transform: Callable object used to transform the targets.
-        transform: Callable object used to transform both the features and the targets.
+        target: Specify which target is returned with the features for each instance:
+            'sign_index': the index of the sign is used;
+            'sign_gloss': the gloss of the sign is used;
+            Default = 'sign_index'.
 
-        mask_transform: Callable object used to transform the masks.
-            You need to set return_mask to true to use this transform.
+        transform: Callable object used to transform the features.
 
-        lemmes_nb: Number of lemme to consider. Default=10
-        lemme_list_file: Path to the csv containing the lemmes lists. Default="lemmes.csv"
-        videos_list_file: Path to the csv containing the video information. Default="clips.csv"
+        split: Specify which subset of the dataset is used.
+            'fold_x' where x is in {0, 1, 2, 3, 4} for a specific fold;
+            'train' for training set (folds 2, 3, 4);
+            'test' for the test set (folds 0 and 1);
+            'all' for all the instances of the dataset (all folds);
+            'mini_sample' for a tiny set of instances (10 instances).
+            Default = 'all'.
 
-        split: Select a specific subset of the dataset. Default = 'all'.
-            'train' for training set;
-            'test' for the test set;
-            'all' for all the instances of the dataset;
-            'mini_sample' for a tiny set of instances.
+        sequence_max_length: (Optional) Max length of the clip sequence. Default=50.
 
-        sequence_max_length: Max length of the clip sequence. Default=50.
-        padding: Pad all sequence to the same length.
-        return_mask: Returning padding mask for the sequence.
-        mask_value: Value of the masked part of the clips.
-        show_progress: If true, show a progress bar while the dataset is loading.
+        n_labels: If this parameter is an integer `x`, then `x+1` labels are used for the `x` most
+            frequent signs and the background label. If none, the number of labels is the number of different signs
+            in the dataset no matter their occurrences.
+            This parameter is used to filter out signs with very few examples.
+            Default=750.
 
+        show_progress: If true, shows a progress bar while the dataset is loading. Default = True.
 
-    Author: jfink
+    Authors:
+        jfink (v 1.0)
+        ppoitier (v 2.0)
     """
 
     root: str
-    landmarks: Optional[List[str]] = None
+    landmarks: Optional[tuple[str, ...]] = ("pose", "left_hand", "right_hand")
+    use_3d: bool = False
+    use_raw: bool = False
 
-    features_transform: Callable = None
-    target_transform: Callable = None
-    transform: Callable = None
-    mask_transform: Callable = None
+    target: str = "sign_index"
 
-    lemmes_nb: int = 10
-    lemme_list_file: str = 'lemmes.csv'
-    videos_list_file: str = 'clips.csv'
+    transform: callable = None
 
-    split: DataSubset = 'all'
+    split: str = "all"
+    n_labels: int = 750
     sequence_max_length: int = 50
 
-    padding: bool = False
-    return_mask: bool = False
-    mask_value: int = 0
     show_progress: bool = True
-
-    def __post_init__(self):
-        if self.landmarks is None:
-            self.landmarks = ['pose', 'hand_left', 'hand_right']
-
-        self.lemme_list_path = os.path.join(self.root, self.lemme_list_file)
-        self.videos_list_path = os.path.join(self.root, self.videos_list_file)
-
-        self.videos = pd.read_csv(self.videos_list_path)
-
-        self.lemmes = pd.read_csv(self.lemme_list_path)
-        self.lemmes = self.lemmes.iloc[:self.lemmes_nb]
