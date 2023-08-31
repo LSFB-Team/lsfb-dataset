@@ -69,7 +69,7 @@ class LSFBContLandmarks(LSFBContBase):
             ]
             annotations.loc[:, 'start'] = annotations['start'] - start * 20
             annotations.loc[:, 'end'] = annotations['end'] - start * 20
-        if self.config.segment_unit == 'frame':
+        elif self.config.segment_unit == 'frame':
             annotations = annotations.loc[
                 (annotations['end'] >= start) &
                 (annotations['start'] <= end)
