@@ -69,19 +69,21 @@ class LSFBContLandmarks(LSFBContBase):
             ]
             annotations.loc[:, 'start'] = annotations['start'] - start * 20
             annotations.loc[:, 'end'] = annotations['end'] - start * 20
-        else:
+        if self.config.segment_unit == 'frame':
             annotations = annotations.loc[
                 (annotations['end'] >= start) &
                 (annotations['start'] <= end)
             ]
             annotations.loc[:, 'start'] = annotations['start'] - start
             annotations.loc[:, 'end'] = annotations['end'] - start
+        else:
+            raise ValueError(f'Unknown segment unit: {self.config.segment_unit}.')
         features, annotations = self._apply_transforms(features, annotations)
         return features, annotations
 
     def _load_features(self):
         pose_folder = 'poses_raw' if self.config.use_raw else 'poses'
-        coordinate_indices = [0, 1, 2] if self.config.use_3d else [1, 2]
+        coordinate_indices = [0, 1, 2] if self.config.use_3d else [0, 1]
         for instance_id in tqdm(self.instances, disable=(not self.config.show_progress)):
             instance_feat = {}
             for landmark_set in self.config.landmarks:

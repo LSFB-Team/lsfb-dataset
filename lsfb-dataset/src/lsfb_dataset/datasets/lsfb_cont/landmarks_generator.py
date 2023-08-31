@@ -61,11 +61,13 @@ class LSFBContLandmarksGenerator(LSFBContBase):
                 ((annotations['end'] / 20) >= start) &
                 ((annotations['start'] / 20) <= end)
             ]
-        else:
+        elif self.config.segment_unit == 'frame':
             annotations = annotations.loc[
                 (annotations['end'] >= start) &
                 (annotations['start'] <= end)
             ]
+        else:
+            raise ValueError(f'Unknown segment unit: {self.config.segment_unit}.')
         annotations.loc[:, 'start'] = annotations['start'] - start
         annotations.loc[:, 'end'] = annotations['end'] - start
         features, annotations = self._apply_transforms(features, annotations)
@@ -73,7 +75,7 @@ class LSFBContLandmarksGenerator(LSFBContBase):
 
     def _load_instance_features(self, instance_id: str):
         pose_folder = 'poses_raw' if self.config.use_raw else 'poses'
-        coordinate_indices = [0, 1, 2] if self.config.use_3d else [1, 2]
+        coordinate_indices = [0, 1, 2] if self.config.use_3d else [0, 1]
         features = {}
         for landmark_set in self.config.landmarks:
             filepath = f"{self.config.root}/{pose_folder}/{landmark_set}/{instance_id}.npy"
