@@ -1,6 +1,7 @@
 import pandas as pd
 import tempfile
 import tarfile
+from tqdm import tqdm
 
 
 def save_as_webdataset(
@@ -34,7 +35,8 @@ def save_as_webdataset(
 
 def write_tar_file(data, output_file):
     with tarfile.open(output_file, "w:gz") as tar:
-        for elem in data:
+        progress = tqdm(data, desc="Writing tar file")
+        for elem in progress:
             if elem[2] == "file":
                 elem_name = elem[0]
                 elem_path = elem[1]

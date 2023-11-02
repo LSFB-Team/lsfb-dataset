@@ -4,6 +4,7 @@ import pandas as pd
 
 from lsfb_dataset.datasets.lsfb_isol.config import LSFBIsolConfig
 from lsfb_dataset.utils.datasets import load_split, load_labels
+from lsfb_dataset.datasets.save_as_webdataset import save_as_webdataset
 
 
 class LSFBIsolBase:
@@ -44,6 +45,16 @@ class LSFBIsolBase:
 
     def __len__(self):
         return len(self.instances)
+
+    def to_webdataset(self, output_path: str):
+        save_as_webdataset(
+            instances=self.instance_metadata,
+            root=self.config.root,
+            poses_list=self.config.landmarks,
+            label_to_index=self.label_to_index,
+            poses_raw=self.config.use_raw,
+            output_path=output_path,
+        )
 
     @abc.abstractmethod
     def __getitem__(self, index):
