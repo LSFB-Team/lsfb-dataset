@@ -24,6 +24,9 @@ class LSFBIsolBase:
         self._load_targets()
 
     def _filter_instances(self):
+        """
+        Filters the instances that are not in the selected split and the instances that have not in the selected labels.
+        """
         self.instance_metadata = self.instance_metadata[
             self.instance_metadata["id"].isin(self.instances)
         ]
@@ -33,6 +36,9 @@ class LSFBIsolBase:
         self.instances = self.instance_metadata["id"].tolist()
 
     def _load_targets(self):
+        """
+        Create a mapping between the id and the target. It could be the label string or the label index (int).
+        """
         targets = self.instance_metadata.loc[:, ["id", "sign"]].to_records(index=False)
         if self.config.target == "sign_index":
             self.targets = {key: self.label_to_index[gloss] for key, gloss in targets}
