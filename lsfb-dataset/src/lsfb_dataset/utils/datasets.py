@@ -19,7 +19,6 @@ def load_labels(sign_index_file: str, n_labels: Optional[int] = None):
     index_to_label = {}
 
     for sign, sign_index in signs:
-        print(n_labels, type(n_labels))
         if n_labels is not None and sign_index >= n_labels:
             sign_index = -1
             index_to_label[-1] = "OTHER_SIGN"
