@@ -12,9 +12,15 @@ class LSFBIsolBase:
 
         self.instances: list[str] = load_split(self.config.root, self.config.split)
         self.instance_metadata = pd.read_csv(f"{self.config.root}/instances.csv")
-        self.labels, self.label_to_index, self.index_to_label = load_labels(
-            self.config.root, self.config.n_labels
+
+        # sign index path
+        sign_index_path = (
+            f"{self.config.root}/metadata/{self.config.sign_index_file}.csv"
         )
+        self.labels, self.label_to_index, self.index_to_label = load_labels(
+            sign_index_path, self.config.n_labels
+        )
+
         self._filter_instances()
 
         self.targets = {}

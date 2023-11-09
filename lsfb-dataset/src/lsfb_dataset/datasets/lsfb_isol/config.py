@@ -32,6 +32,9 @@ class LSFBIsolConfig:
             'sign_gloss': the gloss of the sign is used;
             Default = 'sign_index'.
 
+        sign_index_file: Basename (without the extension), of the CSV file containing
+            the sign to index mapping to use.
+
         transform: Callable object used to transform the features.
 
         split: Specify which subset of the dataset is used.
@@ -63,6 +66,7 @@ class LSFBIsolConfig:
     use_raw: bool = False
 
     target: str = "sign_index"
+    sign_index_file: str = "sign_to_index"
 
     transform: callable = None
 
