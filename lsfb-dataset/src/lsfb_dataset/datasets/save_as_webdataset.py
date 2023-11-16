@@ -17,7 +17,7 @@ def save_as_webdataset(
     data = []
 
     for _, row in instances.iterrows():
-        instance_id = row["id"]
+        instance_id = row["id"].replace(".", "_")
 
         for pose in poses_list:
             elem_name = f"{instance_id}.{pose}.npy"
