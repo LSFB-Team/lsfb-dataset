@@ -28,8 +28,8 @@ def save_as_webdataset(
         sign_class = row["sign"]
         sign_idx = label_to_index[sign_class]
 
-        data.append((f"{instance_id}.class", sign_class, "text"))
-        data.append((f"{instance_id}.idx", sign_idx, "text"))
+        data.append((f"{instance_id.replace('.', '_')}.class", sign_class, "text"))
+        data.append((f"{instance_id.replace('.', '_')}.idx", sign_idx, "text"))
 
     write_tar_file(data, output_path)
 
