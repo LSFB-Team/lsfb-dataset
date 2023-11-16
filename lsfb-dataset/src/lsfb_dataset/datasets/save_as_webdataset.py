@@ -2,6 +2,7 @@ import pandas as pd
 import tempfile
 import tarfile
 from tqdm import tqdm
+import os
 
 
 def save_as_webdataset(
@@ -48,7 +49,10 @@ def write_tar_file(data, output_file):
 
                 elem_name = elem[0]
                 elem_path = f.name
-                tar.add(elem_path, arcname=elem_name)
+                if os.path.exists(elem_path):
+                    tar.add(elem_path, arcname=elem_name)
+                else:
+                    raise ValueError(f"File does not exist: {elem_path}")
 
             else:
                 raise ValueError(f"Unknown data type: {elem[2]}")
