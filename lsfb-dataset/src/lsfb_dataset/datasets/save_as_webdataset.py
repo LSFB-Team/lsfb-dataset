@@ -17,10 +17,10 @@ def save_as_webdataset(
     data = []
 
     for _, row in instances.iterrows():
-        instance_id = row["id"].replace(".", "_")
+        instance_id = row["id"]
 
         for pose in poses_list:
-            elem_name = f"{instance_id}.{pose}.npy"
+            elem_name = f"{instance_id.replace('.', '_')}.{pose}.npy"
             elem_path = f"{root}/{poses_folder}/{pose}/{instance_id}.npy"
 
             data.append((elem_name, elem_path, "file"))
