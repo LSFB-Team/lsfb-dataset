@@ -5,6 +5,7 @@ from tqdm import tqdm
 
 from lsfb_dataset.datasets.lsfb_isol.config import LSFBIsolConfig
 from lsfb_dataset.datasets.lsfb_isol.base import LSFBIsolBase
+from lsfb_dataset.utils.body_parts import get_body_part
 
 
 class LSFBIsolLandmarks(LSFBIsolBase):
@@ -63,12 +64,16 @@ class LSFBIsolLandmarks(LSFBIsolBase):
 
         for instance_id in tqdm(self.instances, disable=(not self.config.show_progress)):
             instance_features = {}
-            for landmark_set in self.config.landmarks:
-                filepath = f"{self.config.root}/{pose_folder}/{landmark_set}/{instance_id}.npy"
+            for landmarks_set, body_part in self.landmarks_sets:
+                filepath = f"{self.config.root}/{pose_folder}/{landmarks_set}/{instance_id}.npy"
                 lm_set_features = np.load(filepath)[:, :, coordinate_indices]
                 if max_len is not None:
                     lm_set_features = lm_set_features[:max_len]
-                instance_features[landmark_set] = lm_set_features
+                if body_part is not None:
+                    lm_set_features = get_body_part(lm_set_features, body_part)
+                    instance_features[body_part] = lm_set_features
+                else:
+                    instance_features[landmarks_set] = lm_set_features
             all_features[instance_id] = instance_features
         gc.collect()
         return all_features

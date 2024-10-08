@@ -4,11 +4,13 @@ import pandas as pd
 
 from lsfb_dataset.datasets.lsfb_isol.config import LSFBIsolConfig
 from lsfb_dataset.utils.datasets import load_split, load_labels
+from lsfb_dataset.utils.body_parts import get_associated_landmarks_sets
 
 
 class LSFBIsolBase:
     def __init__(self, config: LSFBIsolConfig):
         self.config = config
+        self.landmarks_sets = get_associated_landmarks_sets(config.landmarks)
 
         self.instances: list[str] = load_split(self.config.root, self.config.split)
         self.instance_metadata = pd.read_csv(f"{self.config.root}/instances.csv")

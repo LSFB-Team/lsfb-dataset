@@ -1,11 +1,11 @@
 import gc
-from math import ceil, floor
 
 from tqdm import tqdm
 import numpy as np
 
 from lsfb_dataset.datasets.lsfb_cont.base import LSFBContBase
 from lsfb_dataset.datasets.lsfb_cont.config import LSFBContConfig
+from lsfb_dataset.utils.body_parts import get_body_part
 
 
 class LSFBContLandmarks(LSFBContBase):
@@ -85,9 +85,14 @@ class LSFBContLandmarks(LSFBContBase):
         pose_folder = 'poses_raw' if self.config.use_raw else 'poses'
         coordinate_indices = [0, 1, 2] if self.config.use_3d else [0, 1]
         for instance_id in tqdm(self.instances, disable=(not self.config.show_progress)):
-            instance_feat = {}
-            for landmark_set in self.config.landmarks:
-                filepath = f"{self.config.root}/{pose_folder}/{landmark_set}/{instance_id}.npy"
-                instance_feat[landmark_set] = np.load(filepath)[:, :, coordinate_indices]
-            self.features[instance_id] = instance_feat
+            instance_features = {}
+            for landmarks_set, body_part in self.landmarks_sets:
+                filepath = f"{self.config.root}/{pose_folder}/{landmarks_set}/{instance_id}.npy"
+                lm_set_features = np.load(filepath)[:, :, coordinate_indices]
+                if body_part is not None:
+                    lm_set_features = get_body_part(lm_set_features, body_part)
+                    instance_features[body_part] = lm_set_features
+                else:
+                    instance_features[landmarks_set] = lm_set_features
+            self.features[instance_id] = instance_features
         gc.collect()

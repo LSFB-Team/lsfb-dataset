@@ -10,7 +10,7 @@ def load_split(root: str, split_name: str) -> list[str]:
         return json.load(file)
 
 
-def load_labels(root: str, n_labels: Optional[int] = None):
+def load_labels(root: str, n_labels: Optional[int] = None, unknown_sign_index: int = -1):
     signs = pd.read_csv(f'{root}/metadata/sign_to_index.csv').to_records(index=False)
     labels = []
     label_to_index = {}
@@ -18,8 +18,8 @@ def load_labels(root: str, n_labels: Optional[int] = None):
 
     for sign, sign_index in signs:
         if n_labels is not None and sign_index >= n_labels:
-            sign_index = -1
-            index_to_label[-1] = 'OTHER_SIGN'
+            sign_index = unknown_sign_index
+            index_to_label[unknown_sign_index] = 'OTHER_SIGN'
         else:
             labels.append(sign)
             index_to_label[sign_index] = sign

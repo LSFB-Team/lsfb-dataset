@@ -69,6 +69,9 @@ class LSFBContConfig:
                 This parameter is used to filter out signs with very few examples.
                 Default=750
 
+            unknown_sign_index: Index of the 'unknown' label for signs that are outside the targetted vocabulary.
+                Default=-1
+
             window: Optional argument (window_size, window_stride) to use fixed-size windows instead of
                 variable length sequences.
                 If specified, the dataset is windowed with a window size and a window stride.
@@ -97,8 +100,11 @@ class LSFBContConfig:
     segment_label: str = 'sign_index'
     segment_unit: str = 'ms'
 
+    unknown_sign_index: int = -1
+
     n_labels: Union[int, None] = 750
 
     window: Optional[tuple[int, int]] = None
+    drop_empty_windows: bool = False
 
     show_progress: bool = True

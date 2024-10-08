@@ -2,6 +2,7 @@ import numpy as np
 
 from lsfb_dataset.datasets.lsfb_isol.config import LSFBIsolConfig
 from lsfb_dataset.datasets.lsfb_isol.base import LSFBIsolBase
+from lsfb_dataset.utils.body_parts import get_body_part
 
 
 class LSFBIsolLandmarksGenerator(LSFBIsolBase):
@@ -53,10 +54,15 @@ class LSFBIsolLandmarksGenerator(LSFBIsolBase):
         coordinate_indices = [0, 1, 2] if self.config.use_3d else [0, 1]
         max_len = self.config.sequence_max_length
         instance_features = {}
-        for landmark_set in self.config.landmarks:
-            pose_path = f"{self.config.root}/{pose_folder}/{landmark_set}/{instance_id}.npy"
+        for landmarks_set, body_part in self.landmarks_sets:
+            pose_path = f"{self.config.root}/{pose_folder}/{landmarks_set}/{instance_id}.npy"
             lm_set_features = np.load(pose_path)[:, :, coordinate_indices]
             if max_len is not None:
                 lm_set_features = lm_set_features[:max_len]
-            instance_features[instance_id] = lm_set_features
+
+            if body_part is not None:
+                lm_set_features = get_body_part(lm_set_features, body_part)
+                instance_features[body_part] = lm_set_features
+            else:
+                instance_features[landmarks_set] = lm_set_features
         return instance_features
