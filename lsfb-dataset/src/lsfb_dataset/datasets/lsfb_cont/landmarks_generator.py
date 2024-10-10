@@ -55,20 +55,8 @@ class LSFBContLandmarksGenerator(LSFBContBase):
         instance_id, start, end = self.windows[index]
         features = self._load_instance_features(instance_id)
         features = {lm: lm_feat[start:end] for lm, lm_feat in features[instance_id].items()}
-
         annotations = self.annotations[instance_id]
-        if self.config.segment_unit == 'ms':
-            annotations = annotations.loc[
-                ((annotations['end'] / 20) >= start) &
-                ((annotations['start'] / 20) <= end)
-            ]
-        elif self.config.segment_unit == 'frame':
-            annotations = annotations.loc[
-                (annotations['end'] >= start) &
-                (annotations['start'] <= end)
-            ]
-        else:
-            raise ValueError(f'Unknown segment unit: {self.config.segment_unit}.')
+        annotations = annotations.loc[(annotations['end'] >= start) & (annotations['start'] <= end)]
         annotations.loc[:, 'start'] = annotations['start'] - start
         annotations.loc[:, 'end'] = annotations['end'] - start
         features, annotations = self._apply_transforms(features, annotations)

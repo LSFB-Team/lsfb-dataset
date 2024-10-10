@@ -1,4 +1,5 @@
 import gc
+from sys import prefix
 
 from tqdm import tqdm
 import numpy as np
@@ -28,7 +29,7 @@ class LSFBContLandmarks(LSFBContBase):
                 segment_unit='frame',
                 segment_label='sign_gloss',
                 use_3d=True,
-                window=(1500, 1200),
+                window=(1500, 1200)
             )
 
             my_dataset = LSFBContLandmarks(my_dataset_config)
@@ -60,31 +61,26 @@ class LSFBContLandmarks(LSFBContBase):
     def __get_window__(self, index):
         instance_id, start, end = self.windows[index]
         features = {lm: lm_feat[start:end] for lm, lm_feat in self.features[instance_id].items()}
-
-        annotations = self.annotations[instance_id]
         if self.config.segment_unit == 'ms':
-            annotations = annotations.loc[
-                ((annotations['end'] / 20) >= start) &
-                ((annotations['start'] / 20) <= end)
-            ]
-            annotations.loc[:, 'start'] = annotations['start'] - start * 20
-            annotations.loc[:, 'end'] = annotations['end'] - start * 20
-        elif self.config.segment_unit == 'frame':
-            annotations = annotations.loc[
-                (annotations['end'] >= start) &
-                (annotations['start'] <= end)
-            ]
-            annotations.loc[:, 'start'] = annotations['start'] - start
-            annotations.loc[:, 'end'] = annotations['end'] - start
-        else:
-            raise ValueError(f'Unknown segment unit: {self.config.segment_unit}.')
+            start, end = start*20, end*20
+        annotations = self.annotations[instance_id]
+        annotations = annotations.loc[(annotations['end'] >= start) & (annotations['start'] <= end)]
+        annotations.loc[:, 'start'] = annotations['start'] - start
+        annotations.loc[:, 'end'] = annotations['end'] - start
         features, annotations = self._apply_transforms(features, annotations)
         return features, annotations
 
     def _load_features(self):
         pose_folder = 'poses_raw' if self.config.use_raw else 'poses'
         coordinate_indices = [0, 1, 2] if self.config.use_3d else [0, 1]
-        for instance_id in tqdm(self.instances, disable=(not self.config.show_progress)):
+        progress_bar = tqdm(
+            self.instances,
+            disable=(not self.config.show_progress),
+            leave=False,
+            unit='instance',
+        )
+        progress_bar.set_description('Loading features')
+        for instance_id in progress_bar:
             instance_features = {}
             for landmarks_set, body_part in self.landmarks_sets:
                 filepath = f"{self.config.root}/{pose_folder}/{landmarks_set}/{instance_id}.npy"

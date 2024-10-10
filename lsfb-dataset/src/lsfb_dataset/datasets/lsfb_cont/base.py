@@ -26,7 +26,7 @@ class LSFBContBase:
             self.config.root, self.config.n_labels, self.config.unknown_sign_index
         )
 
-        self.annotations: dict[str] = {}
+        self.annotations = {}
         self._load_annotations()
 
         self.windows = None
@@ -68,8 +68,11 @@ class LSFBContBase:
             )
 
     def _is_empty_window(self, instance_id, start, end):
-        # TODO
-        return False
+        if self.config.segment_unit == 'ms':
+            start, end = start * 20, end * 20
+        annotations = self.annotations[instance_id]
+        annotations = annotations.loc[(annotations['end'] >= start) & (annotations['start'] <= end)]
+        return annotations.shape[0] == 0
 
     def _make_windows(self):
         window_size, window_stride = self.config.window
@@ -79,7 +82,7 @@ class LSFBContBase:
         ].to_records(index=False):
             for start in range(0, n_frames, window_stride):
                 end = min(start + window_size, n_frames - 1)
-                if not self._is_empty_window(instance_id, start, end):
+                if (not self.config.drop_empty_windows) or (not self._is_empty_window(instance_id, start, end)):
                     self.windows.append((instance_id, start, end))
 
     def _apply_transforms(self, features, annotations):
